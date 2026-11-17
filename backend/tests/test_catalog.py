@@ -176,3 +176,42 @@ async def test_listing_requires_known_category_and_state(app: Any) -> None:
         bad_state = await c.post("/api/listings", json={**LISTING, "state": "ZZ"})
     assert unknown.status_code == 400
     assert bad_state.status_code == 422
+
+
+async def test_uploads_stop_at_the_storage_quota(seller: Any) -> None:
+    from tradepost.config import get_settings
+
+    settings = get_settings()
+    draft = await create_listing(seller, publish=False)
+    url = f"/api/listings/{draft['id']}/photos"
+    first = await seller.post(url, files={"file": ("p.png", image_bytes(), "image/png")})
+    assert first.status_code == 201
+    previous = settings.media_quota_bytes
+    settings.media_quota_bytes = 1  # already used more than this
+    try:
+        full = await seller.post(url, files={"file": ("p.png", image_bytes(), "image/png")})
+    finally:
+        settings.media_quota_bytes = previous
+    assert full.status_code == 507
+    assert full.json()["error"]["code"] == "storage_full"
+
+
+async def test_photo_limit_per_account(seller: Any) -> None:
+    from tradepost.config import get_settings
+
+    settings = get_settings()
+    previous = settings.max_photos_per_user
+    settings.max_photos_per_user = 2
+    try:
+        a = await create_listing(seller, publish=False)
+        b = await create_listing(seller, publish=False)
+        files = {"file": ("p.png", image_bytes(), "image/png")}
+        codes = [
+            (await seller.post(f"/api/listings/{a['id']}/photos", files=files)).status_code,
+            (await seller.post(f"/api/listings/{b['id']}/photos", files=files)).status_code,
+        ]
+        third = await seller.post(f"/api/listings/{b['id']}/photos", files=files)
+    finally:
+        settings.max_photos_per_user = previous
+    assert codes == [201, 201]
+    assert third.json()["error"]["code"] == "photo_limit_reached"

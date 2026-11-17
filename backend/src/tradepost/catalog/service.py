@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -22,6 +22,14 @@ from tradepost.media.storage import Storage
 
 # Image decoding is CPU and memory heavy; the free instance has 512 MB.
 _image_slots = asyncio.Semaphore(2)
+
+_MEDIA_QUOTA_LOCK = 7_301_002
+
+
+class StorageFull(AppError):
+    status_code = 507
+    code = "storage_full"
+
 
 PUBLIC_STATUSES = frozenset({ListingStatus.ACTIVE, ListingStatus.PAUSED, ListingStatus.SOLD_OUT})
 
@@ -133,6 +141,19 @@ async def add_photo(
             f"A listing can have at most {settings.max_photos_per_listing} photos.",
             code="too_many_photos",
         )
+    owned = (
+        await db.execute(
+            select(func.count(ListingPhoto.id))
+            .join(Listing, Listing.id == ListingPhoto.listing_id)
+            .where(Listing.seller_id == listing.seller_id)
+        )
+    ).scalar_one()
+    if owned >= settings.max_photos_per_user:
+        raise AppError(
+            f"An account can store at most {settings.max_photos_per_user} photos. "
+            "Delete photos from old listings to add new ones.",
+            code="photo_limit_reached",
+        )
     async with _image_slots:
         processed = await asyncio.to_thread(
             process_image,
@@ -140,6 +161,13 @@ async def add_photo(
             max_bytes=settings.max_photo_bytes,
             max_pixels=settings.max_image_pixels,
         )
+    size = len(processed.full) + len(processed.thumb)
+    # One upload at a time checks and claims space, so concurrent uploads cannot overshoot
+    # the quota. The lock is released when the request's transaction ends.
+    await db.execute(text("SELECT pg_advisory_xact_lock(:id)"), {"id": _MEDIA_QUOTA_LOCK})
+    used = (await db.execute(select(func.coalesce(func.sum(ListingPhoto.bytes), 0)))).scalar_one()
+    if used + size > settings.media_quota_bytes:
+        raise StorageFull("Photo storage for this demo is full. Try again later.")
     photo_id = uuid.uuid4()
     key_full = f"listings/{listing.id}/{photo_id}.webp"
     key_thumb = f"listings/{listing.id}/{photo_id}_t.webp"
@@ -160,6 +188,7 @@ async def add_photo(
         key_thumb=key_thumb,
         width=processed.width,
         height=processed.height,
+        bytes=size,
     )
     listing.photos.append(photo)
     try:

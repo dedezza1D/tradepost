@@ -115,3 +115,5 @@ class ListingPhoto(TimestampMixin, Base):
     key_thumb: Mapped[str] = mapped_column(String(200), nullable=False)
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Stored size of both renditions, counted against the storage quota.
+    bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, server_default="0")

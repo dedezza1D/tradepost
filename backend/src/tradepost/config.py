@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     max_photo_bytes: int = 5 * 1024 * 1024
     max_photos_per_listing: int = 8
     max_image_pixels: int = 40_000_000
+    # Hard ceilings that keep object storage inside the provider's free tier (R2: 10 GB).
+    # Uploads beyond them are refused; nothing is ever billed.
+    media_quota_bytes: int = 2 * 1024**3
+    max_photos_per_user: int = 200
 
     platform_fee_bps: int = Field(default=1000, ge=0, le=5000)
     reservation_ttl_minutes: int = 15
