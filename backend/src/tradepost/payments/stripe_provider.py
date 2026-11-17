@@ -142,7 +142,7 @@ class StripeProvider:
             raise InvalidWebhook("Invalid Stripe signature.") from None
         if event.type not in _PAYMENT_EVENTS:
             return None
-        obj = event.data.object
+        obj = event.data.object.to_dict()
         ref = obj.get("payment_intent") if event.type.startswith("charge.") else obj.get("id")
         return WebhookNotice(event_id=event.id, event_type=event.type, provider_ref=ref)
 

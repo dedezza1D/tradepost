@@ -355,8 +355,15 @@ async def start_payment(
         client_data=result.client_data,
         status_detail=result.status_detail,
     )
-    db.add(attempt)
-    await db.flush()
+    try:
+        async with db.begin_nested():
+            db.add(attempt)
+    except IntegrityError:
+        # Two requests started the same payment at once and the provider's idempotency key
+        # returned the same payment to both: keep the one already stored.
+        existing = await find_attempt(db, provider.name, result.provider_ref)
+        assert existing is not None
+        return existing
     if result.status != AttemptStatus.PENDING:
         await apply_status(
             db,

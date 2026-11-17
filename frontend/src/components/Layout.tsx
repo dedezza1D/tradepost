@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLogout, useMe } from '../api/auth'
+import { useCart } from '../api/orders'
 
 function SearchBox() {
   const [params] = useSearchParams()
@@ -36,6 +37,8 @@ function SearchBox() {
 
 function AccountMenu() {
   const { data: me } = useMe()
+  const { data: cart } = useCart(Boolean(me))
+  const count = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
   const logout = useLogout()
   const navigate = useNavigate()
 
@@ -55,11 +58,14 @@ function AccountMenu() {
     `rounded-md px-2 py-1 text-sm font-medium ${isActive ? 'text-brand-700' : 'text-stone-700 hover:text-stone-950'}`
   return (
     <nav className="flex items-center gap-1 sm:gap-3" aria-label="Account">
-      <NavLink to="/sell" className={linkClass}>
-        Sell
+      <NavLink to="/seller" className={linkClass}>
+        Selling
       </NavLink>
-      <NavLink to="/me/listings" className={linkClass}>
-        My listings
+      <NavLink to="/orders" className={linkClass}>
+        Orders
+      </NavLink>
+      <NavLink to="/cart" className={linkClass}>
+        Cart{count ? ` (${count})` : ''}
       </NavLink>
       <span className="hidden text-sm text-stone-500 md:inline">{me.display_name}</span>
       <button

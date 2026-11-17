@@ -4,7 +4,13 @@ import { RequireAuth } from './components/RequireAuth'
 import { Layout } from './components/Layout'
 import { LoginPage, RegisterPage } from './pages/AuthPages'
 import { ListingPage } from './pages/ListingPage'
+import { CartPage } from './pages/CartPage'
+import { CheckoutPage } from './pages/CheckoutPage'
+import { CheckoutStartPage } from './pages/CheckoutStartPage'
 import { MyListingsPage } from './pages/MyListingsPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { SellerPage } from './pages/SellerPage'
+import { SellerProfilePage } from './pages/SellerProfilePage'
 import { SearchPage } from './pages/SearchPage'
 import { SellPage } from './pages/SellPage'
 
@@ -34,6 +40,12 @@ const router = createBrowserRouter([
       { path: '/sell', element: <RequireAuth><SellPage key="new" /></RequireAuth> },
       { path: '/sell/:id', element: <RequireAuth><SellPage key="edit" /></RequireAuth> },
       { path: '/me/listings', element: <RequireAuth><MyListingsPage /></RequireAuth> },
+      { path: '/cart', element: <RequireAuth><CartPage /></RequireAuth> },
+      { path: '/checkout', element: <RequireAuth><CheckoutStartPage /></RequireAuth> },
+      { path: '/checkout/:id', element: <RequireAuth><CheckoutPage /></RequireAuth> },
+      { path: '/orders', element: <RequireAuth><OrdersPage /></RequireAuth> },
+      { path: '/seller', element: <RequireAuth><SellerPage /></RequireAuth> },
+      { path: '/users/:id', element: <SellerProfilePage /> },
       { path: '*', element: <NotFound /> },
     ],
   },

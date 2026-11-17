@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCategories } from '../api/catalog'
-import { ApiError, api } from '../api/client'
+import { ApiError, api, json } from '../api/client'
+import { Stars } from './SellerProfilePage'
 import type { Listing } from '../api/types'
 import { useMe } from '../api/auth'
 import { conditionLabel, formatMoney, statusLabel } from '../lib/format'
@@ -102,21 +103,86 @@ export function ListingPage() {
               Edit listing
             </Link>
           ) : (
-            <button
-              type="button"
-              className="btn-primary w-full"
-              disabled={!available}
-              title="Checkout arrives with the payments milestone"
-            >
-              Buy now
-            </button>
+            <BuyBox listingId={item.id} stock={item.stock} available={available} signedIn={Boolean(me)} />
           )}
         </div>
-        <div className="card p-5 text-sm">
+        <Link to={`/users/${item.seller.id}`} className="card block p-5 text-sm hover:shadow-md">
           <p className="text-stone-500">Sold by</p>
           <p className="font-semibold">{item.seller.display_name}</p>
-        </div>
+          <p className="mt-1 text-xs text-stone-600">
+            {item.seller.rating_avg !== null ? (
+              <>
+                <Stars value={item.seller.rating_avg} /> {item.seller.rating_avg.toFixed(1)} ·{' '}
+                {item.seller.rating_count} review{item.seller.rating_count > 1 ? 's' : ''}
+              </>
+            ) : (
+              'No reviews yet'
+            )}
+          </p>
+        </Link>
       </aside>
     </article>
+  )
+}
+
+function BuyBox({
+  listingId,
+  stock,
+  available,
+  signedIn,
+}: {
+  listingId: string
+  stock: number
+  available: boolean
+  signedIn: boolean
+}) {
+  const [quantity, setQuantity] = useState(1)
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [added, setAdded] = useState(false)
+  const addToCart = useMutation({
+    mutationFn: () => api<void>(`/api/cart/${listingId}`, { method: 'PUT', body: json({ quantity }) }),
+    onSuccess: () => {
+      setAdded(true)
+      qc.invalidateQueries({ queryKey: ['cart'] })
+    },
+  })
+  const requireSignIn = () => navigate('/login', { state: { from: `/listings/${listingId}` } })
+
+  if (!available) return null
+  return (
+    <div className="space-y-2">
+      {stock > 1 && (
+        <label className="flex items-center gap-2 text-sm">
+          Quantity
+          <select className="input w-20 py-1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))}>
+            {Array.from({ length: Math.min(stock, 10) }, (_, i) => i + 1).map((n) => (
+              <option key={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      <button
+        type="button"
+        className="btn-primary w-full"
+        onClick={() => (signedIn ? navigate(`/checkout?listing=${listingId}&qty=${quantity}`) : requireSignIn())}
+      >
+        Buy now
+      </button>
+      <button
+        type="button"
+        className="btn-secondary w-full"
+        disabled={addToCart.isPending}
+        onClick={() => (signedIn ? addToCart.mutate() : requireSignIn())}
+      >
+        {added ? 'Added to cart' : 'Add to cart'}
+      </button>
+      {added && (
+        <Link to="/cart" className="block text-center text-sm font-medium text-brand-700 hover:underline">
+          Go to cart
+        </Link>
+      )}
+      {addToCart.isError && <p className="text-sm text-red-700">{addToCart.error.message}</p>}
+    </div>
   )
 }
