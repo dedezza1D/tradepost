@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: tradepost
+          POSTGRES_PASSWORD: tradepost
+          POSTGRES_DB: tradepost
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tradepost"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      TP_DATABASE_URL: postgresql+asyncpg://tradepost:tradepost@localhost:5432/tradepost
+      TP_TEST_DATABASE_URL: postgresql+asyncpg://tradepost:tradepost@localhost:5432/tradepost_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy
+      - name: Migrations apply, roll back and re-apply on an empty database
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Models and migrations agree
+        run: uv run alembic check
+      - name: Tests
+        run: |
+          PGPASSWORD=tradepost psql -h localhost -U tradepost -c "CREATE DATABASE tradepost_test"
+          uv run pytest
+      - name: Dependency audit
+        run: |
+          uv export --no-dev --no-hashes --frozen --no-emit-project > "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit --strict --progress-spinner off -r "$RUNNER_TEMP/requirements.txt"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=high

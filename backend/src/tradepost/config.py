@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     db_pool_size: int = 5
 
     # Public origin of the web app. Unsafe requests must come from it (CSRF defence in depth).
-    public_origin: str = "http://localhost:5173"
+    public_origin: str = "http://localhost:5180"
     # Cookies are Secure everywhere except plain-HTTP local development.
     cookie_secure: bool = False
     session_ttl_hours: int = 24 * 14
