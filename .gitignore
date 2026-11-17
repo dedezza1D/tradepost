@@ -20,3 +20,10 @@ dist/
 var/
 *.log
 .DS_Store
+.neon
+
+# Local coding-agent tooling (Neon skills, MCP config, project link)
+.claude/
+.mcp.json
+skills-lock.json
+.neon

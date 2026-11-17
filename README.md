@@ -48,7 +48,7 @@ split would happen later.
 | Layer | Choice |
 |---|---|
 | API | Python 3.13, FastAPI, SQLAlchemy 2 (async), Alembic, Pydantic v2 |
-| Database | PostgreSQL 17: full-text search, trigram matching, advisory locks, JSONB |
+| Database | PostgreSQL 18: full-text search, trigram matching, advisory locks, JSONB |
 | Web app | React 19, TypeScript, Vite, TanStack Query, Tailwind CSS |
 | Payments | Stripe PaymentIntents + Connect (Accounts v2), Mercado Pago Orders API |
 | Hosting | Cloudflare Pages + R2, Render (Docker), Neon, all on free tiers |
