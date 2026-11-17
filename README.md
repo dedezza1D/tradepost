@@ -6,6 +6,9 @@ Pix through **Stripe** or **Mercado Pago**, and sellers ship, get paid out and r
 Payments run in **test mode only** (provider sandboxes): no real money moves, and the API refuses
 live credentials.
 
+**Live demo: https://tradepost-2ay.pages.dev** — runs on free tiers, so the first request after
+a quiet period can take about a minute while the API wakes up. See [test payments](#test-payments).
+
 [![CI](https://github.com/dedezza1D/tradepost/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dedezza1D/tradepost/actions/workflows/ci.yml)
 
 ## What it does
@@ -134,7 +137,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 53 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 55 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -195,7 +198,8 @@ uv run python scripts/stripe_listen.py
 | Photos | Cloudflare R2 bucket `tradepost-media` | API writes through the S3 API, Pages reads through the binding |
 | API | Render web service (`render.yaml`) | Docker; migrations run at start-up; health check `/healthz` |
 | Database | Neon | the non-pooled connection string; `sslmode` is adapted for asyncpg |
-| Webhooks | `https://<pages-domain>/api/webhooks/stripe` and `/mercadopago` | through the proxy, bytes unchanged |
+| Webhooks | `https://<pages-domain>/api/webhooks/stripe` (and `/mercadopago`) | through the proxy, bytes unchanged |
+| Free-tier guard | `TP_MEDIA_QUOTA_BYTES`, `TP_MAX_PHOTOS_PER_USER` | uploads stop at 2 GB / 200 photos per account; photos cached at the edge |
 
 ## Decisions and trade-offs
 
@@ -213,6 +217,11 @@ uv run python scripts/stripe_listen.py
 - **PostgreSQL does the jobs of three services**: search engine, queue and rate limiter. Fewer
   moving parts on free hosting; each would move out (OpenSearch, a queue, Redis) only when load
   asks for it.
+- **Mercado Pago without webhooks on the live demo.** Stripe notifications are signed and
+  delivered to the API; Mercado Pago payments are confirmed by asking its API (while the buyer
+  waits on the checkout page, and every 30 seconds in the background). The webhook handler and
+  its signature check are implemented and tested; turning it on is one secret in the API's
+  environment.
 - **Migrations at container start**, because the free tier has no pre-deploy step. They are
   written expand/contract so the running release keeps working while they apply.
 
