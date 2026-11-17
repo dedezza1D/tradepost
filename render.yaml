@@ -26,8 +26,9 @@ services:
         value: /media
       - key: TP_PAYMENTS_SANDBOX
         value: "true"
+      # Shared with the Cloudflare Pages proxy (PROXY_SECRET there); same value on both sides.
       - key: TP_PROXY_SECRET
-        generateValue: true
+        sync: false
       - key: TP_PUBLIC_ORIGIN
         sync: false
       - key: TP_DATABASE_URL
