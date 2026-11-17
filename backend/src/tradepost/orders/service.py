@@ -54,6 +54,7 @@ from tradepost.payments.base import (
 log = get_logger(__name__)
 
 MAX_LINES = 20
+EXPIRY_GRACE = timedelta(minutes=10)
 MAX_QUANTITY = 10
 
 
@@ -529,6 +530,7 @@ async def close_unpaid(
     Open attempts are checked and cancelled at the provider first: a payment that already went
     through wins over the expiry."""
     provider = registry.get(checkout.provider)
+    still_open = False
     for attempt in list(checkout.attempts):
         if attempt.status not in (AttemptStatus.PENDING, AttemptStatus.FAILED):
             continue
@@ -536,6 +538,17 @@ async def close_unpaid(
         if status.status == AttemptStatus.PENDING:
             status = await provider.cancel(attempt.provider_ref)
         await apply_status(db, registry, attempt, status)
+        still_open = still_open or status.status == AttemptStatus.PENDING
+
+    if (
+        still_open
+        and final == CheckoutStatus.EXPIRED
+        and checkout.expires_at > _now() - EXPIRY_GRACE
+    ):
+        # A payment is being processed and can no longer be cancelled (a Pix under review, for
+        # instance). Keep the stock a little longer; the next tick looks again. After the grace
+        # period the checkout closes anyway and a late payment is refunded.
+        return checkout
 
     checkout = (
         await db.execute(

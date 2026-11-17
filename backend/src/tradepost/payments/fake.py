@@ -40,6 +40,8 @@ class FakeProvider:
         self.transfers: list[dict[str, Any]] = []
         self._ids = itertools.count(1)
         self.fail_next_start = False
+        # Payments the "provider" is processing and will not cancel any more.
+        self.uncancellable: set[str] = set()
 
     def public_config(self) -> dict[str, Any]:
         return {"methods": list(self.methods)}
@@ -79,7 +81,7 @@ class FakeProvider:
 
     async def cancel(self, provider_ref: str) -> StatusResult:
         payment = self.payments[provider_ref]
-        if payment["status"] == AttemptStatus.PENDING:
+        if payment["status"] == AttemptStatus.PENDING and provider_ref not in self.uncancellable:
             payment["status"] = AttemptStatus.CANCELLED
         return await self.get_status(provider_ref)
 

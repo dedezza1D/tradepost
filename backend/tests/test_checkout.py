@@ -297,6 +297,37 @@ async def test_payment_found_at_expiry_wins_over_expiring(
     assert (await buyer.get(f"/api/checkouts/{created['id']}")).json()["status"] == "paid"
 
 
+async def test_expiry_waits_for_a_payment_under_review(app: Any, seller: Any, buyer: Any) -> None:
+    item = await create_listing(seller, stock=1)
+    created = (await checkout(buyer, [(item["id"], 1)])).json()
+    await pay(buyer, created["id"], "pix")
+    ref = next(iter(fake(app).payments))
+    fake(app).uncancellable.add(ref)
+    await sql(app, "UPDATE checkouts SET expires_at = now() - interval '1 minute'")
+
+    await tick(app)
+    status = await sql(app, "SELECT status FROM checkouts WHERE id = :id", id=created["id"])
+    assert status == [("pending",)]  # stock still held
+
+    fake(app).settle(ref)
+    await tick(app)
+    status = await sql(app, "SELECT status FROM checkouts WHERE id = :id", id=created["id"])
+    assert status == [("paid",)]
+    assert fake(app).refunds == []
+
+
+async def test_expiry_gives_up_after_the_grace_period(app: Any, seller: Any, buyer: Any) -> None:
+    item = await create_listing(seller, stock=1)
+    created = (await checkout(buyer, [(item["id"], 1)])).json()
+    await pay(buyer, created["id"], "pix")
+    fake(app).uncancellable.add(next(iter(fake(app).payments)))
+    await sql(app, "UPDATE checkouts SET expires_at = now() - interval '11 minutes'")
+    await tick(app)
+    status = await sql(app, "SELECT status FROM checkouts WHERE id = :id", id=created["id"])
+    assert status == [("expired",)]
+    assert (await buyer.get(f"/api/listings/{item['id']}")).json()["stock"] == 1
+
+
 async def test_a_payment_after_expiry_is_refunded(app: Any, seller: Any, buyer: Any) -> None:
     item = await create_listing(seller)
     created = (await checkout(buyer, [(item["id"], 1)])).json()

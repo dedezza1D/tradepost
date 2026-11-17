@@ -208,11 +208,13 @@ class StripeProvider:
             "amount": amount_cents,
             "currency": currency.lower(),
             "destination": account_id,
-            "transfer_group": group,
         }
         if charge_ref:
-            # Ties the transfer to the charge, so it can happen before the funds settle.
+            # Ties the transfer to the charge, so it can happen before the funds settle. The
+            # charge already carries the checkout's transfer group.
             params["source_transaction"] = charge_ref
+        else:
+            params["transfer_group"] = group
         try:
             transfer = await self._client.v1.transfers.create_async(
                 params, {"idempotency_key": idempotency_key}
