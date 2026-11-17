@@ -1,0 +1,80 @@
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+
+from tradepost import jobs
+from tradepost.catalog.router import router as catalog_router
+from tradepost.config import Settings, get_settings
+from tradepost.db import Database
+from tradepost.deps import DbSession
+from tradepost.errors import install_error_handlers
+from tradepost.identity.router import router as identity_router
+from tradepost.logs import configure_logging
+from tradepost.media.storage import build_storage
+from tradepost.middleware import (
+    OriginCheckMiddleware,
+    ProxyGuardMiddleware,
+    RequestContextMiddleware,
+)
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    configure_logging(json=settings.log_json)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.db = Database(settings)
+        app.state.storage = build_storage(settings)
+        worker: asyncio.Task[None] | None = None
+        if settings.run_worker:
+            worker = asyncio.create_task(jobs.run_worker(app.state.db, settings))
+        try:
+            yield
+        finally:
+            if worker is not None:
+                worker.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await worker
+            await app.state.db.dispose()
+
+    app = FastAPI(
+        title="tradepost",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url="/api/docs",
+        openapi_url="/api/openapi.json",
+        redoc_url=None,
+    )
+    install_error_handlers(app)
+    # Starlette runs the last-added middleware first.
+    app.add_middleware(OriginCheckMiddleware, settings=settings)
+    app.add_middleware(ProxyGuardMiddleware, settings=settings)
+    app.add_middleware(RequestContextMiddleware)
+
+    app.include_router(identity_router)
+    app.include_router(catalog_router)
+
+    @app.get("/healthz", tags=["ops"])
+    async def healthz() -> dict[str, str]:
+        """Liveness: the process is up."""
+        return {"status": "ok"}
+
+    @app.get("/api/readyz", tags=["ops"])
+    async def readyz(db: DbSession) -> dict[str, str]:
+        """Readiness: the database answers."""
+        await db.execute(text("SELECT 1"))
+        return {"status": "ready"}
+
+    if settings.storage_backend == "local":
+        media_dir = Path(settings.media_local_dir)
+        media_dir.mkdir(parents=True, exist_ok=True)
+        app.mount("/media", StaticFiles(directory=media_dir), name="media")
+
+    return app
