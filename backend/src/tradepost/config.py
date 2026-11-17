@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     platform_fee_bps: int = Field(default=1000, ge=0, le=5000)
     reservation_ttl_minutes: int = 15
 
+    # Providers offered at checkout, among those with credentials configured.
+    payment_providers: list[str] = ["stripe", "mercadopago"]
+    # Sandbox conveniences (Mercado Pago auto-approves test Pix). Live keys are always refused.
+    payments_sandbox: bool = True
+
     stripe_secret_key: SecretStr | None = None
     stripe_publishable_key: str | None = None
     stripe_webhook_secret: SecretStr | None = None

@@ -200,9 +200,17 @@ async def listing_out(db: AsyncSession, storage: Storage, listing: Listing) -> L
     seller = await db.get(User, listing.seller_id)
     if seller is None:  # pragma: no cover - FK guarantees it
         raise Forbidden("Seller not found.")
+    from tradepost.reviews.service import seller_rating
+
+    rating_avg, rating_count = await seller_rating(db, seller.id)
     return ListingOut(
         id=listing.id,
-        seller=SellerOut(id=seller.id, display_name=seller.display_name),
+        seller=SellerOut(
+            id=seller.id,
+            display_name=seller.display_name,
+            rating_avg=rating_avg,
+            rating_count=rating_count,
+        ),
         title=listing.title,
         description=listing.description,
         category_slug=listing.category_slug,

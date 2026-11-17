@@ -22,6 +22,9 @@ from tradepost.middleware import (
     ProxyGuardMiddleware,
     RequestContextMiddleware,
 )
+from tradepost.orders.router import router as orders_router
+from tradepost.payments.registry import build_registry
+from tradepost.reviews.service import router as reviews_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -32,9 +35,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.db = Database(settings)
         app.state.storage = build_storage(settings)
+        app.state.payments = build_registry(settings)
+        app.state.jobs = jobs.JobContext(settings=settings, payments=app.state.payments)
         worker: asyncio.Task[None] | None = None
         if settings.run_worker:
-            worker = asyncio.create_task(jobs.run_worker(app.state.db, settings))
+            worker = asyncio.create_task(jobs.run_worker(app.state.db, app.state.jobs))
         try:
             yield
         finally:
@@ -60,6 +65,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(identity_router)
     app.include_router(catalog_router)
+    app.include_router(orders_router)
+    app.include_router(reviews_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:
