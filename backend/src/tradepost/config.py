@@ -41,8 +41,10 @@ class Settings(BaseSettings):
     reservation_ttl_minutes: int = 15
 
     stripe_secret_key: SecretStr | None = None
+    stripe_publishable_key: str | None = None
     stripe_webhook_secret: SecretStr | None = None
     mercadopago_access_token: SecretStr | None = None
+    mercadopago_public_key: str | None = None
     mercadopago_webhook_secret: SecretStr | None = None
 
     run_worker: bool = True
