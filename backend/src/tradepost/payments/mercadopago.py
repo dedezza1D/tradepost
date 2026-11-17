@@ -71,6 +71,12 @@ class MercadoPagoProvider:
     def public_config(self) -> dict[str, Any]:
         return {"public_key": self._public_key}
 
+    async def is_sandbox(self) -> bool:
+        """Mercado Pago test credentials look like live ones (``APP_USR-``); the account they
+        belong to is what tells them apart. Only test users may be used here."""
+        me = await self._request("GET", "/users/me")
+        return "test_user" in (me.get("tags") or [])
+
     async def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         try:
             response = await self._http.request(method, path, **kwargs)

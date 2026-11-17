@@ -1,0 +1,8 @@
+# Cloudflare Pages project: static app + Functions (API proxy, photo serving).
+name = "tradepost"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "tradepost-media"

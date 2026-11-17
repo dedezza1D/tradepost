@@ -1,8 +1,27 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_database_url(url: str) -> str:
+    """Accept the URL a hosting provider hands out (``postgres://...?sslmode=require``) and turn
+    it into what SQLAlchemy's asyncpg driver expects."""
+    parts = urlsplit(url)
+    scheme = parts.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+    query = []
+    for key, value in parse_qsl(parts.query):
+        if key == "sslmode":
+            query.append(("ssl", value))
+        elif key in ("channel_binding",):
+            continue  # libpq-only option
+        else:
+            query.append((key, value))
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 class Settings(BaseSettings):
@@ -54,6 +73,28 @@ class Settings(BaseSettings):
 
     run_worker: bool = True
     log_json: bool = True
+
+    @field_validator("database_url")
+    @classmethod
+    def _database_url(cls, value: str) -> str:
+        return normalize_database_url(value)
+
+    @model_validator(mode="after")
+    def _production_guards(self) -> Self:
+        if self.env == "production":
+            missing = [
+                name
+                for name, ok in (
+                    ("TP_PROXY_SECRET", self.proxy_secret is not None),
+                    ("TP_COOKIE_SECURE=true", self.cookie_secure),
+                    ("TP_PUBLIC_ORIGIN (https)", self.public_origin.startswith("https://")),
+                    ("TP_STORAGE_BACKEND=s3", self.storage_backend == "s3"),
+                )
+                if not ok
+            ]
+            if missing:
+                raise ValueError(f"production settings missing: {', '.join(missing)}")
+        return self
 
 
 @lru_cache

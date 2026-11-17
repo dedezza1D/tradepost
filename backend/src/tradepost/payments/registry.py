@@ -48,3 +48,22 @@ def build_registry(settings: Settings) -> PaymentRegistry:
             continue
         log.warning("payment_provider_disabled", provider=name, reason="missing credentials")
     return PaymentRegistry(providers)
+
+
+async def drop_live_accounts(registry: PaymentRegistry) -> PaymentRegistry:
+    """Remove any provider whose credentials turn out not to be a sandbox account."""
+    kept: list[PaymentProvider] = []
+    for provider in registry.all():
+        check = getattr(provider, "is_sandbox", None)
+        try:
+            sandbox = await check() if check else True
+        except Exception:
+            log.exception("payment_provider_check_failed", provider=provider.name)
+            sandbox = False
+        if sandbox:
+            kept.append(provider)
+        else:
+            log.error(
+                "payment_provider_disabled", provider=provider.name, reason="not a sandbox account"
+            )
+    return PaymentRegistry(kept)

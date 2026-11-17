@@ -23,7 +23,7 @@ from tradepost.middleware import (
     RequestContextMiddleware,
 )
 from tradepost.orders.router import router as orders_router
-from tradepost.payments.registry import build_registry
+from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.reviews.service import router as reviews_router
 
 
@@ -35,7 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.db = Database(settings)
         app.state.storage = build_storage(settings)
-        app.state.payments = build_registry(settings)
+        app.state.payments = await drop_live_accounts(build_registry(settings))
         app.state.jobs = jobs.JobContext(settings=settings, payments=app.state.payments)
         worker: asyncio.Task[None] | None = None
         if settings.run_worker:
