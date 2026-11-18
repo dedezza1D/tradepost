@@ -141,7 +141,15 @@
     "listing_unavailable": "Este anúncio não está disponível.",
     "contact_not_allowed": "Perguntas e respostas são públicas: tire telefone, e-mail, links ou dados de pagamento. Use a conversa privada.",
     "own_listing_question": "Este anúncio é seu.",
-    "seller_only": "Só o vendedor pode fazer isso."
+    "seller_only": "Só o vendedor pode fazer isso.",
+    "variant_required": "Escolha uma opção (tamanho, cor…) primeiro.",
+    "unknown_variant": "Essa opção não está mais disponível.",
+    "duplicate_variant": "Duas opções têm o mesmo nome.",
+    "stock_from_variants": "O estoque vem das opções; edite-as.",
+    "package_required": "O frete calculado precisa do peso e das medidas do pacote.",
+    "destination_required": "Escolha a cidade de entrega.",
+    "shipping_unavailable": "Não é possível calcular o frete deste anúncio agora.",
+    "offer_checkout_open": "Já existe um pagamento em aberto para esta oferta."
   },
   "home": {
     "categories": "Categorias",
@@ -211,7 +219,8 @@
     "edit": "Editar anúncio",
     "description": "Descrição",
     "notFound": "Este anúncio não existe ou não está mais disponível.",
-    "backToListings": "Voltar aos anúncios"
+    "backToListings": "Voltar aos anúncios",
+    "chooseOption": "Escolha uma opção"
   },
   "reviews": {
     "title": "Avaliações",
@@ -334,7 +343,31 @@
       "price": "Informe um preço válido.",
       "shipping": "Informe um frete válido.",
       "stock": "A quantidade precisa ser um número inteiro.",
-      "city": "Escolha a cidade."
+      "city": "Escolha a cidade.",
+      "variants": "Cada opção precisa de nome e de um estoque válido.",
+      "package": "Informe peso (até 30 kg) e medidas (1 a 100 cm) do pacote."
+    },
+    "variants": {
+      "title": "Opções (tamanho, cor…)",
+      "hint": "Opcional. Cada opção tem o próprio estoque; o comprador escolhe uma antes de comprar.",
+      "name": "Opção",
+      "namePlaceholder": "Ex.: M, Azul, 42",
+      "add": "Adicionar opção",
+      "remove": "Remover opção {{name}}"
+    },
+    "shippingTitle": "Frete",
+    "shippingMode": {
+      "fixed": "Valor fixo",
+      "fixedHint": "Você define o frete (ou deixa grátis).",
+      "calculated": "Calcular pelo destino",
+      "calculatedHint": "Pelo peso, tamanho do pacote e distância até o comprador."
+    },
+    "package": {
+      "weight": "Peso (kg)",
+      "length": "Comprimento (cm)",
+      "width": "Largura (cm)",
+      "height": "Altura (cm)",
+      "hint": "De uma unidade já embalada. Pacotes grandes e leves pagam pelo volume."
     }
   },
   "cart": {
@@ -647,5 +680,19 @@
       "attention": "Cancelamentos, atrasos ou notas acima dos limites dos outros níveis."
     },
     "helpFooter": "Sem notas, o nível depende só de vendas, cancelamentos e atrasos. O cálculo é refeito a cada consulta."
+  },
+  "shipping": {
+    "title": "Frete",
+    "to": "Entregar em",
+    "deliverTo": "Entrega",
+    "calculated": "Frete calculado pelo destino",
+    "service": {
+      "standard": "Padrão",
+      "express": "Expresso",
+      "seller": "Frete do vendedor"
+    },
+    "days_one": "{{count}} dia útil",
+    "days_other": "{{count}} dias úteis",
+    "simulated": "Valores de uma tabela de demonstração, por distância e peso."
   }
 }

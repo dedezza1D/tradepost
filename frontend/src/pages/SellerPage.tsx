@@ -51,6 +51,12 @@ function SellerOrder({ order }: { order: Order }) {
         <div><dt className="text-muted">{t('seller.youReceive')}</dt><dd className="font-semibold text-success">{formatMoney(order.seller_net_cents ?? 0)}</dd></div>
       </dl>
       {order.tracking_code && <p className="text-sm text-muted">{t('orders.tracking')}: <code className="font-mono">{order.tracking_code}</code></p>}
+      {order.shipping_service && (
+        <p className="text-sm text-muted">
+          {t(`shipping.service.${order.shipping_service}`)} · {t('shipping.days', { count: order.shipping_days ?? 0 })}
+          {order.ship_to ? ` · ${order.ship_to}` : ''}
+        </p>
+      )}
       {order.status === 'paid' && (
         <div className="space-y-2">
           <form onSubmit={(e: FormEvent) => { e.preventDefault(); ship.mutate() }} className="flex gap-2">

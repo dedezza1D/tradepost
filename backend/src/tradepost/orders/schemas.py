@@ -7,13 +7,18 @@ from pydantic import BaseModel, EmailStr, Field, StringConstraints
 from tradepost.catalog.models import ListingStatus
 from tradepost.orders.models import AttemptStatus, CheckoutStatus, OrderStatus
 
+ShippingService = Literal["standard", "express"]
+
 
 class CartLineIn(BaseModel):
     quantity: int = Field(ge=0, le=10)
+    variant_id: uuid.UUID | None = None
 
 
 class CartLineOut(BaseModel):
     listing_id: uuid.UUID
+    variant_id: uuid.UUID | None = None
+    variant_name: str | None = None
     title: str
     price_cents: int
     shipping_cents: int
@@ -35,9 +40,16 @@ class CartOut(BaseModel):
 class CheckoutLineIn(BaseModel):
     listing_id: uuid.UUID
     quantity: int = Field(ge=1, le=10)
+    variant_id: uuid.UUID | None = None
 
 
-class CheckoutIn(BaseModel):
+class Delivery(BaseModel):
+    # City to ship to (IBGE code); defaults to the buyer's city. Used by calculated shipping.
+    ship_to: int | None = Field(default=None, ge=1_000_000, le=9_999_999)
+    shipping_service: ShippingService = "standard"
+
+
+class CheckoutIn(Delivery):
     provider: str = Field(max_length=20)
     # Either explicit lines ("buy now") or the whole cart.
     items: list[CheckoutLineIn] | None = Field(default=None, max_length=20)
@@ -74,6 +86,7 @@ class PartyOut(BaseModel):
 class OrderItemOut(BaseModel):
     listing_id: uuid.UUID
     title: str
+    variant_name: str | None = None
     unit_price_cents: int
     quantity: int
     shipping_cents: int
@@ -101,6 +114,9 @@ class OrderOut(BaseModel):
     platform_fee_cents: int | None = None  # seller only
     seller_net_cents: int | None = None  # seller only
     tracking_code: str | None
+    shipping_service: str | None = None
+    shipping_days: int | None = None
+    ship_to: str | None = None
     created_at: datetime
     paid_at: datetime | None
     shipped_at: datetime | None
@@ -153,3 +169,36 @@ class PayoutAccountOut(BaseModel):
     provider: str
     connected: bool
     onboarding_url: str | None = None
+
+
+class QuoteIn(Delivery):
+    items: list[CheckoutLineIn] | None = Field(default=None, max_length=20)
+    from_cart: bool = False
+    offer_id: uuid.UUID | None = None
+
+
+class QuoteLineOut(BaseModel):
+    listing_id: uuid.UUID
+    variant_id: uuid.UUID | None
+    title: str
+    variant_name: str | None
+    quantity: int
+    unit_price_cents: int
+    shipping_cents: int
+
+
+class QuoteOrderOut(BaseModel):
+    seller_id: uuid.UUID
+    items: list[QuoteLineOut]
+    items_cents: int
+    shipping_cents: int
+    total_cents: int
+    shipping_service: str | None
+    shipping_days: int | None
+
+
+class QuoteOut(BaseModel):
+    orders: list[QuoteOrderOut]
+    total_cents: int
+    destination: str | None
+    shipping_by_service: dict[str, int]

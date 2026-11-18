@@ -17,16 +17,22 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from sqlalchemy import delete, select, text, update
 from sqlalchemy.dialects.postgresql import distinct_on, insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tradepost.catalog.models import ListingPhoto
+from tradepost.catalog.models import (
+    Listing,
+    ListingPhoto,
+    ListingStatus,
+    ListingVariant,
+    ShippingMode,
+)
 from tradepost.config import Settings
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
+from tradepost.geo.models import Municipality
 from tradepost.identity.models import User
 from tradepost.logs import get_logger
 from tradepost.notifications.service import notify
@@ -51,6 +57,7 @@ from tradepost.payments.base import (
     PaymentRegistry,
     StatusResult,
 )
+from tradepost.shipping import SERVICES, Parcel, Service, distance_km, quoter
 from tradepost.social.blocks import is_blocked
 from tradepost.social.service import alert_low_stock
 
@@ -72,12 +79,14 @@ def order_summary(order: Order) -> dict[str, object]:
 
 EXPIRY_GRACE = timedelta(minutes=10)
 MAX_QUANTITY = 10
+NO_VARIANT = uuid.UUID(int=0)
 
 
 @dataclass(frozen=True)
 class Line:
     listing_id: uuid.UUID
     quantity: int
+    variant_id: uuid.UUID | None = None
 
 
 class OutOfStock(Conflict):
@@ -96,12 +105,24 @@ def platform_fee(items_cents: int, bps: int) -> int:
 # --- cart ---------------------------------------------------------------------------------
 
 
-async def set_cart_item(db: AsyncSession, user: User, listing_id: uuid.UUID, quantity: int) -> None:
+async def set_cart_item(
+    db: AsyncSession,
+    user: User,
+    listing_id: uuid.UUID,
+    quantity: int,
+    variant_id: uuid.UUID | None = None,
+) -> None:
+    key = variant_id or NO_VARIANT
     if quantity <= 0:
         await db.execute(
-            delete(CartItem).where(CartItem.user_id == user.id, CartItem.listing_id == listing_id)
+            delete(CartItem).where(
+                CartItem.user_id == user.id,
+                CartItem.listing_id == listing_id,
+                CartItem.variant_id == key,
+            )
         )
         return
+    await _check_variant(db, Line(listing_id, quantity, variant_id))
     owner = (
         await db.execute(text("SELECT seller_id FROM listings WHERE id = :id"), {"id": listing_id})
     ).scalar_one_or_none()
@@ -111,16 +132,21 @@ async def set_cart_item(db: AsyncSession, user: User, listing_id: uuid.UUID, qua
         raise AppError("You cannot buy your own listing.", code="own_listing")
     count = (
         await db.execute(
-            text("SELECT count(*) FROM cart_items WHERE user_id = :u AND listing_id <> :l"),
-            {"u": user.id, "l": listing_id},
+            text(
+                "SELECT count(*) FROM cart_items WHERE user_id = :u"
+                " AND (listing_id, variant_id) <> (:l, :v)"
+            ),
+            {"u": user.id, "l": listing_id, "v": key},
         )
     ).scalar_one()
     if count >= MAX_LINES:
         raise AppError(f"A cart holds at most {MAX_LINES} items.", code="cart_full")
-    stmt = insert(CartItem).values(user_id=user.id, listing_id=listing_id, quantity=quantity)
+    stmt = insert(CartItem).values(
+        user_id=user.id, listing_id=listing_id, variant_id=key, quantity=quantity
+    )
     await db.execute(
         stmt.on_conflict_do_update(
-            index_elements=[CartItem.user_id, CartItem.listing_id],
+            index_elements=[CartItem.user_id, CartItem.listing_id, CartItem.variant_id],
             set_={"quantity": quantity},
         )
     )
@@ -137,14 +163,22 @@ class AgreedPrice:
     listing_id: uuid.UUID
     quantity: int
     unit_price_cents: int
+    variant_id: uuid.UUID | None = None
 
 
-def _request_hash(provider: str, lines: list[Line], offer_id: uuid.UUID | None = None) -> str:
+def _request_hash(
+    provider: str,
+    lines: list[Line],
+    offer_id: uuid.UUID | None = None,
+    ship_to: int | None = None,
+    service: str = "standard",
+) -> str:
     payload = json.dumps(
         {
             "p": provider,
-            "l": [[str(x.listing_id), x.quantity] for x in lines],
+            "l": [[str(x.listing_id), str(x.variant_id or ""), x.quantity] for x in lines],
             "o": str(offer_id) if offer_id else None,
+            "d": [ship_to, service],
         },
         separators=(",", ":"),
     )
@@ -152,17 +186,18 @@ def _request_hash(provider: str, lines: list[Line], offer_id: uuid.UUID | None =
 
 
 def _normalize(lines: list[Line]) -> list[Line]:
-    merged: dict[uuid.UUID, int] = defaultdict(int)
+    merged: dict[tuple[uuid.UUID, uuid.UUID | None], int] = defaultdict(int)
     for line in lines:
-        merged[line.listing_id] += line.quantity
+        merged[(line.listing_id, line.variant_id)] += line.quantity
     if not merged:
         raise AppError("Nothing to buy.", code="empty_checkout")
     if len(merged) > MAX_LINES:
         raise AppError(f"At most {MAX_LINES} different items per checkout.", code="too_many_items")
     if any(q < 1 or q > MAX_QUANTITY for q in merged.values()):
         raise AppError(f"Quantity must be between 1 and {MAX_QUANTITY}.", code="bad_quantity")
-    # A fixed lock order (by listing id) keeps concurrent checkouts from deadlocking.
-    return [Line(lid, merged[lid]) for lid in sorted(merged)]
+    # A fixed lock order (by listing id, then option) keeps concurrent checkouts from deadlocking.
+    keys = sorted(merged, key=lambda k: (k[0], k[1] or uuid.UUID(int=0)))
+    return [Line(lid, merged[(lid, vid)], vid) for lid, vid in keys]
 
 
 _RESERVE = text(
@@ -177,7 +212,15 @@ _RESERVE = text(
            SELECT 1 FROM blocks
             WHERE (blocker_id = listings.seller_id AND blocked_id = :buyer)
                OR (blocker_id = :buyer AND blocked_id = listings.seller_id))
-    RETURNING seller_id, title, price_cents, shipping_cents, currency, stock
+    RETURNING seller_id, title, stock
+    """
+)
+
+_RESERVE_VARIANT = text(
+    """
+    UPDATE listing_variants SET stock = stock - :q
+     WHERE id = :v AND listing_id = :id AND active AND stock >= :q
+    RETURNING name, stock
     """
 )
 
@@ -191,6 +234,16 @@ _RELEASE = text(
      WHERE id = :id
     """
 )
+
+_RELEASE_VARIANT = text("UPDATE listing_variants SET stock = stock + :q WHERE id = :v")
+
+
+async def release_stock(
+    db: AsyncSession, listing_id: uuid.UUID, variant_id: uuid.UUID | None, quantity: int
+) -> None:
+    if variant_id is not None:
+        await db.execute(_RELEASE_VARIANT, {"v": variant_id, "q": quantity})
+    await db.execute(_RELEASE, {"id": listing_id, "q": quantity})
 
 
 async def _explain_unavailable(db: AsyncSession, listing_id: uuid.UUID, buyer: User) -> AppError:
@@ -213,6 +266,186 @@ async def _explain_unavailable(db: AsyncSession, listing_id: uuid.UUID, buyer: U
     )
 
 
+async def active_variants(
+    db: AsyncSession, listing_id: uuid.UUID
+) -> dict[uuid.UUID, ListingVariant]:
+    rows = await db.execute(
+        select(ListingVariant).where(
+            ListingVariant.listing_id == listing_id, ListingVariant.active.is_(True)
+        )
+    )
+    return {v.id: v for v in rows.scalars()}
+
+
+async def _check_variant(db: AsyncSession, line: Line) -> ListingVariant | None:
+    """A listing with variants needs one chosen; one without must not get one."""
+    variants = await active_variants(db, line.listing_id)
+    if not variants:
+        if line.variant_id is not None:
+            raise AppError("This listing has no options.", code="unknown_variant")
+        return None
+    if line.variant_id is None:
+        raise AppError("Choose an option (size, color…) first.", code="variant_required")
+    variant = variants.get(line.variant_id)
+    if variant is None:
+        raise AppError("That option is no longer available.", code="unknown_variant")
+    return variant
+
+
+# --- pricing ---------------------------------------------------------------------------------
+
+
+@dataclass
+class PricedLine:
+    line: Line
+    listing: Listing
+    variant_name: str | None
+    unit_price_cents: int
+    shipping_cents: int
+    shipping_days: int | None
+
+
+@dataclass
+class SellerDraft:
+    seller_id: uuid.UUID
+    lines: list[PricedLine]
+    shipping_service: str | None
+    shipping_days: int | None
+
+    @property
+    def items_cents(self) -> int:
+        return sum(p.unit_price_cents * p.line.quantity for p in self.lines)
+
+    @property
+    def shipping_cents(self) -> int:
+        return sum(p.shipping_cents for p in self.lines)
+
+    @property
+    def total_cents(self) -> int:
+        return self.items_cents + self.shipping_cents
+
+
+@dataclass
+class Pricing:
+    drafts: list[SellerDraft]
+    destination: Municipality | None
+    # Shipping of the whole checkout under each service, for the service picker.
+    shipping_by_service: dict[str, int]
+
+    @property
+    def total_cents(self) -> int:
+        return sum(d.total_cents for d in self.drafts)
+
+
+async def _destination(
+    db: AsyncSession, buyer: User, ship_to: int | None, needed: bool
+) -> Municipality | None:
+    code = ship_to or buyer.municipality_id
+    if code is None:
+        if needed:
+            raise AppError("Choose where to ship to.", code="destination_required")
+        return None
+    city = await db.get(Municipality, code)
+    if city is None:
+        raise AppError("Unknown city.", code="unknown_city")
+    return city
+
+
+def _line_shipping(
+    listing: Listing,
+    quantity: int,
+    dest: Municipality | None,
+    origin: Municipality | None,
+    service: Service,
+) -> tuple[int, int | None]:
+    if listing.shipping_mode != ShippingMode.CALCULATED:
+        return listing.shipping_cents, None
+    assert dest is not None
+    if origin is None or listing.weight_grams is None:
+        raise AppError("This listing cannot be shipped right now.", code="shipping_unavailable")
+    parcel = Parcel(
+        listing.weight_grams, listing.length_cm or 1, listing.width_cm or 1, listing.height_cm or 1
+    )
+    km = distance_km(origin.lat, origin.lng, dest.lat, dest.lng)
+    quote = next(q for q in quoter.quote(km, parcel, quantity) if q.service == service)
+    return quote.price_cents, quote.days
+
+
+async def price_lines(
+    db: AsyncSession,
+    buyer: User,
+    items: list[tuple[Line, Listing, str | None]],
+    *,
+    ship_to: int | None,
+    service: Service,
+    agreed: AgreedPrice | None,
+) -> Pricing:
+    """Prices, shipping and totals per seller. Used to quote and, after the stock is reserved,
+    to create the orders: the buyer sees exactly what will be charged."""
+    calculated = any(listing.shipping_mode == ShippingMode.CALCULATED for _, listing, _ in items)
+    dest = await _destination(db, buyer, ship_to, calculated)
+    origins: dict[int, Municipality | None] = {}
+    for _, listing, _ in items:
+        if listing.municipality_id is not None and listing.municipality_id not in origins:
+            origins[listing.municipality_id] = await db.get(Municipality, listing.municipality_id)
+
+    def build(svc: Service) -> list[SellerDraft]:
+        drafts: dict[uuid.UUID, SellerDraft] = {}
+        for line, listing, variant_name in items:
+            origin = origins.get(listing.municipality_id) if listing.municipality_id else None
+            shipping, days = _line_shipping(listing, line.quantity, dest, origin, svc)
+            unit = (
+                agreed.unit_price_cents
+                if agreed is not None and line.listing_id == agreed.listing_id
+                else listing.price_cents
+            )
+            draft = drafts.setdefault(
+                listing.seller_id, SellerDraft(listing.seller_id, [], None, None)
+            )
+            draft.lines.append(PricedLine(line, listing, variant_name, unit, shipping, days))
+            if days is not None:
+                draft.shipping_service = svc
+                draft.shipping_days = max(draft.shipping_days or 0, days)
+        return list(drafts.values())
+
+    by_service: dict[str, int] = {
+        svc: sum(d.shipping_cents for d in build(svc)) for svc in (SERVICES if calculated else ())
+    }
+    return Pricing(drafts=build(service), destination=dest, shipping_by_service=by_service)
+
+
+async def quote_checkout(
+    db: AsyncSession,
+    buyer: User,
+    lines: list[Line],
+    *,
+    ship_to: int | None,
+    service: Service,
+    agreed: AgreedPrice | None = None,
+) -> Pricing:
+    """What a checkout would cost, without reserving anything."""
+    if agreed is not None:
+        lines = [Line(agreed.listing_id, agreed.quantity, agreed.variant_id)]
+    lines = _normalize(lines)
+    items: list[tuple[Line, Listing, str | None]] = []
+    for line in lines:
+        listing = await db.get(Listing, line.listing_id)
+        if listing is None or listing.status != ListingStatus.ACTIVE:
+            raise await _explain_unavailable(db, line.listing_id, buyer)
+        if listing.seller_id == buyer.id or await is_blocked(db, buyer.id, listing.seller_id):
+            raise await _explain_unavailable(db, line.listing_id, buyer)
+        variant = await _check_variant(db, line)
+        available = variant.stock if variant else listing.stock
+        if available < line.quantity:
+            raise OutOfStock(
+                "Not enough stock for one of the items.",
+                listing_id=str(line.listing_id),
+                available=available,
+            )
+        items.append((line, listing, variant.name if variant else None))
+    return await price_lines(db, buyer, items, ship_to=ship_to, service=service, agreed=agreed)
+
+
 async def create_checkout(
     db: AsyncSession,
     settings: Settings,
@@ -222,16 +455,21 @@ async def create_checkout(
     lines: list[Line],
     idempotency_key: str,
     agreed: AgreedPrice | None = None,
+    *,
+    ship_to: int | None = None,
+    service: Service = "standard",
 ) -> tuple[Checkout, bool]:
     """Reserve stock and open a checkout. Returns (checkout, created).
 
-    With ``agreed``, the checkout pays an accepted offer: exactly that listing and quantity,
-    at the agreed unit price instead of the listed one."""
+    With ``agreed``, the checkout pays an accepted offer: exactly that listing, option and
+    quantity, at the agreed unit price instead of the listed one."""
     registry.get(provider)
     if agreed is not None:
-        lines = [Line(agreed.listing_id, agreed.quantity)]
+        lines = [Line(agreed.listing_id, agreed.quantity, agreed.variant_id)]
     lines = _normalize(lines)
-    request_hash = _request_hash(provider, lines, agreed.offer_id if agreed else None)
+    request_hash = _request_hash(
+        provider, lines, agreed.offer_id if agreed else None, ship_to, service
+    )
 
     existing = (
         await db.execute(
@@ -248,8 +486,22 @@ async def create_checkout(
             )
         return existing, False
 
-    by_seller: dict[uuid.UUID, list[tuple[Line, Any]]] = defaultdict(list)
+    # Reserve in a fixed order (listing, then option): concurrent checkouts never deadlock.
+    items: list[tuple[Line, Listing, str | None]] = []
     for line in lines:
+        variant_name: str | None = None
+        if await _check_variant(db, line) is not None:
+            taken = (
+                await db.execute(
+                    _RESERVE_VARIANT,
+                    {"v": line.variant_id, "id": line.listing_id, "q": line.quantity},
+                )
+            ).one_or_none()
+            if taken is None:
+                raise OutOfStock(
+                    "Not enough stock for this option.", listing_id=str(line.listing_id)
+                )
+            variant_name = taken.name
         row = (
             await db.execute(
                 _RESERVE, {"id": line.listing_id, "q": line.quantity, "buyer": buyer.id}
@@ -258,64 +510,65 @@ async def create_checkout(
         if row is None:
             # The request transaction rolls back, releasing whatever was reserved before.
             raise await _explain_unavailable(db, line.listing_id, buyer)
-        by_seller[row.seller_id].append((line, row))
         if row.stock == 1:
             await alert_low_stock(db, line.listing_id, row.title, exclude=buyer.id)
+        listing = await db.get(Listing, line.listing_id)
+        assert listing is not None
+        items.append((line, listing, variant_name))
 
+    pricing = await price_lines(db, buyer, items, ship_to=ship_to, service=service, agreed=agreed)
     checkout = Checkout(
         id=uuid.uuid4(),
         buyer_id=buyer.id,
         provider=provider,
-        total_cents=0,
+        total_cents=pricing.total_cents,
         idempotency_key=idempotency_key,
         request_hash=request_hash,
         expires_at=_now() + timedelta(minutes=settings.reservation_ttl_minutes),
         offer_id=agreed.offer_id if agreed else None,
     )
-
-    def unit_price(line: Line, row: Any) -> int:
-        if agreed is not None and line.listing_id == agreed.listing_id:
-            return agreed.unit_price_cents
-        return int(row.price_cents)
-
+    dest = pricing.destination
     thumbs = await _thumbs(db, [line.listing_id for line in lines])
     orders: list[Order] = []
     children: list[OrderItem | OrderEvent | StockReservation] = []
-    total = 0
-    for seller_id, rows in by_seller.items():
-        items_cents = sum(unit_price(line, r) * line.quantity for line, r in rows)
-        shipping_cents = sum(r.shipping_cents for _, r in rows)
+    for draft in pricing.drafts:
         order = Order(
             id=uuid.uuid4(),
             checkout_id=checkout.id,
             buyer_id=buyer.id,
-            seller_id=seller_id,
-            items_cents=items_cents,
-            shipping_cents=shipping_cents,
-            total_cents=items_cents + shipping_cents,
-            platform_fee_cents=platform_fee(items_cents, settings.platform_fee_bps),
+            seller_id=draft.seller_id,
+            items_cents=draft.items_cents,
+            shipping_cents=draft.shipping_cents,
+            total_cents=draft.total_cents,
+            platform_fee_cents=platform_fee(draft.items_cents, settings.platform_fee_bps),
+            shipping_service=draft.shipping_service,
+            shipping_days=draft.shipping_days,
+            ship_to=f"{dest.name} - {dest.state}" if dest and draft.shipping_service else None,
         )
-        total += order.total_cents
         orders.append(order)
-        for line, r in rows:
+        for priced in draft.lines:
             children.append(
                 OrderItem(
                     order_id=order.id,
-                    listing_id=line.listing_id,
-                    title=r.title,
-                    unit_price_cents=unit_price(line, r),
-                    quantity=line.quantity,
-                    shipping_cents=r.shipping_cents,
-                    thumb_key=thumbs.get(line.listing_id),
+                    listing_id=priced.line.listing_id,
+                    variant_id=priced.line.variant_id,
+                    title=priced.listing.title,
+                    variant_name=priced.variant_name,
+                    unit_price_cents=priced.unit_price_cents,
+                    quantity=priced.line.quantity,
+                    shipping_cents=priced.shipping_cents,
+                    thumb_key=thumbs.get(priced.line.listing_id),
                 )
             )
         children.append(
             OrderEvent(order_id=order.id, to_status=OrderStatus.AWAITING_PAYMENT, actor="buyer")
         )
-    checkout.total_cents = total
     children += [
         StockReservation(
-            checkout_id=checkout.id, listing_id=line.listing_id, quantity=line.quantity
+            checkout_id=checkout.id,
+            listing_id=line.listing_id,
+            variant_id=line.variant_id,
+            quantity=line.quantity,
         )
         for line in lines
     ]
@@ -638,7 +891,9 @@ async def close_unpaid(
     ).scalars()
     now = _now()
     for reservation in sorted(reservations, key=lambda r: r.listing_id):
-        await db.execute(_RELEASE, {"id": reservation.listing_id, "q": reservation.quantity})
+        await release_stock(
+            db, reservation.listing_id, reservation.variant_id, reservation.quantity
+        )
         reservation.released_at = now
     checkout.status = final
     checkout.closed_at = now
@@ -709,5 +964,5 @@ async def refund_order(
     await _ledger(db, order, LedgerKind.FEE_REVERSAL, order.platform_fee_cents, None)
     await notify(db, order.buyer_id, "order_refunded", order_summary(order))
     for item in order.items:
-        await db.execute(_RELEASE, {"id": item.listing_id, "q": item.quantity})
+        await release_stock(db, item.listing_id, item.variant_id, item.quantity)
     return order

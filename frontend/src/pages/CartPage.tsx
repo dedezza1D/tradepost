@@ -14,8 +14,10 @@ export function CartPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const update = useMutation({
-    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
-      api<void>(`/api/cart/${id}`, { method: 'PUT', body: json({ quantity }) }),
+    mutationFn: ({ id, quantity, variant }: { id: string; quantity: number; variant: string | null }) =>
+      quantity > 0
+        ? api<void>(`/api/cart/${id}`, { method: 'PUT', body: json({ quantity, variant_id: variant }) })
+        : api<void>(`/api/cart/${id}${variant ? `?variant_id=${variant}` : ''}`, { method: 'DELETE' }),
     onSettled: () => qc.invalidateQueries({ queryKey: ['cart'] }),
   })
 
@@ -41,6 +43,7 @@ export function CartPage() {
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <Link to={`/listings/${item.listing_id}`} className="line-clamp-2 text-sm font-semibold hover:underline">{item.title}</Link>
+                    {item.variant_name && <span className="text-xs text-muted">{item.variant_name}</span>}
                     <span className="text-xs text-muted">{t('cart.soldBy', { name: item.seller_name })}</span>
                     {short && (
                       <span className="text-xs font-semibold text-danger">
@@ -51,11 +54,11 @@ export function CartPage() {
                       <div className="flex items-center gap-2">
                         <label className="sr-only" htmlFor={`qty-${item.listing_id}`}>{t('listing.quantity')}</label>
                         <select id={`qty-${item.listing_id}`} className="input min-h-9 w-20 py-1" value={item.quantity}
-                          onChange={(e) => update.mutate({ id: item.listing_id, quantity: Number(e.target.value) })}>
+                          onChange={(e) => update.mutate({ id: item.listing_id, quantity: Number(e.target.value), variant: item.variant_id })}>
                           {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <option key={n}>{n}</option>)}
                         </select>
                         <button type="button" className="btn-ghost min-h-9 px-2 text-danger" aria-label={t('cart.remove', { title: item.title })}
-                          onClick={() => update.mutate({ id: item.listing_id, quantity: 0 })}>
+                          onClick={() => update.mutate({ id: item.listing_id, quantity: 0, variant: item.variant_id })}>
                           <Icon name="trash" size={18} />
                         </button>
                       </div>

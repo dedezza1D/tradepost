@@ -120,7 +120,7 @@ function Summary({ checkout }: { checkout: Checkout }) {
         <div key={order.id} className="space-y-1.5 p-4">
           <p className="text-xs text-muted">{t('cart.soldBy', { name: order.seller.display_name })}</p>
           {order.items.map((item) => (
-            <div key={item.listing_id} className="flex justify-between gap-2"><span>{item.quantity} × {item.title}</span><span>{formatMoney(item.unit_price_cents * item.quantity)}</span></div>
+            <div key={`${item.listing_id}-${item.variant_name ?? ''}`} className="flex justify-between gap-2"><span>{item.quantity} × {item.title}{item.variant_name ? ` (${item.variant_name})` : ''}</span><span>{formatMoney(item.unit_price_cents * item.quantity)}</span></div>
           ))}
           <div className="flex justify-between text-muted"><span>{t('cart.shipping')}</span><span>{formatMoney(order.shipping_cents)}</span></div>
         </div>

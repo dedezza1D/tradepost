@@ -11,7 +11,7 @@ import {
   useSendMessage,
   type OfferAction,
 } from '../api/chat'
-import type { ChatMessage, Conversation, Offer } from '../api/types'
+import type { ChatMessage, Conversation, Offer, Variant } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { ReportSheet } from '../components/ReportSheet'
 import { useToggleBlock } from '../api/social'
@@ -107,6 +107,9 @@ function AmountSheet({
   onSubmit,
   pending,
   error,
+  variants = [],
+  variant = null,
+  onVariant,
 }: {
   open: boolean
   onClose: () => void
@@ -116,11 +119,14 @@ function AmountSheet({
   onSubmit: (cents: number) => void
   pending: boolean
   error: unknown
+  variants?: Variant[]
+  variant?: string | null
+  onVariant?: (id: string) => void
 }) {
   const { t } = useTranslation()
   const [value, setValue] = useState(centsToInput(initial))
   const cents = parseMoney(value)
-  const invalid = cents === null || cents <= 0 || cents > max
+  const invalid = cents === null || cents <= 0 || cents > max || (variants.length > 0 && !variant)
   function submit(e: FormEvent) {
     e.preventDefault()
     if (!invalid && cents !== null) onSubmit(cents)
@@ -128,6 +134,15 @@ function AmountSheet({
   return (
     <Sheet open={open} onClose={onClose} title={title}>
       <form onSubmit={submit} className="space-y-4">
+        {variants.length > 0 && (
+          <div>
+            <label className="label" htmlFor="offer-variant">{t('listing.chooseOption')}</label>
+            <select id="offer-variant" className="input" value={variant ?? ''} onChange={(e) => onVariant?.(e.target.value)}>
+              <option value="" disabled>—</option>
+              {variants.map((v) => <option key={v.id} value={v.id} disabled={v.stock === 0}>{v.name}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label className="label" htmlFor="offer-amount">{t('chat.offer.amount')}</label>
           <div className="relative">
@@ -297,6 +312,7 @@ export function ConversationPage() {
   const [params, setParams] = useSearchParams()
   // Arriving from "Make an offer" on the listing page opens the offer form.
   const [offering, setOffering] = useState(params.get('offer') === '1')
+  const [offerVariant, setOfferVariant] = useState<string | null>(params.get('variant'))
   const [countering, setCountering] = useState<Offer | null>(null)
   const bottom = useRef<HTMLDivElement>(null)
 
@@ -427,7 +443,8 @@ export function ConversationPage() {
       {offering && canOffer && (
         <AmountSheet open onClose={() => { setOffering(false); setParams({}, { replace: true }) }} title={t('chat.offer.make')} max={c.listing.price_cents}
           initial={Math.round((c.listing.price_cents * 0.9) / 100) * 100} pending={make.isPending} error={make.error}
-          onSubmit={(cents) => make.mutate(cents, { onSuccess: () => { setOffering(false); setParams({}, { replace: true }) } })} />
+          variants={c.listing.variants} variant={offerVariant} onVariant={setOfferVariant}
+          onSubmit={(cents) => make.mutate({ amount_cents: cents, variant_id: offerVariant }, { onSuccess: () => { setOffering(false); setParams({}, { replace: true }) } })} />
       )}
       {countering && (
         <AmountSheet open onClose={() => setCountering(null)} title={t('chat.offer.counterTitle')} max={c.listing.price_cents}

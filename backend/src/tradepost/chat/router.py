@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import select
 
-from tradepost.catalog.models import Listing, ListingPhoto, ListingStatus
+from tradepost.catalog.models import Listing, ListingPhoto, ListingStatus, ListingVariant
 from tradepost.chat import service
 from tradepost.chat.models import Conversation, Message, MessageKind, Offer, OfferStatus
 from tradepost.deps import DbSession
@@ -14,6 +14,7 @@ from tradepost.identity.models import User
 from tradepost.identity.sessions import CurrentUser
 from tradepost.media.storage import Storage
 from tradepost.orders.models import CheckoutStatus
+from tradepost.orders.service import active_variants
 from tradepost.security.ratelimit import rate_limit
 from tradepost.social.blocks import is_blocked
 
@@ -43,10 +44,17 @@ class MessageIn(BaseModel):
 class OfferIn(BaseModel):
     amount_cents: Amount
     quantity: int = Field(default=1, ge=1, le=10)
+    variant_id: uuid.UUID | None = None
 
 
 class CounterIn(BaseModel):
     amount_cents: Amount
+
+
+class VariantSummary(BaseModel):
+    id: uuid.UUID
+    name: str
+    stock: int
 
 
 class ListingSummary(BaseModel):
@@ -55,6 +63,7 @@ class ListingSummary(BaseModel):
     price_cents: int
     status: ListingStatus
     thumb_url: str | None
+    variants: list[VariantSummary] = []
 
 
 class PersonOut(BaseModel):
@@ -87,6 +96,8 @@ class OfferOut(BaseModel):
     proposer_id: uuid.UUID
     amount_cents: int
     quantity: int
+    variant_id: uuid.UUID | None
+    variant_name: str | None
     status: OfferStatus
     expires_at: datetime
     pay_by: datetime | None
@@ -146,6 +157,10 @@ async def _conversation_out(
             price_cents=listing.price_cents,
             status=listing.status,
             thumb_url=storage.url(thumb) if thumb else None,
+            variants=[
+                VariantSummary(id=v.id, name=v.name, stock=v.stock)
+                for v in (await active_variants(db, listing.id)).values()
+            ],
         ),
         other=PersonOut(
             id=other.id,
@@ -166,11 +181,14 @@ async def _offer_out(db: DbSession, offer: Offer) -> OfferOut:
     checkouts = await service.offer_checkouts(db, offer.id)
     paid = any(c.status == CheckoutStatus.PAID for c in checkouts)
     open_checkout = next((c for c in checkouts if c.status == CheckoutStatus.PENDING), None)
+    variant = await db.get(ListingVariant, offer.variant_id) if offer.variant_id else None
     return OfferOut(
         id=offer.id,
         proposer_id=offer.proposer_id,
         amount_cents=offer.amount_cents,
         quantity=offer.quantity,
+        variant_id=offer.variant_id,
+        variant_name=variant.name if variant else None,
         status=offer.status,
         expires_at=offer.expires_at,
         pay_by=service.pay_by(offer),
@@ -300,7 +318,9 @@ async def make_offer(
     conversation_id: uuid.UUID, body: OfferIn, user: CurrentUser, db: DbSession
 ) -> OfferOut:
     conversation = await service.get(db, conversation_id, user)
-    offer = await service.make_offer(db, conversation, user, body.amount_cents, body.quantity)
+    offer = await service.make_offer(
+        db, conversation, user, body.amount_cents, body.quantity, body.variant_id
+    )
     return await _offer_out(db, offer)
 
 

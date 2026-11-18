@@ -14,6 +14,8 @@ export type AttemptStatus = 'pending' | 'succeeded' | 'failed' | 'cancelled' | '
 
 export interface CartLine {
   listing_id: string
+  variant_id: string | null
+  variant_name: string | null
   title: string
   price_cents: number
   shipping_cents: number
@@ -40,6 +42,7 @@ export interface Party {
 export interface OrderItem {
   listing_id: string
   title: string
+  variant_name: string | null
   unit_price_cents: number
   quantity: number
   shipping_cents: number
@@ -67,6 +70,9 @@ export interface Order {
   platform_fee_cents: number | null
   seller_net_cents: number | null
   tracking_code: string | null
+  shipping_service: string | null
+  shipping_days: number | null
+  ship_to: string | null
   created_at: string
   paid_at: string | null
   shipped_at: string | null

@@ -45,12 +45,12 @@ export function OrderProgress({ status }: { status: Order['status'] }) {
 export function OrderItems({ order }: { order: Order }) {
   return (
     <ul className="space-y-2">
-      {order.items.map((item) => (
-        <li key={item.listing_id} className="flex items-center gap-3">
+      {order.items.map((item, i) => (
+        <li key={`${item.listing_id}-${i}`} className="flex items-center gap-3">
           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-2">
             {item.thumb_url && <img src={item.thumb_url} alt="" className="h-full w-full object-cover" />}
           </div>
-          <Link to={`/listings/${item.listing_id}`} className="line-clamp-2 flex-1 text-sm hover:underline">{item.quantity} × {item.title}</Link>
+          <Link to={`/listings/${item.listing_id}`} className="line-clamp-2 flex-1 text-sm hover:underline">{item.quantity} × {item.title}{item.variant_name ? ` (${item.variant_name})` : ''}</Link>
           <span className="text-sm font-semibold">{formatMoney(item.unit_price_cents * item.quantity)}</span>
         </li>
       ))}
@@ -109,6 +109,12 @@ function BuyerOrder({ order }: { order: Order }) {
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3 text-sm">
         <span>{t('cart.total')} <strong>{formatMoney(order.total_cents)}</strong></span>
         {order.tracking_code && <span className="text-muted">{t('orders.tracking')}: <code className="font-mono">{order.tracking_code}</code></span>}
+        {order.shipping_service && (
+          <span className="text-muted">
+            {t(`shipping.service.${order.shipping_service}`)} · {t('shipping.days', { count: order.shipping_days ?? 0 })}
+            {order.ship_to ? ` · ${order.ship_to}` : ''}
+          </span>
+        )}
         {order.status === 'shipped' && (
           <button className="btn-primary" onClick={() => deliver.mutate()} disabled={deliver.isPending}>{t('orders.received')}</button>
         )}

@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     Computed,
     DateTime,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -29,6 +31,11 @@ class ListingStatus(enum.StrEnum):
     PAUSED = "paused"
     SOLD_OUT = "sold_out"
     REMOVED = "removed"
+
+
+class ShippingMode(enum.StrEnum):
+    FIXED = "fixed"  # the seller's price, shipping_cents
+    CALCULATED = "calculated"  # quoted from weight, size and distance
 
 
 class ItemCondition(enum.StrEnum):
@@ -86,6 +93,17 @@ class Listing(TimestampMixin, Base):
     # Kept in step with ``saves`` by plain UPDATEs, which leave ``version`` alone: a save must
     # not make the seller's open edit form stale.
     save_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    shipping_mode: Mapped[ShippingMode] = mapped_column(
+        Enum(ShippingMode, name="shipping_mode", values_callable=lambda e: [m.value for m in e]),
+        nullable=False,
+        default=ShippingMode.FIXED,
+        server_default="fixed",
+    )
+    # Package of one unit, required for calculated shipping.
+    weight_grams: Mapped[int | None] = mapped_column(Integer)
+    length_cm: Mapped[int | None] = mapped_column(SmallInteger)
+    width_cm: Mapped[int | None] = mapped_column(SmallInteger)
+    height_cm: Mapped[int | None] = mapped_column(SmallInteger)
     status: Mapped[ListingStatus] = mapped_column(
         Enum(ListingStatus, name="listing_status", values_callable=lambda e: [m.value for m in e]),
         nullable=False,
@@ -106,6 +124,33 @@ class Listing(TimestampMixin, Base):
     photos: Mapped[list["ListingPhoto"]] = relationship(
         order_by="ListingPhoto.position", lazy="selectin", cascade="all, delete-orphan"
     )
+
+
+class ListingVariant(Base):
+    """A size, color or other option with its own stock. When a listing has active variants,
+    its ``stock`` is their sum, kept in step by every write."""
+
+    __tablename__ = "listing_variants"
+    __table_args__ = (
+        CheckConstraint("stock >= 0", name="variant_stock_non_negative"),
+        Index(
+            "uq_listing_variants_name",
+            "listing_id",
+            "name",
+            unique=True,
+            postgresql_where=text("active"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    listing_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("listings.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(40), nullable=False)
+    stock: Mapped[int] = mapped_column(Integer, nullable=False)
+    position: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    # Removed variants stay for the orders that point at them.
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
 class ListingPhoto(TimestampMixin, Base):

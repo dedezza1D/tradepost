@@ -22,6 +22,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -75,6 +76,10 @@ class CartItem(Base):
     )
     listing_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("listings.id", ondelete="CASCADE"), primary_key=True
+    )
+    # The nil UUID stands for "no variant", so the key never contains NULL.
+    variant_id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("'00000000-0000-0000-0000-000000000000'")
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     added_at: Mapped[datetime] = mapped_column(
@@ -138,6 +143,10 @@ class Order(TimestampMixin, Base):
     total_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     platform_fee_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     tracking_code: Mapped[str | None] = mapped_column(String(60))
+    # Calculated shipping: service, promised delivery time and destination city.
+    shipping_service: Mapped[str | None] = mapped_column(String(20))
+    shipping_days: Mapped[int | None] = mapped_column(SmallInteger)
+    ship_to: Mapped[str | None] = mapped_column(String(90))
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -159,8 +168,10 @@ class OrderItem(Base):
         ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True
     )
     listing_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("listings.id"), nullable=False)
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("listing_variants.id"))
     # Snapshot: what the buyer saw when paying, whatever the seller edits later.
     title: Mapped[str] = mapped_column(String(120), nullable=False)
+    variant_name: Mapped[str | None] = mapped_column(String(40))
     unit_price_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     shipping_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
@@ -193,6 +204,7 @@ class StockReservation(Base):
         ForeignKey("checkouts.id", ondelete="CASCADE"), nullable=False, index=True
     )
     listing_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("listings.id"), nullable=False)
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("listing_variants.id"))
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

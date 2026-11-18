@@ -1,6 +1,6 @@
 """Imports every model so ``Base.metadata`` is complete (Alembic and tests rely on it)."""
 
-from tradepost.catalog.models import Category, Listing, ListingPhoto
+from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingVariant
 from tradepost.chat.models import Conversation, Message, Offer
 from tradepost.db import Base
 from tradepost.geo.models import Municipality
@@ -34,6 +34,7 @@ __all__ = [
     "LedgerEntry",
     "Listing",
     "ListingPhoto",
+    "ListingVariant",
     "Message",
     "Municipality",
     "Notification",

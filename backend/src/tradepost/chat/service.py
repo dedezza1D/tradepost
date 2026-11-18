@@ -300,11 +300,16 @@ async def messages(
 # --- offers ----------------------------------------------------------------------------------
 
 
-async def _offer_listing(db: AsyncSession, conversation: Conversation, quantity: int) -> Listing:
+async def _offer_listing(
+    db: AsyncSession, conversation: Conversation, quantity: int, variant_id: uuid.UUID | None
+) -> Listing:
     listing = await db.get(Listing, conversation.listing_id)
     if listing is None or listing.status != ListingStatus.ACTIVE:
         raise Conflict("This listing is not available.", code="listing_unavailable")
-    if quantity > listing.stock:
+    from tradepost.orders.service import Line, _check_variant
+
+    variant = await _check_variant(db, Line(listing.id, quantity, variant_id))
+    if quantity > (variant.stock if variant else listing.stock):
         raise Conflict("Not enough stock for this quantity.", code="out_of_stock")
     return listing
 
@@ -315,14 +320,19 @@ def _check_amount(listing: Listing, amount_cents: int) -> None:
 
 
 async def make_offer(
-    db: AsyncSession, conversation: Conversation, user: User, amount_cents: int, quantity: int
+    db: AsyncSession,
+    conversation: Conversation,
+    user: User,
+    amount_cents: int,
+    quantity: int,
+    variant_id: uuid.UUID | None = None,
 ) -> Offer:
     if conversation.role_of(user.id) != "buyer":
         raise Forbidden("Only the buyer opens an offer; the seller counters.", code="buyer_only")
     await _ensure_not_blocked(db, conversation)
-    listing = await _offer_listing(db, conversation, quantity)
+    listing = await _offer_listing(db, conversation, quantity, variant_id)
     _check_amount(listing, amount_cents)
-    offer = await _insert_offer(db, conversation, user, amount_cents, quantity)
+    offer = await _insert_offer(db, conversation, user, amount_cents, quantity, variant_id)
     await _append(db, conversation, user.id, MessageKind.OFFER, offer=offer)
     await _tell(
         db,
@@ -335,13 +345,19 @@ async def make_offer(
 
 
 async def _insert_offer(
-    db: AsyncSession, conversation: Conversation, user: User, amount_cents: int, quantity: int
+    db: AsyncSession,
+    conversation: Conversation,
+    user: User,
+    amount_cents: int,
+    quantity: int,
+    variant_id: uuid.UUID | None = None,
 ) -> Offer:
     offer = Offer(
         conversation_id=conversation.id,
         proposer_id=user.id,
         amount_cents=amount_cents,
         quantity=quantity,
+        variant_id=variant_id,
         expires_at=_now() + OFFER_TTL,
     )
     try:
@@ -437,10 +453,12 @@ async def decline(db: AsyncSession, offer_id: uuid.UUID, user: User) -> Offer:
 async def counter(db: AsyncSession, offer_id: uuid.UUID, user: User, amount_cents: int) -> Offer:
     offer, conversation = await get_offer(db, offer_id, user)
     await _ensure_not_blocked(db, conversation)
-    listing = await _offer_listing(db, conversation, offer.quantity)
+    listing = await _offer_listing(db, conversation, offer.quantity, offer.variant_id)
     _check_amount(listing, amount_cents)
     await _transition(db, offer, user, OfferStatus.COUNTERED, by_proposer=False)
-    new = await _insert_offer(db, conversation, user, amount_cents, offer.quantity)
+    new = await _insert_offer(
+        db, conversation, user, amount_cents, offer.quantity, offer.variant_id
+    )
     await _append(db, conversation, user.id, MessageKind.OFFER, offer=new)
     await _tell(
         db,
@@ -499,6 +517,7 @@ class OfferTerms:
     listing_id: uuid.UUID
     quantity: int
     unit_price_cents: int
+    variant_id: uuid.UUID | None = None
 
 
 async def offer_checkouts(db: AsyncSession, offer_id: uuid.UUID) -> list[Checkout]:
@@ -543,4 +562,5 @@ async def checkout_terms(
         listing_id=conversation.listing_id,
         quantity=offer.quantity,
         unit_price_cents=offer.amount_cents,
+        variant_id=offer.variant_id,
     )

@@ -141,7 +141,15 @@
     "listing_unavailable": "This listing is not available.",
     "contact_not_allowed": "Questions and answers are public: remove phone numbers, emails, links or payment details. Use the private chat.",
     "own_listing_question": "This is your own listing.",
-    "seller_only": "Only the seller can do this."
+    "seller_only": "Only the seller can do this.",
+    "variant_required": "Choose an option (size, color…) first.",
+    "unknown_variant": "That option is no longer available.",
+    "duplicate_variant": "Two options have the same name.",
+    "stock_from_variants": "Stock comes from the options; edit them instead.",
+    "package_required": "Calculated shipping needs the package weight and size.",
+    "destination_required": "Choose the delivery city.",
+    "shipping_unavailable": "Shipping for this listing cannot be calculated right now.",
+    "offer_checkout_open": "There is already an open payment for this offer."
   },
   "home": {
     "categories": "Categories",
@@ -211,7 +219,8 @@
     "edit": "Edit listing",
     "description": "Description",
     "notFound": "This listing does not exist or is no longer available.",
-    "backToListings": "Back to listings"
+    "backToListings": "Back to listings",
+    "chooseOption": "Choose an option"
   },
   "reviews": {
     "title": "Reviews",
@@ -334,7 +343,31 @@
       "price": "Enter a valid price.",
       "shipping": "Enter a valid shipping cost.",
       "stock": "Quantity must be a whole number.",
-      "city": "Choose the city."
+      "city": "Choose the city.",
+      "variants": "Each option needs a name and a valid stock.",
+      "package": "Enter the package weight (up to 30 kg) and size (1 to 100 cm)."
+    },
+    "variants": {
+      "title": "Options (size, color…)",
+      "hint": "Optional. Each option has its own stock; buyers pick one before buying.",
+      "name": "Option",
+      "namePlaceholder": "e.g. M, Blue, 42",
+      "add": "Add option",
+      "remove": "Remove option {{name}}"
+    },
+    "shippingTitle": "Shipping",
+    "shippingMode": {
+      "fixed": "Fixed price",
+      "fixedHint": "You set the shipping price (or make it free).",
+      "calculated": "Calculate by destination",
+      "calculatedHint": "From weight, package size and distance to the buyer."
+    },
+    "package": {
+      "weight": "Weight (kg)",
+      "length": "Length (cm)",
+      "width": "Width (cm)",
+      "height": "Height (cm)",
+      "hint": "Of one packed unit. Large, light packages are billed by volume."
     }
   },
   "cart": {
@@ -647,5 +680,19 @@
       "attention": "Cancellations, delays or ratings outside the limits of the other levels."
     },
     "helpFooter": "Without ratings, the level depends only on sales, cancellations and delays. It is recomputed on every view."
+  },
+  "shipping": {
+    "title": "Shipping",
+    "to": "Deliver to",
+    "deliverTo": "Delivery",
+    "calculated": "Shipping calculated by destination",
+    "service": {
+      "standard": "Standard",
+      "express": "Express",
+      "seller": "Seller's shipping"
+    },
+    "days_one": "{{count}} business day",
+    "days_other": "{{count}} business days",
+    "simulated": "Prices from a demo table, by distance and weight."
   }
 }

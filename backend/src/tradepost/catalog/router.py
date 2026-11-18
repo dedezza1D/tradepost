@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from tradepost.catalog import service
-from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingStatus
+from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingStatus, ShippingMode
 from tradepost.catalog.schemas import (
     CategoryOut,
     ListingCard,
@@ -17,15 +17,20 @@ from tradepost.catalog.schemas import (
     ListingUpdate,
     PhotoOut,
     SearchParams,
+    ShippingOption,
+    ShippingQuoteOut,
+    VariantsIn,
 )
 from tradepost.catalog.search import search_listings
 from tradepost.config import get_settings
 from tradepost.deps import DbSession
-from tradepost.errors import NotFound
+from tradepost.errors import AppError, NotFound
+from tradepost.geo.models import Municipality
 from tradepost.identity.sessions import CurrentUser, OptionalPrincipal
 from tradepost.media.images import InvalidImage, share_preview
 from tradepost.media.storage import Storage
 from tradepost.security.ratelimit import rate_limit
+from tradepost.shipping import Parcel, distance_km, quoter
 
 router = APIRouter(prefix="/api", tags=["catalog"])
 
@@ -159,6 +164,63 @@ async def upload_photo(
         raise InvalidImage(f"Photos must be at most {settings.max_photo_bytes // 2**20} MB.")
     photo: ListingPhoto = await service.add_photo(db, storage, settings, listing, data)
     return service.photo_out(storage, photo)
+
+
+@router.put("/listings/{listing_id}/variants")
+async def set_variants(
+    listing_id: uuid.UUID, body: VariantsIn, user: CurrentUser, db: DbSession, storage: StorageDep
+) -> ListingOut:
+    """Replace the listing's options (size, color...), each with its own stock."""
+    listing = await service.get_owned_listing(db, listing_id, user)
+    await service.set_variants(db, listing, body.variants)
+    await db.refresh(listing)
+    return await service.listing_out(db, storage, listing)
+
+
+@router.get(
+    "/listings/{listing_id}/shipping",
+    dependencies=[Depends(rate_limit("shipping_quote", limit=120, window_seconds=60))],
+)
+async def shipping_quote(
+    listing_id: uuid.UUID,
+    db: DbSession,
+    to: Annotated[int | None, Query(ge=1_000_000, le=9_999_999)] = None,
+    quantity: Annotated[int, Query(ge=1, le=10)] = 1,
+) -> ShippingQuoteOut:
+    """Shipping options for a listing to a city (IBGE code)."""
+    listing = await service.get_visible_listing(db, listing_id, None)
+    if listing.shipping_mode != ShippingMode.CALCULATED:
+        return ShippingQuoteOut(
+            mode=listing.shipping_mode,
+            destination=None,
+            options=[
+                ShippingOption(
+                    service="seller", carrier="", price_cents=listing.shipping_cents, days=None
+                )
+            ],
+        )
+    if to is None:
+        return ShippingQuoteOut(mode=listing.shipping_mode, destination=None, options=[])
+    origin = (
+        await db.get(Municipality, listing.municipality_id) if listing.municipality_id else None
+    )
+    dest = await db.get(Municipality, to)
+    if dest is None or origin is None or listing.weight_grams is None:
+        raise AppError("Unknown city.", code="unknown_city")
+    parcel = Parcel(
+        listing.weight_grams, listing.length_cm or 1, listing.width_cm or 1, listing.height_cm or 1
+    )
+    km = distance_km(origin.lat, origin.lng, dest.lat, dest.lng)
+    return ShippingQuoteOut(
+        mode=listing.shipping_mode,
+        destination=f"{dest.name} - {dest.state}",
+        options=[
+            ShippingOption(
+                service=q.service, carrier=q.carrier, price_cents=q.price_cents, days=q.days
+            )
+            for q in quoter.quote(km, parcel, quantity)
+        ],
+    )
 
 
 class PhotoOrderIn(BaseModel):

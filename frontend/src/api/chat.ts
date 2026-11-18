@@ -100,8 +100,8 @@ export type OfferAction = 'accept' | 'decline' | 'cancel' | 'counter'
 export function useOfferActions(conversationId: string) {
   const refresh = useRefreshChat(conversationId)
   const make = useMutation({
-    mutationFn: (amount_cents: number) =>
-      api<Offer>(`/api/conversations/${conversationId}/offers`, { method: 'POST', body: json({ amount_cents }) }),
+    mutationFn: ({ amount_cents, variant_id }: { amount_cents: number; variant_id?: string | null }) =>
+      api<Offer>(`/api/conversations/${conversationId}/offers`, { method: 'POST', body: json({ amount_cents, variant_id }) }),
     onSuccess: refresh,
   })
   const respond = useMutation({

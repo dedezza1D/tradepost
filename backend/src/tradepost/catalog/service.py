@@ -6,13 +6,22 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
-from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingStatus
+from tradepost.catalog.models import (
+    Category,
+    Listing,
+    ListingPhoto,
+    ListingStatus,
+    ListingVariant,
+    ShippingMode,
+)
 from tradepost.catalog.schemas import (
     ListingCreate,
     ListingOut,
     ListingUpdate,
     PhotoOut,
     SellerOut,
+    VariantIn,
+    VariantOut,
 )
 from tradepost.config import Settings
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
@@ -41,6 +50,62 @@ async def media_used(db: AsyncSession) -> int:
     photos = select(func.coalesce(func.sum(ListingPhoto.bytes), 0)).scalar_subquery()
     avatars = select(func.coalesce(func.sum(User.avatar_bytes), 0)).scalar_subquery()
     return int((await db.execute(select(photos + avatars))).scalar_one())
+
+
+def _check_package(listing: Listing) -> None:
+    if listing.shipping_mode != ShippingMode.CALCULATED:
+        return
+    if None in (listing.weight_grams, listing.length_cm, listing.width_cm, listing.height_cm):
+        raise AppError(
+            "Calculated shipping needs the weight and size of the package.",
+            code="package_required",
+        )
+    if listing.municipality_id is None:
+        raise AppError("Calculated shipping needs a known city.", code="unknown_city")
+
+
+async def _variants(db: AsyncSession, listing_id: uuid.UUID) -> list[ListingVariant]:
+    rows = await db.execute(
+        select(ListingVariant)
+        .where(ListingVariant.listing_id == listing_id, ListingVariant.active.is_(True))
+        .order_by(ListingVariant.position)
+    )
+    return list(rows.scalars())
+
+
+async def set_variants(
+    db: AsyncSession, listing: Listing, variants: list[VariantIn]
+) -> list[ListingVariant]:
+    """Replace the listing's options. Kept ids are updated, new ones created, missing ones
+    retired (orders keep pointing at them). The listing's stock becomes their sum."""
+    names = [v.name.casefold() for v in variants]
+    if len(set(names)) != len(names):
+        raise AppError("Two options have the same name.", code="duplicate_variant")
+    current = {v.id: v for v in await _variants(db, listing.id)}
+    keep: set[uuid.UUID] = set()
+    for position, item in enumerate(variants):
+        existing = current.get(item.id) if item.id else None
+        if item.id is not None and existing is None:
+            raise AppError("Unknown option.", code="unknown_variant")
+        if existing is not None:
+            existing.name, existing.stock, existing.position = item.name, item.stock, position
+            keep.add(existing.id)
+        else:
+            db.add(
+                ListingVariant(
+                    listing_id=listing.id, name=item.name, stock=item.stock, position=position
+                )
+            )
+    for variant in current.values():
+        if variant.id not in keep:
+            variant.active = False
+    # Retire first, then insert: a renamed option may reuse a retired name.
+    await db.flush()
+    if variants:
+        listing.stock = sum(v.stock for v in variants)
+        _sync_stock_status(listing)
+        await db.flush()
+    return await _variants(db, listing.id)
 
 
 async def _require_category(db: AsyncSession, slug: str) -> None:
@@ -83,11 +148,12 @@ async def create_listing(db: AsyncSession, seller: User, body: ListingCreate) ->
     listing = Listing(
         seller_id=seller.id,
         status=ListingStatus.DRAFT,
-        **body.model_dump(exclude={"city", "state"}),
+        **body.model_dump(exclude={"city", "state"}, exclude_none=True),
         city=city.name,
         state=city.state,
         municipality_id=city.ibge_code,
     )
+    _check_package(listing)
     db.add(listing)
     await db.flush()
     await db.refresh(listing)
@@ -110,6 +176,10 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
         )
     changes = body.model_dump(exclude_unset=True, exclude={"version"})
     old_price, old_stock = listing.price_cents, listing.stock
+    if changes.get("stock") is not None and await _variants(db, listing.id):
+        raise AppError(
+            "Stock comes from the options; edit them instead.", code="stock_from_variants"
+        )
     if "category_slug" in changes and changes["category_slug"] is not None:
         await _require_category(db, changes["category_slug"])
     if changes.get("city") or changes.get("state"):
@@ -123,6 +193,7 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
         if value is not None:
             setattr(listing, field, value)
     _sync_stock_status(listing)
+    _check_package(listing)
     try:
         await db.flush()
     except StaleDataError:
@@ -313,4 +384,12 @@ async def listing_out(
         published_at=listing.published_at,
         save_count=listing.save_count,
         saved=viewer_id is not None and await has_saved(db, viewer_id, listing.id),
+        variants=[
+            VariantOut(id=v.id, name=v.name, stock=v.stock) for v in await _variants(db, listing.id)
+        ],
+        shipping_mode=listing.shipping_mode,
+        weight_grams=listing.weight_grams,
+        length_cm=listing.length_cm,
+        width_cm=listing.width_cm,
+        height_cm=listing.height_cm,
     )

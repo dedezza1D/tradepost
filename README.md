@@ -36,6 +36,13 @@ a quiet period can take about a minute while the API wakes up. See [test payment
   payment outside the platform.
 - **Offers**: the buyer proposes a price, the seller accepts, declines or counters, offers expire
   after 24 hours; an accepted offer is paid through the normal checkout at the agreed price.
+- **Public questions** on listings, answered by the seller; contact details are refused in
+  public text.
+- **Seller reputation** computed from the last 90 days (sales, cancellations, late shipments,
+  ratings), with a public page explaining the rules.
+- **Options** (size, color...) with their own stock, chosen before buying.
+- **Calculated shipping** by distance and package weight (standard or express), quoted on the
+  listing and at checkout, with the service, delivery time and destination on the order.
 - **Live notifications** over server-sent events, in Portuguese or English.
 
 ## Architecture
@@ -148,7 +155,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 104 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 122 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -264,6 +271,14 @@ uv run python scripts/stripe_listen.py
   accepts cannot both win, and a partial unique index allows one open offer per conversation.
   The checkout for an offer takes only the payment provider: listing, quantity and price come
   from the offer.
+- **Shipping from a price table behind a port.** Quotes come from distance between the two
+  cities (IBGE coordinates), billable weight (the larger of real weight and length * width *
+  height / 6000) and the service. Prices are simulated, and the README says so; a carrier
+  aggregator such as Melhor Envio would be a second adapter, with the table as its fallback.
+  The checkout page asks the server for a quote, so what it shows is what is charged.
+- **Options keep the listing's stock as their sum.** A reservation takes the option first and
+  then the listing, always in the same order (listing id, then option), so concurrent checkouts
+  neither oversell an option nor deadlock.
 - **Counters updated in the same transaction** as the follow or save they count (atomic
   `x = x + 1`), so they never drift and need no reconciliation job.
 - **Link previews rendered at the edge.** A Pages Function adds Open Graph tags to

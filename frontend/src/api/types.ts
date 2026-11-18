@@ -60,6 +60,27 @@ export interface Listing {
   published_at: string | null
   save_count: number
   saved: boolean
+  variants: Variant[]
+  shipping_mode: ShippingMode
+  weight_grams: number | null
+  length_cm: number | null
+  width_cm: number | null
+  height_cm: number | null
+}
+
+export type ShippingMode = 'fixed' | 'calculated'
+
+export interface Variant {
+  id: string
+  name: string
+  stock: number
+}
+
+export interface ShippingOption {
+  service: 'seller' | 'standard' | 'express'
+  carrier: string
+  price_cents: number
+  days: number | null
 }
 
 export interface ListingCard {
@@ -90,10 +111,15 @@ export interface ListingInput {
   category_slug: string
   condition: Condition
   price_cents: number
-  stock: number
+  stock?: number
   shipping_cents: number
   city: string
   state: string
+  shipping_mode: ShippingMode
+  weight_grams?: number
+  length_cm?: number
+  width_cm?: number
+  height_cm?: number
 }
 
 export const BR_STATES = [
@@ -181,7 +207,7 @@ export interface ChatMessage {
 export interface Conversation {
   id: string
   role: 'buyer' | 'seller'
-  listing: { id: string; title: string; price_cents: number; status: ListingStatus; thumb_url: string | null }
+  listing: { id: string; title: string; price_cents: number; status: ListingStatus; thumb_url: string | null; variants: Variant[] }
   other: { id: string; display_name: string; avatar_url: string | null }
   last_message_at: string
   last_message_preview: string | null

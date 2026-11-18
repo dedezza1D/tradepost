@@ -217,6 +217,63 @@ test('public questions are answered by the seller', async ({ browser }, info) =>
   await expect(page.getByRole('heading', { name: 'How reputation works' })).toBeVisible()
 })
 
+test('an item with options and calculated shipping is bought with express delivery', async ({ browser }, info) => {
+  const title = `Camiseta e2e ${unique()}`
+  const seller = await newUser(browser, 'pt-BR', info.project.name)
+  await register(seller.page, 'Loja Opções', seller.email, 'Recife', /Crie sua conta/)
+  const s = seller.page
+  await s.goto('/sell')
+  await s.locator('input[type=file]').setInputFiles({ name: 'shirt.png', mimeType: 'image/png', buffer: png() })
+  await s.getByRole('button', { name: 'Continuar' }).click()
+  await s.locator('#title').fill(title)
+  await s.locator('#description').fill('Camiseta de algodão, várias medidas.')
+  await s.locator('#category').selectOption('fashion')
+  await s.getByRole('button', { name: 'Continuar' }).click()
+  await s.locator('#price').fill('80,00')
+  await s.getByRole('button', { name: 'Adicionar opção' }).click()
+  await s.locator('#variant-name-0').fill('M')
+  await s.locator('#variant-stock-0').fill('2')
+  await s.getByRole('button', { name: 'Adicionar opção' }).click()
+  await s.locator('#variant-name-1').fill('G')
+  await s.locator('#variant-stock-1').fill('1')
+  await s.getByText('Calcular pelo destino').click()
+  await s.locator('#weight').fill('0,4')
+  await s.locator('#length').fill('30')
+  await s.locator('#width').fill('25')
+  await s.locator('#height').fill('5')
+  await s.getByRole('button', { name: 'Continuar' }).click()
+  await s.getByRole('button', { name: 'Publicar' }).click()
+  await expect(s.getByRole('heading', { name: title })).toBeVisible()
+  const listingUrl = s.url()
+
+  const buyer = await newUser(browser, 'en', info.project.name)
+  await register(buyer.page, 'Buyer Options', buyer.email, 'Porto Alegre', /Create your account/)
+  const b = buyer.page
+  await b.goto(listingUrl)
+  // Buying needs an option first.
+  await b.locator('button:visible', { hasText: /Buy (now|for)/ }).first().click()
+  await expect(b.getByText('Choose an option (size, color…) first.').first()).toBeVisible()
+  await b.getByText('G', { exact: true }).click()
+  // The shipping quote uses the buyer's city.
+  await expect(b.getByText('Express').first()).toBeVisible()
+  await b.locator('button:visible', { hasText: /Buy (now|for)/ }).first().click()
+
+  await expect(b.getByRole('heading', { name: 'Checkout' })).toBeVisible()
+  await expect(b.getByText(`1 × ${title} (G)`)).toBeVisible()
+  await b.getByText('Express', { exact: true }).click()
+  await b.getByRole('button', { name: /Continue to payment/ }).click()
+  await b.getByRole('button', { name: 'Pay with a test card' }).click()
+  await expect(b.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible()
+
+  await b.goto('/orders')
+  await expect(b.getByText(`1 × ${title} (G)`)).toBeVisible()
+  await expect(b.getByText(/Express · \d+ business days? · Porto Alegre - RS/)).toBeVisible()
+  // The G option is sold out; M still has stock.
+  await b.goto(listingUrl)
+  await expect(b.locator('input[name=variant]').nth(1)).toBeDisabled()
+  await expect(b.locator('input[name=variant]').nth(0)).toBeEnabled()
+})
+
 test('main pages have no serious accessibility violations', async ({ page }) => {
   for (const path of ['/', '/search', '/login', '/register']) {
     await page.goto(path)

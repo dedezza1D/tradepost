@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
 import { ApiError, api, json } from '../api/client'
-import type { Listing, Photo } from '../api/types'
+import type { Listing, Photo, Variant } from '../api/types'
 import { errorMessage } from '../lib/errors'
 import { formatMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
@@ -15,6 +15,7 @@ import { ReportSheet } from '../components/ReportSheet'
 import { SaveButton } from '../components/SaveButton'
 import { useStartConversation } from '../api/chat'
 import { Questions } from '../components/Questions'
+import { ShippingQuote } from '../components/ShippingQuote'
 import { ReputationBadge } from '../components/Reputation'
 
 function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
@@ -119,7 +120,26 @@ function ShareButton({ title }: { title: string }) {
 
 const QUICK = ['available', 'condition', 'pickup', 'shipping'] as const
 
-function ContactSeller({ listing, signedIn }: { listing: Listing; signedIn: boolean }) {
+function VariantPicker({ variants, value, onChange }: { variants: Variant[]; value: string | null; onChange: (id: string) => void }) {
+  const { t } = useTranslation()
+  return (
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-semibold">{t('listing.chooseOption')}</legend>
+      <div className="flex flex-wrap gap-2">
+        {variants.map((v) => (
+          <label key={v.id} className={`relative ${v.stock === 0 ? 'opacity-50' : ''}`}>
+            <input type="radio" name="variant" className="peer sr-only" checked={value === v.id} disabled={v.stock === 0} onChange={() => onChange(v.id)} />
+            <span className="inline-flex min-h-10 cursor-pointer items-center rounded-xl border border-line px-3.5 text-sm font-medium peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-disabled:cursor-not-allowed peer-disabled:line-through">
+              {v.name}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function ContactSeller({ listing, signedIn, variantId }: { listing: Listing; signedIn: boolean; variantId: string | null }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const start = useStartConversation()
@@ -130,7 +150,7 @@ function ContactSeller({ listing, signedIn }: { listing: Listing; signedIn: bool
     }
     start.mutate(
       { listing_id: listing.id, body },
-      { onSuccess: (c) => navigate(`/inbox/${c.id}${offer ? '?offer=1' : ''}`) },
+      { onSuccess: (c) => navigate(`/inbox/${c.id}${offer ? `?offer=1${variantId ? `&variant=${variantId}` : ''}` : ''}`) },
     )
   }
   return (
@@ -159,48 +179,62 @@ function ContactSeller({ listing, signedIn }: { listing: Listing; signedIn: bool
   )
 }
 
-function BuyBox({ listing, signedIn }: { listing: Listing; signedIn: boolean }) {
+function BuyBox({ listing, signedIn, variant }: { listing: Listing; signedIn: boolean; variant: Variant | null }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
+  const [pickFirst, setPickFirst] = useState(false)
+  const needsVariant = listing.variants.length > 0
+  const stock = variant ? variant.stock : listing.stock
   const addToCart = useMutation({
-    mutationFn: () => api<void>(`/api/cart/${listing.id}`, { method: 'PUT', body: json({ quantity }) }),
+    mutationFn: () => api<void>(`/api/cart/${listing.id}`, { method: 'PUT', body: json({ quantity, variant_id: variant?.id }) }),
     onSuccess: () => {
       setAdded(true)
       void qc.invalidateQueries({ queryKey: ['cart'] })
     },
   })
   const needSignIn = () => navigate('/login', { state: { from: `/listings/${listing.id}` } })
-  const buy = () => (signedIn ? navigate(`/checkout?listing=${listing.id}&qty=${quantity}`) : needSignIn())
+  const ready = () => {
+    if (needsVariant && !variant) {
+      setPickFirst(true)
+      return false
+    }
+    setPickFirst(false)
+    return true
+  }
+  const buy = () => {
+    if (!signedIn) return needSignIn()
+    if (ready()) navigate(`/checkout?listing=${listing.id}&qty=${quantity}${variant ? `&variant=${variant.id}` : ''}`)
+  }
+  const add = () => (signedIn ? ready() && addToCart.mutate() : needSignIn())
 
   return (
     <div className="space-y-3">
-      {listing.stock > 1 && (
+      {stock > 1 && (
         <label className="flex items-center gap-3 text-sm">
           {t('listing.quantity')}
           <select className="input w-24" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))}>
-            {Array.from({ length: Math.min(listing.stock, 10) }, (_, i) => i + 1).map((n) => <option key={n}>{n}</option>)}
+            {Array.from({ length: Math.min(stock, 10) }, (_, i) => i + 1).map((n) => <option key={n}>{n}</option>)}
           </select>
-          <span className="text-muted">{t('listing.available', { count: listing.stock })}</span>
+          <span className="text-muted">{t('listing.available', { count: stock })}</span>
         </label>
       )}
       <div className="hidden gap-2 md:grid">
         <button type="button" className="btn-primary" onClick={buy}>{t('listing.buyNow')}</button>
-        <button type="button" className="btn-secondary" disabled={addToCart.isPending}
-          onClick={() => (signedIn ? addToCart.mutate() : needSignIn())}>
+        <button type="button" className="btn-secondary" disabled={addToCart.isPending} onClick={add}>
           <Icon name="cart" size={18} />
           {added ? t('listing.addedToCart') : t('listing.addToCart')}
         </button>
       </div>
+      {pickFirst && <p role="alert" className="text-sm text-danger">{t('errors.variant_required')}</p>}
       {added && <Link to="/cart" className="block text-sm font-semibold text-primary hover:underline">{t('listing.goToCart')}</Link>}
       {addToCart.isError && <p className="text-sm text-danger">{errorMessage(addToCart.error, t)}</p>}
 
       {/* Phones: the main actions stay reachable above the bottom navigation. */}
       <div className="fixed inset-x-0 bottom-[calc(57px+env(safe-area-inset-bottom))] z-20 flex gap-2 border-t border-line bg-surface/95 px-4 py-2.5 backdrop-blur md:hidden">
-        <button type="button" className="btn-secondary px-3" aria-label={t('listing.addToCart')} disabled={addToCart.isPending}
-          onClick={() => (signedIn ? addToCart.mutate() : needSignIn())}>
+        <button type="button" className="btn-secondary px-3" aria-label={t('listing.addToCart')} disabled={addToCart.isPending} onClick={add}>
           <Icon name={added ? 'check' : 'cart'} />
         </button>
         <button type="button" className="btn-primary flex-1" onClick={buy}>
@@ -217,6 +251,7 @@ export function ListingPage() {
   const { data: me } = useMe()
   const { data: categories } = useCategories()
   const [reporting, setReporting] = useState(false)
+  const [variantId, setVariantId] = useState<string | null>(null)
   const listing = useQuery({
     queryKey: ['listing', id],
     queryFn: () => api<Listing>(`/api/listings/${id}`),
@@ -243,6 +278,7 @@ export function ListingPage() {
   const isOwner = me?.id === item.seller.id
   const available = item.status === 'active' && item.stock > 0
   const category = categories?.find((c) => c.slug === item.category_slug)
+  const variant = item.variants.find((v) => v.id === variantId) ?? null
 
   return (
     <article className="grid gap-6 pb-16 md:grid-cols-[1fr_380px] md:items-start md:pb-0">
@@ -260,7 +296,9 @@ export function ListingPage() {
           <p className="text-3xl font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
           <ul className="space-y-1.5 text-sm text-muted">
             <li className="flex items-center gap-2"><Icon name="truck" size={18} />
-              {item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}</li>
+              {item.shipping_mode === 'calculated'
+                ? t('shipping.calculated')
+                : item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}</li>
             <li className="flex items-center gap-2"><Icon name="pin" size={18} />{item.city} - {item.state}</li>
             <li className="flex items-center gap-2"><Icon name="shield" size={18} />{t('listing.protected')}</li>
           </ul>
@@ -270,9 +308,13 @@ export function ListingPage() {
         {isOwner ? (
           <Link to={`/sell/${item.id}`} className="btn-primary w-full">{t('listing.edit')}</Link>
         ) : available ? (
-          <BuyBox listing={item} signedIn={Boolean(me)} />
+          <>
+            {item.variants.length > 0 && <VariantPicker variants={item.variants} value={variantId} onChange={setVariantId} />}
+            <BuyBox listing={item} signedIn={Boolean(me)} variant={variant} />
+          </>
         ) : null}
-        {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} />}
+        {item.shipping_mode === 'calculated' && <ShippingQuote listingId={item.id} />}
+        {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} variantId={variantId} />}
 
         <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
           <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />

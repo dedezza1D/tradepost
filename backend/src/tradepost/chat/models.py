@@ -103,6 +103,8 @@ class Offer(Base):
     )
     amount_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     quantity: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=1)
+    # Required when the listing has variants: the offer is for that option.
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("listing_variants.id"))
     status: Mapped[OfferStatus] = mapped_column(
         _enum(OfferStatus, "offer_status"), nullable=False, default=OfferStatus.PENDING
     )

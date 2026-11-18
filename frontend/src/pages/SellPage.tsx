@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
 import { ApiError, api, json } from '../api/client'
-import type { Condition, Listing, ListingInput, Photo } from '../api/types'
+import type { Condition, Listing, ListingInput, Photo, ShippingMode } from '../api/types'
 import { CityPicker, type City } from '../components/CityPicker'
 import { errorMessage } from '../lib/errors'
 import { centsToInput, formatMoney, parseMoney } from '../lib/format'
@@ -14,6 +14,13 @@ import { Badge, ErrorState, PageHeader, Spinner } from '../ui/primitives'
 
 const MAX_PHOTOS = 8
 const MAX_BYTES = 5 * 1024 * 1024
+
+interface VariantRow {
+  key: string
+  id?: string
+  name: string
+  stock: string
+}
 
 interface Details {
   title: string
@@ -24,9 +31,18 @@ interface Details {
   shipping: string
   stock: string
   city: City | null
+  variants: VariantRow[]
+  shippingMode: ShippingMode
+  weightKg: string
+  length: string
+  width: string
+  height: string
 }
 
-const EMPTY: Details = { title: '', description: '', category_slug: '', condition: 'used', price: '', shipping: '0', stock: '1', city: null }
+const EMPTY: Details = {
+  title: '', description: '', category_slug: '', condition: 'used', price: '', shipping: '0', stock: '1', city: null,
+  variants: [], shippingMode: 'fixed', weightKg: '', length: '', width: '', height: '',
+}
 
 function fromListing(l: Listing): Details {
   return {
@@ -38,19 +54,46 @@ function fromListing(l: Listing): Details {
     shipping: centsToInput(l.shipping_cents),
     stock: String(l.stock),
     city: { ibge_code: l.municipality_id ?? 0, name: l.city, state: l.state },
+    variants: l.variants.map((v) => ({ key: v.id, id: v.id, name: v.name, stock: String(v.stock) })),
+    shippingMode: l.shipping_mode,
+    weightKg: l.weight_grams ? String(l.weight_grams / 1000).replace('.', ',') : '',
+    length: l.length_cm ? String(l.length_cm) : '',
+    width: l.width_cm ? String(l.width_cm) : '',
+    height: l.height_cm ? String(l.height_cm) : '',
   }
+}
+
+/** The options to save, or the translation key of the first problem. */
+function toVariants(d: Details): { id?: string; name: string; stock: number }[] | string {
+  const rows = d.variants.filter((v) => v.name.trim() || v.stock.trim())
+  for (const v of rows) {
+    const stock = Number(v.stock)
+    if (!v.name.trim() || !Number.isInteger(stock) || stock < 0) return 'sell.errors.variants'
+  }
+  return rows.map((v) => ({ ...(v.id ? { id: v.id } : {}), name: v.name.trim(), stock: Number(v.stock) }))
 }
 
 /** Returns the API payload, or the translation key of the first problem. */
 function toInput(d: Details): ListingInput | string {
   const price = parseMoney(d.price)
   const shipping = parseMoney(d.shipping || '0')
-  const stock = Number(d.stock)
+  const variants = toVariants(d)
+  if (typeof variants === 'string') return variants
+  const stock = variants.length ? variants.reduce((s, v) => s + v.stock, 0) : Number(d.stock)
   if (!price || price <= 0) return 'sell.errors.price'
   if (shipping === null) return 'sell.errors.shipping'
   if (!Number.isInteger(stock) || stock < 0) return 'sell.errors.stock'
   if (!d.city) return 'sell.errors.city'
+  let pkg: Partial<ListingInput> = {}
+  if (d.shippingMode === 'calculated') {
+    const kg = Number(d.weightKg.replace(',', '.'))
+    const sides = [d.length, d.width, d.height].map(Number)
+    if (!(kg > 0 && kg <= 30) || sides.some((s) => !Number.isInteger(s) || s < 1 || s > 100)) return 'sell.errors.package'
+    pkg = { weight_grams: Math.round(kg * 1000), length_cm: sides[0], width_cm: sides[1], height_cm: sides[2] }
+  }
   return {
+    ...pkg,
+    shipping_mode: d.shippingMode,
     title: d.title.trim(),
     description: d.description.trim(),
     category_slug: d.category_slug,
@@ -185,25 +228,98 @@ function DetailFields({ d, set }: { d: Details; set: (patch: Partial<Details>) =
   )
 }
 
-function PriceFields({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
+function VariantsEditor({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
+  const { t } = useTranslation()
+  const rows = d.variants
+  const update = (i: number, patch: Partial<VariantRow>) => set({ variants: rows.map((r, j) => (j === i ? { ...r, ...patch } : r)) })
+  const add = () => set({ variants: [...rows, { key: crypto.randomUUID(), name: '', stock: '1' }] })
+  return (
+    <fieldset className="space-y-2 rounded-2xl border border-line p-4">
+      <legend className="px-1 text-sm font-semibold">{t('sell.variants.title')}</legend>
+      <p className="text-xs text-muted">{t('sell.variants.hint')}</p>
+      {rows.map((r, i) => (
+        <div key={r.key} className="flex items-end gap-2">
+          <div className="flex-1">
+            <label className="label" htmlFor={`variant-name-${i}`}>{t('sell.variants.name')}</label>
+            <input id={`variant-name-${i}`} className="input" maxLength={40} placeholder={t('sell.variants.namePlaceholder')} value={r.name} onChange={(e) => update(i, { name: e.target.value })} />
+          </div>
+          <div className="w-24">
+            <label className="label" htmlFor={`variant-stock-${i}`}>{t('sell.stock')}</label>
+            <input id={`variant-stock-${i}`} className="input" type="number" min={0} max={10000} value={r.stock} onChange={(e) => update(i, { stock: e.target.value })} />
+          </div>
+          <button type="button" className="btn-ghost min-h-11 px-2 text-danger" aria-label={t('sell.variants.remove', { name: r.name || i + 1 })}
+            onClick={() => set({ variants: rows.filter((_, j) => j !== i) })}>
+            <Icon name="trash" size={18} />
+          </button>
+        </div>
+      ))}
+      <button type="button" className="btn-secondary min-h-10 text-sm" disabled={rows.length >= 20} onClick={add}>
+        <Icon name="plus" size={16} />{t('sell.variants.add')}
+      </button>
+    </fieldset>
+  )
+}
+
+function ShippingFields({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
   const { t } = useTranslation()
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label className="label" htmlFor="price">{t('sell.price')}</label>
-          <input id="price" className="input" inputMode="decimal" required placeholder="0,00" value={d.price} onChange={(e) => set({ price: e.target.value })} />
-        </div>
-        <div>
+    <fieldset className="space-y-3 rounded-2xl border border-line p-4">
+      <legend className="px-1 text-sm font-semibold">{t('sell.shippingTitle')}</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {(['fixed', 'calculated'] as const).map((mode) => (
+          <label key={mode} className="flex cursor-pointer items-start gap-2 rounded-xl border border-line p-3 has-checked:border-primary has-checked:bg-primary-soft">
+            <input type="radio" name="shipping_mode" className="mt-1" checked={d.shippingMode === mode} onChange={() => set({ shippingMode: mode })} />
+            <span>
+              <span className="block text-sm font-semibold">{t(`sell.shippingMode.${mode}`)}</span>
+              <span className="block text-xs text-muted">{t(`sell.shippingMode.${mode}Hint`)}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {d.shippingMode === 'fixed' ? (
+        <div className="sm:w-1/2">
           <label className="label" htmlFor="shipping">{t('sell.shipping')}</label>
           <input id="shipping" className="input" inputMode="decimal" value={d.shipping} onChange={(e) => set({ shipping: e.target.value })} />
           <p className="mt-1 text-xs text-muted">{t('sell.shippingHint')}</p>
         </div>
-        <div>
-          <label className="label" htmlFor="stock">{t('sell.stock')}</label>
-          <input id="stock" className="input" type="number" min={0} max={10000} value={d.stock} onChange={(e) => set({ stock: e.target.value })} />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <label className="label" htmlFor="weight">{t('sell.package.weight')}</label>
+            <input id="weight" className="input" inputMode="decimal" placeholder="1,5" value={d.weightKg} onChange={(e) => set({ weightKg: e.target.value })} />
+          </div>
+          {(['length', 'width', 'height'] as const).map((side) => (
+            <div key={side}>
+              <label className="label" htmlFor={side}>{t(`sell.package.${side}`)}</label>
+              <input id={side} className="input" type="number" min={1} max={100} value={d[side]} onChange={(e) => set({ [side]: e.target.value })} />
+            </div>
+          ))}
+          <p className="col-span-full text-xs text-muted">{t('sell.package.hint')}</p>
         </div>
+      )}
+    </fieldset>
+  )
+}
+
+function PriceFields({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
+  const { t } = useTranslation()
+  const hasVariants = d.variants.length > 0
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="label" htmlFor="price">{t('sell.price')}</label>
+          <input id="price" className="input" inputMode="decimal" required placeholder="0,00" value={d.price} onChange={(e) => set({ price: e.target.value })} />
+        </div>
+        {!hasVariants && (
+          <div>
+            <label className="label" htmlFor="stock">{t('sell.stock')}</label>
+            <input id="stock" className="input" type="number" min={0} max={10000} value={d.stock} onChange={(e) => set({ stock: e.target.value })} />
+          </div>
+        )}
       </div>
+      <VariantsEditor d={d} set={set} />
+      <ShippingFields d={d} set={set} />
       <CityPicker required value={d.city} onChange={(city) => set({ city })} />
     </div>
   )
@@ -264,6 +380,10 @@ function NewListing() {
     try {
       setProgress(t('sell.progress.creating'))
       created = await api<Listing>('/api/listings', { method: 'POST', body: json(input) })
+      const variants = toVariants(d)
+      if (typeof variants !== 'string' && variants.length) {
+        await api<Listing>(`/api/listings/${created.id}/variants`, { method: 'PUT', body: json({ variants }) })
+      }
       for (const [i, photo] of photos.entries()) {
         setProgress(t('sell.progress.uploading', { n: i + 1, total: photos.length }))
         const body = new FormData()
@@ -370,7 +490,17 @@ function EditListing({ id }: { id: string }) {
     void qc.invalidateQueries({ queryKey: ['listings'] })
   }
   const save = useMutation({
-    mutationFn: (input: ListingInput) => api<Listing>(`/api/listings/${id}`, { method: 'PATCH', body: json({ ...input, version: listing.data?.version }) }),
+    mutationFn: async (input: ListingInput) => {
+      const variants = toVariants(d)
+      const options = typeof variants === 'string' ? [] : variants
+      // With options the stock is their sum, set by the options call below.
+      const body = options.length || listing.data?.variants.length ? { ...input, stock: undefined } : input
+      let updated = await api<Listing>(`/api/listings/${id}`, { method: 'PATCH', body: json({ ...body, version: listing.data?.version }) })
+      if (options.length || listing.data?.variants.length) {
+        updated = await api<Listing>(`/api/listings/${id}/variants`, { method: 'PUT', body: json({ variants: options }) })
+      }
+      return updated
+    },
     onSuccess: (l) => { onListing(l); setSaved(true) },
   })
   const action = useMutation({

@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from tradepost.catalog.models import ItemCondition, ListingStatus
+from tradepost.catalog.models import ItemCondition, ListingStatus, ShippingMode
 from tradepost.identity.schemas import BR_STATES
 
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=5, max_length=120)]
@@ -15,6 +15,19 @@ City = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max
 PriceCents = Annotated[int, Field(gt=0, le=100_000_000)]
 Stock = Annotated[int, Field(ge=0, le=10_000)]
 ShippingCents = Annotated[int, Field(ge=0, le=1_000_000)]
+WeightGrams = Annotated[int, Field(ge=1, le=30_000)]
+SideCm = Annotated[int, Field(ge=1, le=100)]
+VariantName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)]
+
+
+class PackageFields(BaseModel):
+    """How the listing ships. Calculated shipping needs the package of one unit."""
+
+    shipping_mode: ShippingMode | None = None
+    weight_grams: WeightGrams | None = None
+    length_cm: SideCm | None = None
+    width_cm: SideCm | None = None
+    height_cm: SideCm | None = None
 
 
 def _state(value: str | None) -> str | None:
@@ -33,7 +46,7 @@ class CategoryOut(BaseModel):
     name: str
 
 
-class ListingCreate(BaseModel):
+class ListingCreate(PackageFields):
     title: Title
     description: Description
     category_slug: str = Field(max_length=40)
@@ -47,7 +60,7 @@ class ListingCreate(BaseModel):
     _state = field_validator("state")(_state)
 
 
-class ListingUpdate(BaseModel):
+class ListingUpdate(PackageFields):
     """Partial update. ``version`` must be the version the client last read."""
 
     version: int
@@ -62,6 +75,35 @@ class ListingUpdate(BaseModel):
     state: str | None = None
 
     _state = field_validator("state")(_state)
+
+
+class VariantIn(BaseModel):
+    id: uuid.UUID | None = None
+    name: VariantName
+    stock: Stock
+
+
+class VariantsIn(BaseModel):
+    variants: list[VariantIn] = Field(max_length=20)
+
+
+class VariantOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    stock: int
+
+
+class ShippingOption(BaseModel):
+    service: str
+    carrier: str
+    price_cents: int
+    days: int | None
+
+
+class ShippingQuoteOut(BaseModel):
+    mode: ShippingMode
+    destination: str | None
+    options: list[ShippingOption]
 
 
 class PhotoOut(BaseModel):
@@ -103,6 +145,12 @@ class ListingOut(BaseModel):
     published_at: datetime | None
     save_count: int = 0
     saved: bool = False
+    variants: list[VariantOut] = []
+    shipping_mode: ShippingMode = ShippingMode.FIXED
+    weight_grams: int | None = None
+    length_cm: int | None = None
+    width_cm: int | None = None
+    height_cm: int | None = None
 
 
 class ListingCard(BaseModel):

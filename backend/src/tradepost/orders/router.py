@@ -4,10 +4,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import select
 
-from tradepost.catalog.models import Listing, ListingPhoto
+from tradepost.catalog.models import Listing, ListingPhoto, ListingVariant
 from tradepost.chat import service as chat_service
 from tradepost.config import get_settings
 from tradepost.deps import DbSession
@@ -34,6 +34,7 @@ from tradepost.orders.schemas import (
     CartOut,
     CheckoutIn,
     CheckoutOut,
+    Delivery,
     OrderEventOut,
     OrderItemOut,
     OrderOut,
@@ -42,6 +43,10 @@ from tradepost.orders.schemas import (
     PayoutAccountIn,
     PayoutAccountOut,
     ProviderOut,
+    QuoteIn,
+    QuoteLineOut,
+    QuoteOrderOut,
+    QuoteOut,
     SellerSummaryOut,
     ShipIn,
 )
@@ -68,6 +73,11 @@ def get_storage(request: Request) -> Storage:
 
 Payments = Annotated[PaymentRegistry, Depends(get_payments)]
 StorageDep = Annotated[Storage, Depends(get_storage)]
+
+
+def _variant(value: uuid.UUID) -> uuid.UUID | None:
+    """Cart lines store the nil UUID for "no variant"."""
+    return None if value == service.NO_VARIANT else value
 
 
 # --- presenters ----------------------------------------------------------------------------
@@ -118,6 +128,7 @@ async def _orders_out(
                     OrderItemOut(
                         listing_id=i.listing_id,
                         title=i.title,
+                        variant_name=i.variant_name,
                         unit_price_cents=i.unit_price_cents,
                         quantity=i.quantity,
                         shipping_cents=i.shipping_cents,
@@ -131,6 +142,9 @@ async def _orders_out(
                 platform_fee_cents=o.platform_fee_cents if is_seller else None,
                 seller_net_cents=o.seller_net_cents if is_seller else None,
                 tracking_code=o.tracking_code,
+                shipping_service=o.shipping_service,
+                shipping_days=o.shipping_days,
+                ship_to=o.ship_to,
                 created_at=o.created_at,
                 paid_at=o.paid_at,
                 shipped_at=o.shipped_at,
@@ -186,9 +200,10 @@ async def list_providers(payments: Payments) -> list[ProviderOut]:
 async def get_cart(user: CurrentUser, db: DbSession, storage: StorageDep) -> CartOut:
     rows = (
         await db.execute(
-            select(CartItem, Listing, User)
+            select(CartItem, Listing, User, ListingVariant)
             .join(Listing, Listing.id == CartItem.listing_id)
             .join(User, User.id == Listing.seller_id)
+            .outerjoin(ListingVariant, ListingVariant.id == CartItem.variant_id)
             .where(CartItem.user_id == user.id)
             .order_by(CartItem.added_at)
         )
@@ -197,7 +212,7 @@ async def get_cart(user: CurrentUser, db: DbSession, storage: StorageDep) -> Car
         (
             await db.execute(
                 select(ListingPhoto.listing_id, ListingPhoto.key_thumb)
-                .where(ListingPhoto.listing_id.in_([listing.id for _, listing, _ in rows]))
+                .where(ListingPhoto.listing_id.in_([row[1].id for row in rows]))
                 .order_by(ListingPhoto.listing_id, ListingPhoto.position)
                 .distinct(ListingPhoto.listing_id)
             )
@@ -206,17 +221,23 @@ async def get_cart(user: CurrentUser, db: DbSession, storage: StorageDep) -> Car
     items = [
         CartLineOut(
             listing_id=listing.id,
+            variant_id=variant.id if variant else None,
+            variant_name=variant.name if variant else None,
             title=listing.title,
             price_cents=listing.price_cents,
             shipping_cents=listing.shipping_cents,
             quantity=item.quantity,
-            available=listing.stock if listing.status.value == "active" else 0,
+            available=(
+                (variant.stock if variant and variant.active else 0 if variant else listing.stock)
+                if listing.status.value == "active"
+                else 0
+            ),
             status=listing.status,
             thumb_url=storage.url(thumbs[listing.id]) if listing.id in thumbs else None,
             seller_id=seller.id,
             seller_name=seller.display_name,
         )
-        for item, listing, seller in rows
+        for item, listing, seller, variant in rows
     ]
     buyable = [i for i in items if i.available >= i.quantity]
     items_cents = sum(i.price_cents * i.quantity for i in buyable)
@@ -233,12 +254,17 @@ async def get_cart(user: CurrentUser, db: DbSession, storage: StorageDep) -> Car
 async def set_cart_line(
     listing_id: uuid.UUID, body: CartLineIn, user: CurrentUser, db: DbSession
 ) -> None:
-    await service.set_cart_item(db, user, listing_id, body.quantity)
+    await service.set_cart_item(db, user, listing_id, body.quantity, body.variant_id)
 
 
 @router.delete("/cart/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_cart_line(listing_id: uuid.UUID, user: CurrentUser, db: DbSession) -> None:
-    await service.set_cart_item(db, user, listing_id, 0)
+async def remove_cart_line(
+    listing_id: uuid.UUID,
+    user: CurrentUser,
+    db: DbSession,
+    variant_id: Annotated[uuid.UUID | None, Query()] = None,
+) -> None:
+    await service.set_cart_item(db, user, listing_id, 0, variant_id)
 
 
 # --- checkout ------------------------------------------------------------------------------
@@ -262,18 +288,26 @@ async def create_checkout(
         raise AppError("Idempotency-Key must be 8-80 letters, digits, '-' or '_'.", code="bad_key")
     if body.from_cart:
         rows = (await db.execute(select(CartItem).where(CartItem.user_id == user.id))).scalars()
-        lines = [service.Line(r.listing_id, r.quantity) for r in rows]
+        lines = [service.Line(r.listing_id, r.quantity, _variant(r.variant_id)) for r in rows]
     else:
-        lines = [service.Line(i.listing_id, i.quantity) for i in body.items or []]
+        lines = [service.Line(i.listing_id, i.quantity, i.variant_id) for i in body.items or []]
     checkout, created = await service.create_checkout(
-        db, get_settings(), payments, user, body.provider, lines, idempotency_key
+        db,
+        get_settings(),
+        payments,
+        user,
+        body.provider,
+        lines,
+        idempotency_key,
+        ship_to=body.ship_to,
+        service=body.shipping_service,
     )
     if not created:
         response.status_code = status.HTTP_200_OK
     return await _checkout_out(db, storage, payments, checkout, user)
 
 
-class OfferCheckoutIn(BaseModel):
+class OfferCheckoutIn(Delivery):
     provider: str = Field(max_length=20)
 
 
@@ -300,18 +334,83 @@ async def checkout_offer(
     if isinstance(terms, Checkout):
         response.status_code = status.HTTP_200_OK
         return await _checkout_out(db, storage, payments, terms, user)
-    agreed = service.AgreedPrice(
-        offer_id=terms.offer_id,
-        listing_id=terms.listing_id,
-        quantity=terms.quantity,
-        unit_price_cents=terms.unit_price_cents,
-    )
     checkout, created = await service.create_checkout(
-        db, get_settings(), payments, user, body.provider, [], idempotency_key, agreed=agreed
+        db,
+        get_settings(),
+        payments,
+        user,
+        body.provider,
+        [],
+        idempotency_key,
+        agreed=_agreed(terms),
+        ship_to=body.ship_to,
+        service=body.shipping_service,
     )
     if not created:
         response.status_code = status.HTTP_200_OK
     return await _checkout_out(db, storage, payments, checkout, user)
+
+
+def _agreed(terms: chat_service.OfferTerms) -> service.AgreedPrice:
+    return service.AgreedPrice(
+        offer_id=terms.offer_id,
+        listing_id=terms.listing_id,
+        quantity=terms.quantity,
+        unit_price_cents=terms.unit_price_cents,
+        variant_id=terms.variant_id,
+    )
+
+
+@router.post(
+    "/checkouts/quote",
+    dependencies=[Depends(rate_limit("checkout_quote", limit=120, window_seconds=60))],
+)
+async def quote(body: QuoteIn, user: CurrentUser, db: DbSession) -> QuoteOut:
+    """What the checkout would cost (prices, shipping, totals per seller) without reserving."""
+    agreed = None
+    lines: list[service.Line] = []
+    if body.offer_id is not None:
+        terms = await chat_service.checkout_terms(db, body.offer_id, user)
+        if isinstance(terms, Checkout):
+            raise AppError("This offer already has an open checkout.", code="offer_checkout_open")
+        agreed = _agreed(terms)
+    elif body.from_cart:
+        rows = (await db.execute(select(CartItem).where(CartItem.user_id == user.id))).scalars()
+        lines = [service.Line(r.listing_id, r.quantity, _variant(r.variant_id)) for r in rows]
+    else:
+        lines = [service.Line(i.listing_id, i.quantity, i.variant_id) for i in body.items or []]
+    pricing = await service.quote_checkout(
+        db, user, lines, ship_to=body.ship_to, service=body.shipping_service, agreed=agreed
+    )
+    dest = pricing.destination
+    return QuoteOut(
+        orders=[
+            QuoteOrderOut(
+                seller_id=d.seller_id,
+                items=[
+                    QuoteLineOut(
+                        listing_id=p.line.listing_id,
+                        variant_id=p.line.variant_id,
+                        title=p.listing.title,
+                        variant_name=p.variant_name,
+                        quantity=p.line.quantity,
+                        unit_price_cents=p.unit_price_cents,
+                        shipping_cents=p.shipping_cents,
+                    )
+                    for p in d.lines
+                ],
+                items_cents=d.items_cents,
+                shipping_cents=d.shipping_cents,
+                total_cents=d.total_cents,
+                shipping_service=d.shipping_service,
+                shipping_days=d.shipping_days,
+            )
+            for d in pricing.drafts
+        ],
+        total_cents=pricing.total_cents,
+        destination=f"{dest.name} - {dest.state}" if dest else None,
+        shipping_by_service=pricing.shipping_by_service,
+    )
 
 
 @router.get("/checkouts/{checkout_id}")
