@@ -77,6 +77,7 @@ class SellerOut(BaseModel):
     id: uuid.UUID
     display_name: str
     avatar_url: str | None = None
+    reputation: str = "new"
     rating_avg: float | None = None
     rating_count: int = 0
 

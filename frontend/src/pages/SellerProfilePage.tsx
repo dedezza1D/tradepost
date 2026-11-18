@@ -9,6 +9,7 @@ import type { Profile } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { InfiniteGrid } from '../components/InfiniteGrid'
 import { ReportSheet } from '../components/ReportSheet'
+import { ReputationBadge, ReputationCard } from '../components/Reputation'
 import { errorMessage } from '../lib/errors'
 import { formatDateTime } from '../lib/format'
 import { Icon } from '../ui/icons'
@@ -159,6 +160,7 @@ export function SellerProfilePage() {
           <Avatar name={p.display_name} url={p.avatar_url} size="xl" />
           <div className="min-w-0 flex-1 space-y-1">
             <h1 className="truncate text-xl font-bold sm:text-2xl">{p.display_name}</h1>
+            <ReputationBadge level={p.reputation.level} />
             {p.city && <p className="flex items-center gap-1 text-sm text-muted"><Icon name="pin" size={15} />{p.city} - {p.state}</p>}
             <p className="flex items-center gap-1.5 text-sm">
               {p.rating_avg !== null ? (
@@ -176,6 +178,8 @@ export function SellerProfilePage() {
         </div>
         <Actions profile={p} />
       </header>
+
+      <ReputationCard data={p.reputation} />
 
       {p.blocked ? (
         <EmptyState icon="ban" title={t('social.youBlocked', { name: p.display_name })} text={t('social.youBlockedText')} />

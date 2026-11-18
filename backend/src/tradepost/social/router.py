@@ -15,6 +15,7 @@ from tradepost.identity.models import User
 from tradepost.identity.sessions import AdminUser, CurrentUser, OptionalPrincipal
 from tradepost.media.images import InvalidImage, process_image
 from tradepost.media.storage import Storage
+from tradepost.reviews.reputation import seller_reputation
 from tradepost.reviews.service import seller_rating
 from tradepost.security.ratelimit import rate_limit
 from tradepost.social import service
@@ -47,6 +48,15 @@ class UserPageOut(BaseModel):
     next_cursor: str | None
 
 
+class ReputationOut(BaseModel):
+    level: str
+    completed_sales: int
+    cancel_rate: float
+    late_rate: float
+    rating_avg: float | None
+    rating_count: int
+
+
 class ProfileOut(BaseModel):
     id: uuid.UUID
     display_name: str
@@ -63,6 +73,7 @@ class ProfileOut(BaseModel):
     is_me: bool
     following: bool
     blocked: bool
+    reputation: ReputationOut
 
 
 class FollowStateOut(BaseModel):
@@ -146,6 +157,7 @@ async def profile(
     viewer = principal.user if principal else None
     user = await service.public_profile_user(db, user_id, viewer)
     rating_avg, rating_count = await seller_rating(db, user.id)
+    rep = await seller_reputation(db, user.id)
     is_me = viewer is not None and viewer.id == user.id
     return ProfileOut(
         id=user.id,
@@ -163,6 +175,14 @@ async def profile(
         is_me=is_me,
         following=bool(viewer and not is_me and await service.is_following(db, viewer.id, user.id)),
         blocked=bool(viewer and not is_me and await service.has_blocked(db, viewer.id, user.id)),
+        reputation=ReputationOut(
+            level=rep.level,
+            completed_sales=rep.completed_sales,
+            cancel_rate=round(rep.cancel_rate, 3),
+            late_rate=round(rep.late_rate, 3),
+            rating_avg=rep.rating_avg,
+            rating_count=rep.rating_count,
+        ),
     )
 
 

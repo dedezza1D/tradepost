@@ -182,6 +182,41 @@ test('buyer and seller chat in real time and settle on an offer', async ({ brows
   await expect(seller.page.getByText(/Você vendeu/)).toBeVisible()
 })
 
+test('public questions are answered by the seller', async ({ browser }, info) => {
+  const title = `Bicicleta pergunta ${unique()}`
+  const seller = await newUser(browser, 'pt-BR', info.project.name)
+  await register(seller.page, 'Vendedora Perguntas', seller.email, 'Recife', /Crie sua conta/)
+  await listItem(seller.page, title)
+  const listingUrl = seller.page.url()
+
+  const buyer = await newUser(browser, 'en', info.project.name)
+  await register(buyer.page, 'Ana Compradora', buyer.email, 'Olinda', /Create your account/)
+  await buyer.page.goto(listingUrl)
+  await buyer.page.getByLabel('Your question').fill('Does it come with the receipt?')
+  await buyer.page.getByRole('button', { name: 'Ask', exact: true }).click()
+  await expect(buyer.page.getByText("Waiting for the seller's answer.")).toBeVisible()
+
+  await seller.page.goto(listingUrl)
+  await expect(seller.page.getByText('1 sem resposta')).toBeVisible()
+  await seller.page.getByLabel('Sua resposta').fill('Sim, com nota fiscal.')
+  await seller.page.getByRole('button', { name: 'Responder' }).click()
+  await expect(seller.page.getByText('Sim, com nota fiscal.')).toBeVisible()
+
+  const visitor = await browser.newContext({ ...info.project.use, locale: 'en' })
+  const page = await visitor.newPage()
+  await page.goto(listingUrl)
+  await expect(page.getByText('Does it come with the receipt?')).toBeVisible()
+  await expect(page.getByText('Sim, com nota fiscal.')).toBeVisible()
+  await expect(page.getByText(/· Ana ·/)).toBeVisible() // first name only
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([])
+
+  // The seller's reputation explains itself.
+  await page.getByRole('link', { name: /Vendedora Perguntas/ }).first().click()
+  await page.getByRole('link', { name: 'How it is calculated' }).click()
+  await expect(page.getByRole('heading', { name: 'How reputation works' })).toBeVisible()
+})
+
 test('main pages have no serious accessibility violations', async ({ page }) => {
   for (const path of ['/', '/search', '/login', '/register']) {
     await page.goto(path)

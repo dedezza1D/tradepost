@@ -280,6 +280,7 @@ async def listing_out(
     seller = await db.get(User, listing.seller_id)
     if seller is None:  # pragma: no cover - FK guarantees it
         raise Forbidden("Seller not found.")
+    from tradepost.reviews.reputation import seller_reputation
     from tradepost.reviews.service import seller_rating
     from tradepost.social.service import has_saved
 
@@ -290,6 +291,7 @@ async def listing_out(
             id=seller.id,
             display_name=seller.display_name,
             avatar_url=storage.url(seller.avatar_key) if seller.avatar_key else None,
+            reputation=(await seller_reputation(db, seller.id)).level,
             rating_avg=rating_avg,
             rating_count=rating_count,
         ),

@@ -18,6 +18,7 @@ from tradepost.orders.models import (
     SellerAccount,
     StockReservation,
 )
+from tradepost.questions import Question
 from tradepost.reviews.service import Review
 from tradepost.security.ratelimit import RateLimitBucket
 from tradepost.social.models import Block, Follow, Report, Save
@@ -42,6 +43,7 @@ __all__ = [
     "OrderItem",
     "PaymentAttempt",
     "PaymentEvent",
+    "Question",
     "RateLimitBucket",
     "Report",
     "Review",

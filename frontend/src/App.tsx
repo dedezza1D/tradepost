@@ -40,6 +40,10 @@ const router = createBrowserRouter([
       { path: '/search', element: <SearchPage /> },
       { path: '/listings/:id', element: <ListingPage /> },
       { path: '/login', element: <LoginPage /> },
+      {
+        path: '/help/reputation',
+        lazy: async () => ({ Component: (await import('./pages/ReputationHelpPage')).ReputationHelpPage }),
+      },
       { path: '/register', element: <RegisterPage /> },
       {
         path: '/users/:id',

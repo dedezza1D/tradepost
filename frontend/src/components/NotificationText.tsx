@@ -17,6 +17,8 @@ const KNOWN = new Set([
   'saved_low_stock',
   'listing_removed',
   'new_message',
+  'question_received',
+  'question_answered',
   'offer_received',
   'offer_countered',
   'offer_accepted',

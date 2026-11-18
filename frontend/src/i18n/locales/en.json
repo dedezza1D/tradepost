@@ -63,7 +63,9 @@
       "offer_countered": "<b>{{name}}</b> countered with {{offer}} for <b>{{title}}</b>.",
       "offer_accepted": "<b>{{name}}</b> accepted {{offer}} for <b>{{title}}</b>.",
       "offer_declined": "<b>{{name}}</b> declined {{offer}} for <b>{{title}}</b>.",
-      "offer_expired": "Your offer of {{offer}} for <b>{{title}}</b> expired."
+      "offer_expired": "Your offer of {{offer}} for <b>{{title}}</b> expired.",
+      "question_received": "<b>{{name}}</b> asked about <b>{{title}}</b>.",
+      "question_answered": "The seller answered your question about <b>{{title}}</b>."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -136,7 +138,10 @@
     "offer_expired": "This offer has expired.",
     "offer_not_accepted": "This offer was not accepted.",
     "offer_used": "This offer was already paid.",
-    "listing_unavailable": "This listing is not available."
+    "listing_unavailable": "This listing is not available.",
+    "contact_not_allowed": "Questions and answers are public: remove phone numbers, emails, links or payment details. Use the private chat.",
+    "own_listing_question": "This is your own listing.",
+    "seller_only": "Only the seller can do this."
   },
   "home": {
     "categories": "Categories",
@@ -596,5 +601,51 @@
     "send": "Send",
     "contactTitle": "Ask the seller",
     "message": "Message"
+  },
+  "questions": {
+    "title": "Questions",
+    "unanswered_one": "{{count}} unanswered",
+    "unanswered_other": "{{count}} unanswered",
+    "askLabel": "Your question",
+    "placeholder": "Ask the seller…",
+    "ask": "Ask",
+    "publicHint": "Questions and answers are public. Do not include phone numbers, emails or payment details.",
+    "signInToAsk": "to ask the seller.",
+    "none": "No questions yet.",
+    "remove": "Remove",
+    "waiting": "Waiting for the seller's answer.",
+    "answerLabel": "Your answer",
+    "answerPlaceholder": "Answer publicly…",
+    "answer": "Answer"
+  },
+  "reputation": {
+    "title": "Reputation",
+    "level": {
+      "new": "New seller",
+      "top": "Top seller",
+      "good": "Good seller",
+      "attention": "Needs attention"
+    },
+    "sales": "Sales",
+    "cancellations": "Cancellations",
+    "late": "Late shipments",
+    "window": "Last 90 days.",
+    "how": "How it is calculated",
+    "helpTitle": "How reputation works",
+    "helpIntro": "Each seller's reputation is computed by tradepost from what happened in their sales over the last 90 days. Nothing is self-reported: only facts recorded on the platform count.",
+    "inputsTitle": "What counts",
+    "inputs": {
+      "sales": "Completed sales (delivered to the buyer).",
+      "cancellations": "Cancellations and refunds after payment, including through a dispute.",
+      "late": "Late shipments: more than 3 days between payment and shipping.",
+      "ratings": "Buyers' ratings."
+    },
+    "rules": {
+      "top": "10 or more sales, at most 2% cancellations, at most 5% late shipments and an average rating of 4.5 or more.",
+      "good": "3 or more sales, at most 5% cancellations, at most 15% late shipments and an average rating of 4 or more.",
+      "new": "Fewer than 3 completed sales in the last 90 days.",
+      "attention": "Cancellations, delays or ratings outside the limits of the other levels."
+    },
+    "helpFooter": "Without ratings, the level depends only on sales, cancellations and delays. It is recomputed on every view."
   }
 }

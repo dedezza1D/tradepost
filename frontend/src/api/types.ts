@@ -34,6 +34,7 @@ export interface Seller {
   id: string
   display_name: string
   avatar_url: string | null
+  reputation: string
   rating_avg: number | null
   rating_count: number
 }
@@ -118,6 +119,14 @@ export interface Profile {
   is_me: boolean
   following: boolean
   blocked: boolean
+  reputation: {
+    level: string
+    completed_sales: number
+    cancel_rate: number
+    late_rate: number
+    rating_avg: number | null
+    rating_count: number
+  }
 }
 
 export interface UserSummary {

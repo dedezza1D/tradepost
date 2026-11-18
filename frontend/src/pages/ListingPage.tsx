@@ -14,6 +14,8 @@ import { Avatar } from '../components/Avatar'
 import { ReportSheet } from '../components/ReportSheet'
 import { SaveButton } from '../components/SaveButton'
 import { useStartConversation } from '../api/chat'
+import { Questions } from '../components/Questions'
+import { ReputationBadge } from '../components/Reputation'
 
 function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
   const { t } = useTranslation()
@@ -275,7 +277,10 @@ export function ListingPage() {
         <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
           <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold">{item.seller.display_name}</span>
+            <span className="flex items-center gap-2">
+              <span className="truncate font-semibold">{item.seller.display_name}</span>
+              <ReputationBadge level={item.seller.reputation} />
+            </span>
             <span className="flex items-center gap-1 text-xs text-muted">
               {item.seller.rating_avg !== null ? (
                 <><Stars value={item.seller.rating_avg} size={13} /> {item.seller.rating_avg.toFixed(1)} · {t('reviews.count', { count: item.seller.rating_count })}</>
@@ -304,6 +309,9 @@ export function ListingPage() {
         <h2 className="mb-2 font-semibold">{t('listing.description')}</h2>
         <p className="text-[15px] leading-relaxed whitespace-pre-line">{item.description}</p>
       </section>
+      <div className="md:col-start-1">
+        <Questions listingId={item.id} isSeller={isOwner} signedIn={Boolean(me)} />
+      </div>
     </article>
   )
 }

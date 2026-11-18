@@ -63,7 +63,9 @@
       "offer_countered": "<b>{{name}}</b> fez uma contraproposta de {{offer}} por <b>{{title}}</b>.",
       "offer_accepted": "<b>{{name}}</b> aceitou {{offer}} por <b>{{title}}</b>.",
       "offer_declined": "<b>{{name}}</b> recusou {{offer}} por <b>{{title}}</b>.",
-      "offer_expired": "Sua oferta de {{offer}} por <b>{{title}}</b> expirou."
+      "offer_expired": "Sua oferta de {{offer}} por <b>{{title}}</b> expirou.",
+      "question_received": "<b>{{name}}</b> perguntou sobre <b>{{title}}</b>.",
+      "question_answered": "O vendedor respondeu sua pergunta sobre <b>{{title}}</b>."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -136,7 +138,10 @@
     "offer_expired": "Esta oferta expirou.",
     "offer_not_accepted": "Esta oferta não foi aceita.",
     "offer_used": "Esta oferta já foi paga.",
-    "listing_unavailable": "Este anúncio não está disponível."
+    "listing_unavailable": "Este anúncio não está disponível.",
+    "contact_not_allowed": "Perguntas e respostas são públicas: tire telefone, e-mail, links ou dados de pagamento. Use a conversa privada.",
+    "own_listing_question": "Este anúncio é seu.",
+    "seller_only": "Só o vendedor pode fazer isso."
   },
   "home": {
     "categories": "Categorias",
@@ -596,5 +601,51 @@
     "send": "Enviar",
     "contactTitle": "Fale com o vendedor",
     "message": "Mensagem"
+  },
+  "questions": {
+    "title": "Perguntas",
+    "unanswered_one": "{{count}} sem resposta",
+    "unanswered_other": "{{count}} sem resposta",
+    "askLabel": "Sua pergunta",
+    "placeholder": "Pergunte ao vendedor…",
+    "ask": "Perguntar",
+    "publicHint": "Perguntas e respostas são públicas. Não coloque telefone, e-mail ou dados de pagamento.",
+    "signInToAsk": "para perguntar ao vendedor.",
+    "none": "Ninguém perguntou nada ainda.",
+    "remove": "Remover",
+    "waiting": "Aguardando resposta do vendedor.",
+    "answerLabel": "Sua resposta",
+    "answerPlaceholder": "Responda publicamente…",
+    "answer": "Responder"
+  },
+  "reputation": {
+    "title": "Reputação",
+    "level": {
+      "new": "Vendedor novo",
+      "top": "Vendedor destaque",
+      "good": "Bom vendedor",
+      "attention": "Atenção"
+    },
+    "sales": "Vendas",
+    "cancellations": "Cancelamentos",
+    "late": "Envios atrasados",
+    "window": "Últimos 90 dias.",
+    "how": "Como calculamos",
+    "helpTitle": "Como funciona a reputação",
+    "helpIntro": "A reputação de cada vendedor é calculada pelo tradepost a partir do que acontece nas vendas dos últimos 90 dias. Nada vem de autoavaliação: só de fatos registrados na plataforma.",
+    "inputsTitle": "O que entra na conta",
+    "inputs": {
+      "sales": "Vendas concluídas (entregues ao comprador).",
+      "cancellations": "Cancelamentos e reembolsos depois do pagamento, inclusive por disputa.",
+      "late": "Envios atrasados: mais de 3 dias entre o pagamento e o envio.",
+      "ratings": "Notas dos compradores."
+    },
+    "rules": {
+      "top": "10 ou mais vendas, até 2% de cancelamentos, até 5% de envios atrasados e nota média 4,5 ou mais.",
+      "good": "3 ou mais vendas, até 5% de cancelamentos, até 15% de envios atrasados e nota média 4 ou mais.",
+      "new": "Menos de 3 vendas concluídas nos últimos 90 dias.",
+      "attention": "Cancelamentos, atrasos ou notas acima dos limites dos outros níveis."
+    },
+    "helpFooter": "Sem notas, o nível depende só de vendas, cancelamentos e atrasos. O cálculo é refeito a cada consulta."
   }
 }
