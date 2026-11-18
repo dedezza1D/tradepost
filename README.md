@@ -31,6 +31,11 @@ a quiet period can take about a minute while the API wakes up. See [test payment
   photo, bio and follower counts, link previews for shared listings.
 - **Safety**: block a user (hides each other's listings, profiles and purchases in both
   directions and cuts follows and saves), report listings and profiles, moderation queue.
+- **Chat per listing** between buyer and seller: quick replies, unread counts, "seen" marks,
+  live delivery, a warning (not a block) when a message carries contact details or asks for
+  payment outside the platform.
+- **Offers**: the buyer proposes a price, the seller accepts, declines or counters, offers expire
+  after 24 hours; an accepted offer is paid through the normal checkout at the agreed price.
 - **Live notifications** over server-sent events, in Portuguese or English.
 
 ## Architecture
@@ -143,7 +148,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 85 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 104 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -154,6 +159,9 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
 - Social tests cover counters, idempotent follow and save, price-drop and last-unit alerts,
   feed ordering and cursor pagination, trending pages that stay stable while new saves arrive,
   blocks hiding content in both directions, report deduplication and moderation.
+- Chat tests cover access by the two participants only, unread and "seen" state, pagination,
+  the off-platform detector, blocking, the offer state machine, a single acceptance under
+  concurrent requests, expiry, and checkouts that charge the agreed price and nothing else.
 - Adapter tests verify webhook signatures with locally signed payloads (no network).
 - `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix
@@ -162,7 +170,10 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
 The web app has a Playwright suite (`npm run e2e`) that runs the production build against the
 API and PostgreSQL on a phone and a desktop viewport: a seller lists an item in Portuguese, a
 buyer in English saves it, follows the seller, finds it in the Following tab, pays with the test
-card, gets it shipped and reviews it; axe checks the main pages for accessibility violations.
+card, gets it shipped and reviews it. A second scenario has the two chat: the seller's reply
+must reach the buyer's open screen through the stream (faster than the fallback poll), then an
+offer is countered, accepted and paid at the agreed price. axe checks the main pages and the
+conversation screen for accessibility violations.
 `npm run test:edge` unit-tests the link-preview tags built at the edge.
 
 CI (GitHub Actions) runs lint, strict type checking, migrations up → down → up on an empty
@@ -243,6 +254,16 @@ uv run python scripts/stripe_listen.py
   one query per page is cheaper than writing every new listing into each follower's timeline.
   Fan-out on write starts paying off when sellers have thousands of followers and reads far
   outnumber writes; the switch would add a `timeline` table filled by a background job.
+- **Chat over server-sent events plus plain POSTs, not WebSockets.** Messages are sent with
+  POST; the existing notification stream sends a "wake" event and the open screens fetch what
+  is new. One real-time channel instead of two, no sticky connections, and it works through the
+  Pages proxy. If the stream fails, the app falls back to polling every 30 seconds. WebSockets
+  (for typing indicators, say) would need a connection that stays on one instance.
+- **Offers as a small state machine** (`pending → accepted | declined | countered | cancelled |
+  expired`). Every transition is one conditional UPDATE on `status = 'pending'`, so concurrent
+  accepts cannot both win, and a partial unique index allows one open offer per conversation.
+  The checkout for an offer takes only the payment provider: listing, quantity and price come
+  from the offer.
 - **Counters updated in the same transaction** as the follow or save they count (atomic
   `x = x + 1`), so they never drift and need no reconciliation job.
 - **Link previews rendered at the edge.** A Pages Function adds Open Graph tags to

@@ -168,6 +168,10 @@ async def stream(
                     await asyncio.wait_for(wake.wait(), timeout=HEARTBEAT_SECONDS)
                 except TimeoutError:
                     yield ": heartbeat\n\n"
+                else:
+                    # Something changed for this user (a message, a read mark): open chat
+                    # screens refetch. Chat messages do not always create a notification.
+                    yield _sse("wake", {})
                 wake.clear()
                 rows, cursor = await read_new(cursor)
                 if rows:

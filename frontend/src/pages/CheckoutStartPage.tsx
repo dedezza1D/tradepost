@@ -19,6 +19,9 @@ export function CheckoutStartPage() {
   const fromCart = params.get('from') === 'cart'
   const listingId = params.get('listing')
   const quantity = Number(params.get('qty') ?? '1')
+  // Paying an accepted offer: the server charges the agreed price; the amount here is only shown.
+  const offerId = params.get('offer')
+  const agreed = Number(params.get('amount') ?? '0')
   const providers = useProviders()
   const cart = useCart(fromCart)
   const listing = useQuery({ queryKey: ['listing', listingId], queryFn: () => api<Listing>(`/api/listings/${listingId}`), enabled: Boolean(listingId) })
@@ -28,18 +31,24 @@ export function CheckoutStartPage() {
 
   const create = useMutation({
     mutationFn: (chosen: string) =>
-      api<Checkout>('/api/checkouts', {
-        method: 'POST',
-        headers: { 'Idempotency-Key': idempotencyKey },
-        body: json(fromCart ? { provider: chosen, from_cart: true } : { provider: chosen, items: [{ listing_id: listingId, quantity }] }),
-      }),
+      offerId
+        ? api<Checkout>(`/api/offers/${offerId}/checkout`, {
+            method: 'POST',
+            headers: { 'Idempotency-Key': idempotencyKey },
+            body: json({ provider: chosen }),
+          })
+        : api<Checkout>('/api/checkouts', {
+            method: 'POST',
+            headers: { 'Idempotency-Key': idempotencyKey },
+            body: json(fromCart ? { provider: chosen, from_cart: true } : { provider: chosen, items: [{ listing_id: listingId, quantity }] }),
+          }),
     onSuccess: (checkout) => navigate(`/checkout/${checkout.id}`, { replace: true }),
   })
 
   const lines = fromCart
     ? (cart.data?.items ?? []).map((i) => ({ title: i.title, quantity: i.quantity, cents: i.price_cents * i.quantity, shipping: i.shipping_cents }))
     : listing.data
-      ? [{ title: listing.data.title, quantity, cents: listing.data.price_cents * quantity, shipping: listing.data.shipping_cents }]
+      ? [{ title: listing.data.title, quantity, cents: (offerId ? agreed : listing.data.price_cents) * quantity, shipping: listing.data.shipping_cents }]
       : []
   const shipping = lines.reduce((s, l) => s + l.shipping, 0)
   const total = lines.reduce((s, l) => s + l.cents, 0) + shipping
@@ -48,6 +57,12 @@ export function CheckoutStartPage() {
   return (
     <div className="mx-auto max-w-xl space-y-4 pb-20 md:pb-0">
       <PageHeader title={t('checkout.title')} />
+      {offerId && (
+        <p className="flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm text-success">
+          <Icon name="check" size={16} />
+          {t('chat.offer.agreedPrice', { amount: formatMoney(agreed) })}
+        </p>
+      )}
       <section className="card divide-y divide-line">
         {lines.map((l, i) => (
           <div key={i} className="flex justify-between gap-4 p-4 text-sm">

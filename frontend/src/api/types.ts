@@ -143,3 +143,40 @@ export interface AdminReport {
   target_label: string
   reports_on_target: number
 }
+
+export type OfferStatus = 'pending' | 'accepted' | 'declined' | 'countered' | 'cancelled' | 'expired'
+export type MessageKind = 'text' | 'offer' | 'offer_accepted' | 'offer_declined' | 'offer_cancelled' | 'offer_expired'
+
+export interface Offer {
+  id: string
+  proposer_id: string
+  amount_cents: number
+  quantity: number
+  status: OfferStatus
+  expires_at: string
+  pay_by: string | null
+  checkout_id: string | null
+  paid: boolean
+}
+
+export interface ChatMessage {
+  id: number
+  sender_id: string | null
+  kind: MessageKind
+  body: string | null
+  warning: 'contact' | 'off_platform_payment' | null
+  created_at: string
+  offer: Offer | null
+}
+
+export interface Conversation {
+  id: string
+  role: 'buyer' | 'seller'
+  listing: { id: string; title: string; price_cents: number; status: ListingStatus; thumb_url: string | null }
+  other: { id: string; display_name: string; avatar_url: string | null }
+  last_message_at: string
+  last_message_preview: string | null
+  unread: number
+  other_read_at: string | null
+  blocked: boolean
+}

@@ -35,7 +35,9 @@ const paths = {
   ban: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM5.6 5.6l12.8 12.8',
   users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 10a7 7 0 0 1 14 0M16 3.2a4 4 0 0 1 0 7.6M22 21a7 7 0 0 0-4-6.3',
   trending: 'm3 17 6-6 4 4 8-8M15 7h6v6',
-  store:'M4 9h16l-1-4H5L4 9Zm0 0v11h16V9M9 20v-6h6v6',
+  chat: 'M4 5h16v11H9l-5 4V5Z',
+  send: 'M4 12 20 4l-6 16-3-7-7-1Z',
+  store: 'M4 9h16l-1-4H5L4 9Zm0 0v11h16V9M9 20v-6h6v6',
 } as const
 
 export type IconName = keyof typeof paths

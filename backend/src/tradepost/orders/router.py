@@ -4,9 +4,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from tradepost.catalog.models import Listing, ListingPhoto
+from tradepost.chat import service as chat_service
 from tradepost.config import get_settings
 from tradepost.deps import DbSession
 from tradepost.errors import AppError, NotFound
@@ -265,6 +267,47 @@ async def create_checkout(
         lines = [service.Line(i.listing_id, i.quantity) for i in body.items or []]
     checkout, created = await service.create_checkout(
         db, get_settings(), payments, user, body.provider, lines, idempotency_key
+    )
+    if not created:
+        response.status_code = status.HTTP_200_OK
+    return await _checkout_out(db, storage, payments, checkout, user)
+
+
+class OfferCheckoutIn(BaseModel):
+    provider: str = Field(max_length=20)
+
+
+@router.post(
+    "/offers/{offer_id}/checkout",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("checkout", limit=30, window_seconds=3600))],
+)
+async def checkout_offer(
+    offer_id: uuid.UUID,
+    body: OfferCheckoutIn,
+    response: Response,
+    user: CurrentUser,
+    db: DbSession,
+    storage: StorageDep,
+    payments: Payments,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+) -> CheckoutOut:
+    """Pay an accepted offer. The body names only the provider: listing, quantity and price
+    come from the offer, so the client cannot change what was agreed."""
+    if not _IDEMPOTENCY_KEY.match(idempotency_key):
+        raise AppError("Idempotency-Key must be 8-80 letters, digits, '-' or '_'.", code="bad_key")
+    terms = await chat_service.checkout_terms(db, offer_id, user)
+    if isinstance(terms, Checkout):
+        response.status_code = status.HTTP_200_OK
+        return await _checkout_out(db, storage, payments, terms, user)
+    agreed = service.AgreedPrice(
+        offer_id=terms.offer_id,
+        listing_id=terms.listing_id,
+        quantity=terms.quantity,
+        unit_price_cents=terms.unit_price_cents,
+    )
+    checkout, created = await service.create_checkout(
+        db, get_settings(), payments, user, body.provider, [], idempotency_key, agreed=agreed
     )
     if not created:
         response.status_code = status.HTTP_200_OK

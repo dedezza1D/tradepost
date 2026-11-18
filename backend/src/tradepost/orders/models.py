@@ -104,6 +104,10 @@ class Checkout(TimestampMixin, Base):
     # The attempt that paid. Any other attempt that succeeds later is a double payment.
     paid_attempt_id: Mapped[uuid.UUID | None] = mapped_column()
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set when the checkout pays an accepted offer: its items are charged at the agreed price.
+    offer_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("offers.id", ondelete="SET NULL"), index=True
+    )
 
     orders: Mapped[list["Order"]] = relationship(
         lazy="selectin", order_by="Order.created_at", back_populates="checkout"

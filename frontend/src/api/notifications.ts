@@ -52,6 +52,11 @@ export function useNotificationStream(enabled: boolean) {
       }
     })
     source.addEventListener('notification', refresh)
+    // Something changed for this user (a chat message, a read mark): open chat screens refetch.
+    source.addEventListener('wake', () => {
+      void qc.invalidateQueries({ queryKey: ['conversations'] })
+      void qc.invalidateQueries({ queryKey: ['messages'] })
+    })
     source.addEventListener('unread', (event) => {
       const { count } = JSON.parse((event as MessageEvent).data) as { count: number }
       qc.setQueryData<NotificationPage>(NOTIFICATIONS_KEY, (page) =>
@@ -73,6 +78,7 @@ const SELLER_KINDS = new Set(['order_paid', 'order_delivered', 'payout_sent', 'r
 
 /** Where tapping a notification goes. */
 export function notificationTarget(n: Notification): string {
+  if (n.payload.conversation_id) return `/inbox/${String(n.payload.conversation_id)}`
   if (n.kind === 'new_follower' && n.payload.user_id) return `/users/${String(n.payload.user_id)}`
   if (n.kind === 'listing_removed') return '/me/listings'
   if (n.payload.listing_id && !n.payload.order_id) return `/listings/${String(n.payload.listing_id)}`

@@ -58,27 +58,32 @@ async function register(page: Page, name: string, email: string, city: string, t
   await expect(page).toHaveURL('/')
 }
 
+/** Lists an item through the wizard (Portuguese interface) and lands on its page. */
+async function listItem(page: Page, title: string) {
+  await page.goto('/sell')
+  await expect(page.getByRole('heading', { name: 'Comece pelas fotos' })).toBeVisible()
+  await page.locator('input[type=file]').setInputFiles({ name: 'bike.png', mimeType: 'image/png', buffer: png() })
+  await expect(page.getByAltText('Foto 1')).toBeVisible()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.locator('#title').fill(title)
+  await page.locator('#description').fill('Quadro de alumínio, pouco uso, revisada.')
+  await page.locator('#category').selectOption('bikes')
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.locator('#price').fill('1.250,00')
+  await page.locator('#shipping').fill('30')
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await expect(page.getByText('R$ 1.250,00')).toBeVisible()
+  await page.getByRole('button', { name: 'Publicar' }).click()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+}
+
 test('a seller lists an item and a buyer buys, receives and reviews it', async ({ browser }, info) => {
   const title = `Bicicleta e2e ${unique()}`
 
   // Seller, Portuguese interface.
   const seller = await newUser(browser, 'pt-BR', info.project.name)
   await register(seller.page, 'Vendedora E2E', seller.email, 'Recife', /Crie sua conta/)
-  await seller.page.goto('/sell')
-  await expect(seller.page.getByRole('heading', { name: 'Comece pelas fotos' })).toBeVisible()
-  await seller.page.locator('input[type=file]').setInputFiles({ name: 'bike.png', mimeType: 'image/png', buffer: png() })
-  await expect(seller.page.getByAltText('Foto 1')).toBeVisible()
-  await seller.page.getByRole('button', { name: 'Continuar' }).click()
-  await seller.page.locator('#title').fill(title)
-  await seller.page.locator('#description').fill('Quadro de alumínio, pouco uso, revisada.')
-  await seller.page.locator('#category').selectOption('bikes')
-  await seller.page.getByRole('button', { name: 'Continuar' }).click()
-  await seller.page.locator('#price').fill('1.250,00')
-  await seller.page.locator('#shipping').fill('30')
-  await seller.page.getByRole('button', { name: 'Continuar' }).click()
-  await expect(seller.page.getByText('R$ 1.250,00')).toBeVisible()
-  await seller.page.getByRole('button', { name: 'Publicar' }).click()
-  await expect(seller.page.getByRole('heading', { name: title })).toBeVisible()
+  await listItem(seller.page, title)
 
   // Buyer, English interface.
   const buyer = await newUser(browser, 'en', info.project.name)
@@ -127,6 +132,54 @@ test('a seller lists an item and a buyer buys, receives and reviews it', async (
 
   await seller.page.goto('/seller')
   await expect(seller.page.getByText('Entregue', { exact: true })).toBeVisible()
+})
+
+test('buyer and seller chat in real time and settle on an offer', async ({ browser }, info) => {
+  const title = `Bicicleta chat ${unique()}`
+  const seller = await newUser(browser, 'pt-BR', info.project.name)
+  await register(seller.page, 'Vendedor Chat', seller.email, 'Recife', /Crie sua conta/)
+  await listItem(seller.page, title)
+  const listingUrl = seller.page.url()
+
+  const buyer = await newUser(browser, 'en', info.project.name)
+  await register(buyer.page, 'Buyer Chat', buyer.email, 'Olinda', /Create your account/)
+  await buyer.page.goto(listingUrl)
+  await buyer.page.getByRole('button', { name: 'Is it still available?' }).click()
+  await expect(buyer.page).toHaveURL(/\/inbox\//)
+  await expect(buyer.page.getByText('Is it still available?')).toBeVisible()
+
+  // The seller sees the new conversation and answers.
+  await seller.page.goto('/inbox')
+  await seller.page.getByRole('link', { name: /Buyer Chat/ }).click()
+  await seller.page.getByLabel('Mensagem').fill('Sim, está disponível!')
+  await seller.page.getByRole('button', { name: 'Enviar' }).click()
+  // Delivered to the buyer's open screen by the stream, well before the 30 s fallback poll.
+  await expect(buyer.page.getByText('Sim, está disponível!')).toBeVisible({ timeout: 15_000 })
+
+  // Offer 1.000,00, counter 1.100,00, accept.
+  await buyer.page.getByRole('button', { name: 'Make an offer' }).click()
+  await buyer.page.getByLabel('Your price').fill('1.000,00')
+  await buyer.page.getByRole('button', { name: 'Send offer' }).click()
+  await expect(seller.page.getByText('R$ 1.000,00')).toBeVisible({ timeout: 15_000 })
+  await seller.page.getByRole('button', { name: 'Contrapropor' }).click()
+  await seller.page.getByLabel('Seu preço').fill('1.100,00')
+  await seller.page.getByRole('button', { name: 'Enviar oferta' }).click()
+  // The English interface formats money for its language: R$1,100.00.
+  await expect(buyer.page.getByText(/R\$\s?1,100\.00/)).toBeVisible({ timeout: 15_000 })
+  const axe = await new AxeBuilder({ page: buyer.page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([])
+  await buyer.page.getByRole('button', { name: 'Accept' }).click()
+
+  // The buyer pays the agreed price through the usual checkout.
+  await buyer.page.getByRole('button', { name: /Pay R\$\s?1,100\.00/ }).click()
+  await expect(buyer.page.getByText(/Price agreed in the chat: R\$\s?1,100\.00/)).toBeVisible()
+  await buyer.page.getByRole('button', { name: /Continue to payment/ }).click()
+  await expect(buyer.page.getByText(/R\$\s?1,130\.00/).first()).toBeVisible() // 1,100.00 + 30.00 shipping
+  await buyer.page.getByRole('button', { name: 'Pay with a test card' }).click()
+  await expect(buyer.page.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible()
+
+  await seller.page.goto('/notifications')
+  await expect(seller.page.getByText(/Você vendeu/)).toBeVisible()
 })
 
 test('main pages have no serious accessibility violations', async ({ page }) => {

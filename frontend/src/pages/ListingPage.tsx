@@ -13,6 +13,7 @@ import { Badge, EmptyState, ErrorState, Sheet, Stars } from '../ui/primitives'
 import { Avatar } from '../components/Avatar'
 import { ReportSheet } from '../components/ReportSheet'
 import { SaveButton } from '../components/SaveButton'
+import { useStartConversation } from '../api/chat'
 
 function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
   const { t } = useTranslation()
@@ -111,6 +112,48 @@ function ShareButton({ title }: { title: string }) {
       <Icon name="share" size={18} />
       {copied ? t('listing.linkCopied') : t('listing.share')}
     </button>
+  )
+}
+
+const QUICK = ['available', 'condition', 'pickup', 'shipping'] as const
+
+function ContactSeller({ listing, signedIn }: { listing: Listing; signedIn: boolean }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const start = useStartConversation()
+  function open(body?: string, offer = false) {
+    if (!signedIn) {
+      navigate('/login', { state: { from: `/listings/${listing.id}` } })
+      return
+    }
+    start.mutate(
+      { listing_id: listing.id, body },
+      { onSuccess: (c) => navigate(`/inbox/${c.id}${offer ? '?offer=1' : ''}`) },
+    )
+  }
+  return (
+    <section className="card space-y-3 p-4" aria-labelledby="contact-title">
+      <h2 id="contact-title" className="font-semibold">{t('chat.contactTitle')}</h2>
+      <div className="flex flex-wrap gap-2">
+        {QUICK.map((q) => (
+          <button key={q} type="button" disabled={start.isPending} onClick={() => open(t(`chat.quick.${q}`))}
+            className="rounded-full border border-line px-3 py-1.5 text-sm hover:border-primary hover:text-primary">
+            {t(`chat.quick.${q}`)}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" className="btn-secondary" disabled={start.isPending} onClick={() => open()}>
+          <Icon name="chat" size={18} />{t('chat.message')}
+        </button>
+        {listing.status === 'active' && (
+          <button type="button" className="btn-secondary" disabled={start.isPending} onClick={() => open(undefined, true)}>
+            <Icon name="tag" size={18} />{t('chat.offer.make')}
+          </button>
+        )}
+      </div>
+      {start.isError && <p role="alert" className="text-sm text-danger">{errorMessage(start.error, t)}</p>}
+    </section>
   )
 }
 
@@ -227,6 +270,7 @@ export function ListingPage() {
         ) : available ? (
           <BuyBox listing={item} signedIn={Boolean(me)} />
         ) : null}
+        {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} />}
 
         <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
           <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />

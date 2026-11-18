@@ -32,7 +32,8 @@
     "skip": "Pular para o conteúdo",
     "cartCount_one": "Carrinho, {{count}} item",
     "cartCount_other": "Carrinho, {{count}} itens",
-    "saved": "Salvos"
+    "saved": "Salvos",
+    "messages": "Mensagens"
   },
   "notifications": {
     "title": "Notificações",
@@ -56,7 +57,13 @@
       "listing_saved": "<b>{{name}}</b> salvou <b>{{title}}</b>.",
       "saved_price_drop": "<b>{{title}}</b> baixou de {{old}} para {{price}}.",
       "saved_low_stock": "Só resta 1 unidade de <b>{{title}}</b>.",
-      "listing_removed": "<b>{{title}}</b> foi removido pela moderação."
+      "listing_removed": "<b>{{title}}</b> foi removido pela moderação.",
+      "new_message": "<b>{{name}}</b> mandou mensagem sobre <b>{{title}}</b>.",
+      "offer_received": "<b>{{name}}</b> ofereceu {{offer}} por <b>{{title}}</b>.",
+      "offer_countered": "<b>{{name}}</b> fez uma contraproposta de {{offer}} por <b>{{title}}</b>.",
+      "offer_accepted": "<b>{{name}}</b> aceitou {{offer}} por <b>{{title}}</b>.",
+      "offer_declined": "<b>{{name}}</b> recusou {{offer}} por <b>{{title}}</b>.",
+      "offer_expired": "Sua oferta de {{offer}} por <b>{{title}}</b> expirou."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -119,7 +126,17 @@
     "block_limit": "Você chegou ao limite desta conta de demonstração.",
     "report_self": "Você não pode denunciar o próprio perfil ou anúncio.",
     "city_required": "Escolha uma cidade.",
-    "sign_in_required": "Entre para continuar."
+    "sign_in_required": "Entre para continuar.",
+    "own_listing_chat": "Este anúncio é seu.",
+    "buyer_only": "Só o comprador pode fazer isso.",
+    "offer_above_price": "A oferta não pode passar do preço anunciado.",
+    "offer_pending": "Já existe uma oferta em aberto nesta conversa.",
+    "not_your_turn": "Agora é a vez da outra pessoa responder.",
+    "offer_closed": "Esta oferta já foi respondida.",
+    "offer_expired": "Esta oferta expirou.",
+    "offer_not_accepted": "Esta oferta não foi aceita.",
+    "offer_used": "Esta oferta já foi paga.",
+    "listing_unavailable": "Este anúncio não está disponível."
   },
   "home": {
     "categories": "Categorias",
@@ -504,5 +521,80 @@
       "remove": "Remover anúncio",
       "actioned": "Marcar como resolvida"
     }
+  },
+  "chat": {
+    "title": "Mensagens",
+    "emptyTitle": "Nenhuma conversa ainda",
+    "emptyText": "Pergunte algo a um vendedor ou faça uma oferta direto no anúncio.",
+    "buying": "Comprando",
+    "selling": "Vendendo",
+    "unread_one": "{{count}} mensagem não lida",
+    "unread_other": "{{count}} mensagens não lidas",
+    "unreadConversations_one": "{{count}} conversa com mensagem nova",
+    "unreadConversations_other": "{{count}} conversas com mensagens novas",
+    "preview": {
+      "offer": "Oferta de {{amount}}",
+      "offer_accepted": "Oferta de {{amount}} aceita",
+      "offer_declined": "Oferta de {{amount}} recusada",
+      "offer_cancelled": "Oferta de {{amount}} cancelada",
+      "offer_expired": "Oferta de {{amount}} expirou"
+    },
+    "offer": {
+      "make": "Fazer oferta",
+      "counterTitle": "Contraproposta",
+      "amount": "Seu preço",
+      "listed": "Preço anunciado: {{price}}",
+      "hint": "A oferta vale por 24 horas. Se for aceita, você paga pelo tradepost com a proteção de sempre.",
+      "send": "Enviar oferta",
+      "label": "Oferta",
+      "counterLabel": "Contraproposta",
+      "paid": "Paga",
+      "status": {
+        "pending": "Aguardando",
+        "accepted": "Aceita",
+        "declined": "Recusada",
+        "countered": "Contraproposta feita",
+        "cancelled": "Cancelada",
+        "expired": "Expirada"
+      },
+      "expires": "Vale até {{time}}",
+      "accept": "Aceitar",
+      "counter": "Contrapropor",
+      "decline": "Recusar",
+      "cancel": "Cancelar oferta",
+      "pay": "Pagar {{amount}}",
+      "payBy": "Pague até {{time}} para garantir o preço.",
+      "waitingPayment": "Aguardando o pagamento do comprador.",
+      "agreedPrice": "Preço combinado na conversa: {{amount}}"
+    },
+    "you": "Você",
+    "event": {
+      "offer_accepted": "{{who}} aceitou a oferta de {{amount}}.",
+      "offer_declined": "{{who}} recusou a oferta de {{amount}}.",
+      "offer_cancelled": "{{who}} cancelou a oferta de {{amount}}.",
+      "offer_expired": "A oferta de {{amount}} expirou sem resposta."
+    },
+    "warning": {
+      "contact": "Esta mensagem parece ter contato pessoal. Combine e pague pelo tradepost para ter proteção.",
+      "off_platform_payment": "Atenção: pagamento fora do tradepost (Pix direto, link, transferência) não tem proteção."
+    },
+    "seen": "Visto",
+    "viewProfile": "Ver perfil",
+    "viewListing": "Ver anúncio",
+    "report": "Denunciar conversa",
+    "safety": "Pague sempre pelo tradepost. Pagamentos fora da plataforma não têm proteção nem reembolso.",
+    "older": "Mensagens anteriores",
+    "blocked": "Não é possível enviar mensagens nesta conversa.",
+    "quick": {
+      "available": "Ainda está disponível?",
+      "condition": "Qual o estado do item?",
+      "pickup": "Posso retirar pessoalmente?",
+      "shipping": "Envia para minha cidade?"
+    },
+    "inputLabel": "Mensagem",
+    "placeholder": "Escreva uma mensagem…",
+    "send": "Enviar",
+    "contactTitle": "Fale com o vendedor",
+    "message": "Mensagem"
   }
 }

@@ -129,9 +129,23 @@ async def set_cart_item(db: AsyncSession, user: User, listing_id: uuid.UUID, qua
 # --- checkout -----------------------------------------------------------------------------
 
 
-def _request_hash(provider: str, lines: list[Line]) -> str:
+@dataclass(frozen=True)
+class AgreedPrice:
+    """An accepted offer: one listing, a fixed quantity, a unit price agreed in the chat."""
+
+    offer_id: uuid.UUID
+    listing_id: uuid.UUID
+    quantity: int
+    unit_price_cents: int
+
+
+def _request_hash(provider: str, lines: list[Line], offer_id: uuid.UUID | None = None) -> str:
     payload = json.dumps(
-        {"p": provider, "l": [[str(x.listing_id), x.quantity] for x in lines]},
+        {
+            "p": provider,
+            "l": [[str(x.listing_id), x.quantity] for x in lines],
+            "o": str(offer_id) if offer_id else None,
+        },
         separators=(",", ":"),
     )
     return hashlib.sha256(payload.encode()).hexdigest()
@@ -207,11 +221,17 @@ async def create_checkout(
     provider: str,
     lines: list[Line],
     idempotency_key: str,
+    agreed: AgreedPrice | None = None,
 ) -> tuple[Checkout, bool]:
-    """Reserve stock and open a checkout. Returns (checkout, created)."""
+    """Reserve stock and open a checkout. Returns (checkout, created).
+
+    With ``agreed``, the checkout pays an accepted offer: exactly that listing and quantity,
+    at the agreed unit price instead of the listed one."""
     registry.get(provider)
+    if agreed is not None:
+        lines = [Line(agreed.listing_id, agreed.quantity)]
     lines = _normalize(lines)
-    request_hash = _request_hash(provider, lines)
+    request_hash = _request_hash(provider, lines, agreed.offer_id if agreed else None)
 
     existing = (
         await db.execute(
@@ -250,13 +270,20 @@ async def create_checkout(
         idempotency_key=idempotency_key,
         request_hash=request_hash,
         expires_at=_now() + timedelta(minutes=settings.reservation_ttl_minutes),
+        offer_id=agreed.offer_id if agreed else None,
     )
+
+    def unit_price(line: Line, row: Any) -> int:
+        if agreed is not None and line.listing_id == agreed.listing_id:
+            return agreed.unit_price_cents
+        return int(row.price_cents)
+
     thumbs = await _thumbs(db, [line.listing_id for line in lines])
     orders: list[Order] = []
     children: list[OrderItem | OrderEvent | StockReservation] = []
     total = 0
     for seller_id, rows in by_seller.items():
-        items_cents = sum(r.price_cents * line.quantity for line, r in rows)
+        items_cents = sum(unit_price(line, r) * line.quantity for line, r in rows)
         shipping_cents = sum(r.shipping_cents for _, r in rows)
         order = Order(
             id=uuid.uuid4(),
@@ -276,7 +303,7 @@ async def create_checkout(
                     order_id=order.id,
                     listing_id=line.listing_id,
                     title=r.title,
-                    unit_price_cents=r.price_cents,
+                    unit_price_cents=unit_price(line, r),
                     quantity=line.quantity,
                     shipping_cents=r.shipping_cents,
                     thumb_key=thumbs.get(line.listing_id),

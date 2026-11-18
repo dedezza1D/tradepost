@@ -32,7 +32,8 @@
     "skip": "Skip to content",
     "cartCount_one": "Cart, {{count}} item",
     "cartCount_other": "Cart, {{count}} items",
-    "saved": "Saved"
+    "saved": "Saved",
+    "messages": "Messages"
   },
   "notifications": {
     "title": "Notifications",
@@ -56,7 +57,13 @@
       "listing_saved": "<b>{{name}}</b> saved <b>{{title}}</b>.",
       "saved_price_drop": "<b>{{title}}</b> dropped from {{old}} to {{price}}.",
       "saved_low_stock": "Only 1 left of <b>{{title}}</b>.",
-      "listing_removed": "<b>{{title}}</b> was removed by moderation."
+      "listing_removed": "<b>{{title}}</b> was removed by moderation.",
+      "new_message": "<b>{{name}}</b> sent a message about <b>{{title}}</b>.",
+      "offer_received": "<b>{{name}}</b> offered {{offer}} for <b>{{title}}</b>.",
+      "offer_countered": "<b>{{name}}</b> countered with {{offer}} for <b>{{title}}</b>.",
+      "offer_accepted": "<b>{{name}}</b> accepted {{offer}} for <b>{{title}}</b>.",
+      "offer_declined": "<b>{{name}}</b> declined {{offer}} for <b>{{title}}</b>.",
+      "offer_expired": "Your offer of {{offer}} for <b>{{title}}</b> expired."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -119,7 +126,17 @@
     "block_limit": "You reached this demo account's limit.",
     "report_self": "You can't report your own profile or listing.",
     "city_required": "Choose a city.",
-    "sign_in_required": "Sign in to continue."
+    "sign_in_required": "Sign in to continue.",
+    "own_listing_chat": "This is your own listing.",
+    "buyer_only": "Only the buyer can do this.",
+    "offer_above_price": "An offer cannot be above the listed price.",
+    "offer_pending": "There is already an open offer in this conversation.",
+    "not_your_turn": "It's the other person's turn to answer.",
+    "offer_closed": "This offer was already answered.",
+    "offer_expired": "This offer has expired.",
+    "offer_not_accepted": "This offer was not accepted.",
+    "offer_used": "This offer was already paid.",
+    "listing_unavailable": "This listing is not available."
   },
   "home": {
     "categories": "Categories",
@@ -504,5 +521,80 @@
       "remove": "Remove listing",
       "actioned": "Mark as handled"
     }
+  },
+  "chat": {
+    "title": "Messages",
+    "emptyTitle": "No conversations yet",
+    "emptyText": "Ask a seller something or make an offer right from a listing.",
+    "buying": "Buying",
+    "selling": "Selling",
+    "unread_one": "{{count}} unread message",
+    "unread_other": "{{count}} unread messages",
+    "unreadConversations_one": "{{count}} conversation with new messages",
+    "unreadConversations_other": "{{count}} conversations with new messages",
+    "preview": {
+      "offer": "Offer of {{amount}}",
+      "offer_accepted": "Offer of {{amount}} accepted",
+      "offer_declined": "Offer of {{amount}} declined",
+      "offer_cancelled": "Offer of {{amount}} withdrawn",
+      "offer_expired": "Offer of {{amount}} expired"
+    },
+    "offer": {
+      "make": "Make an offer",
+      "counterTitle": "Counteroffer",
+      "amount": "Your price",
+      "listed": "Listed price: {{price}}",
+      "hint": "The offer is valid for 24 hours. If accepted, you pay through tradepost with the usual protection.",
+      "send": "Send offer",
+      "label": "Offer",
+      "counterLabel": "Counteroffer",
+      "paid": "Paid",
+      "status": {
+        "pending": "Waiting",
+        "accepted": "Accepted",
+        "declined": "Declined",
+        "countered": "Countered",
+        "cancelled": "Withdrawn",
+        "expired": "Expired"
+      },
+      "expires": "Valid until {{time}}",
+      "accept": "Accept",
+      "counter": "Counter",
+      "decline": "Decline",
+      "cancel": "Withdraw offer",
+      "pay": "Pay {{amount}}",
+      "payBy": "Pay by {{time}} to keep this price.",
+      "waitingPayment": "Waiting for the buyer to pay.",
+      "agreedPrice": "Price agreed in the chat: {{amount}}"
+    },
+    "you": "You",
+    "event": {
+      "offer_accepted": "{{who}} accepted the offer of {{amount}}.",
+      "offer_declined": "{{who}} declined the offer of {{amount}}.",
+      "offer_cancelled": "{{who}} withdrew the offer of {{amount}}.",
+      "offer_expired": "The offer of {{amount}} expired unanswered."
+    },
+    "warning": {
+      "contact": "This message seems to share contact details. Keep the deal on tradepost to stay protected.",
+      "off_platform_payment": "Careful: paying outside tradepost (direct Pix, links, transfers) is not protected."
+    },
+    "seen": "Seen",
+    "viewProfile": "View profile",
+    "viewListing": "View listing",
+    "report": "Report conversation",
+    "safety": "Always pay through tradepost. Payments outside the platform have no protection or refund.",
+    "older": "Earlier messages",
+    "blocked": "You can't send messages in this conversation.",
+    "quick": {
+      "available": "Is it still available?",
+      "condition": "What condition is it in?",
+      "pickup": "Can I pick it up in person?",
+      "shipping": "Do you ship to my city?"
+    },
+    "inputLabel": "Message",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "contactTitle": "Ask the seller",
+    "message": "Message"
   }
 }

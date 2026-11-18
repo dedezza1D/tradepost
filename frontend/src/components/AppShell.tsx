@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useMe } from '../api/auth'
+import { useUnreadChats } from '../api/chat'
 import { useCart } from '../api/orders'
 import { currentLanguage } from '../i18n'
 import { Icon, type IconName } from '../ui/icons'
@@ -65,9 +66,21 @@ function CartLink() {
   )
 }
 
+function UnreadDot({ count }: { count: number | undefined }) {
+  const { t } = useTranslation()
+  if (!count) return null
+  return (
+    <span className="absolute -top-1 -right-2 min-w-4.5 rounded-full bg-accent px-1 text-center text-[10px] leading-4.5 font-bold text-white">
+      <span className="sr-only">{t('chat.unreadConversations', { count })}</span>
+      <span aria-hidden>{count}</span>
+    </span>
+  )
+}
+
 function DesktopNav() {
   const { t } = useTranslation()
   const { data: me } = useMe()
+  const { data: unread } = useUnreadChats()
   const link = ({ isActive }: { isActive: boolean }) =>
     `rounded-full px-3 py-2 text-sm font-medium ${isActive ? 'bg-primary-soft text-primary' : 'text-fg hover:bg-surface-2'}`
   if (!me) {
@@ -84,6 +97,12 @@ function DesktopNav() {
   }
   return (
     <nav className="hidden items-center gap-1 md:flex" aria-label={t('nav.account')}>
+      <NavLink to="/inbox" className={link}>
+        <span className="relative">
+          {t('nav.messages')}
+          <UnreadDot count={unread} />
+        </span>
+      </NavLink>
       <NavLink to="/me/saved" className={link}>
         {t('nav.saved')}
       </NavLink>
@@ -104,11 +123,13 @@ function DesktopNav() {
 function BottomNav() {
   const { t } = useTranslation()
   const { data: me } = useMe()
-  const items: { to: string; icon: IconName; label: string; end?: boolean }[] = [
+  const { data: unread } = useUnreadChats()
+  const items: { to: string; icon: IconName; label: string; end?: boolean; badge?: number }[] = [
     { to: '/', icon: 'home', label: t('nav.home'), end: true },
     { to: '/search', icon: 'search', label: t('nav.search') },
     { to: me ? '/sell' : '/login', icon: 'plus', label: t('nav.sell') },
-    { to: me ? '/notifications' : '/login', icon: 'bell', label: t('nav.alerts') },
+    // Alerts stay one tap away in the header bell; messages get the tab.
+    { to: me ? '/inbox' : '/login', icon: 'chat', label: t('nav.messages'), badge: unread },
     { to: me ? '/me' : '/login', icon: 'user', label: t('nav.profile') },
   ]
   return (
@@ -132,7 +153,10 @@ function BottomNav() {
                     <Icon name="plus" size={22} />
                   </span>
                 ) : (
-                  <Icon name={item.icon} />
+                  <span className="relative">
+                    <Icon name={item.icon} />
+                    <UnreadDot count={item.badge} />
+                  </span>
                 )}
               </span>
               {item.label}

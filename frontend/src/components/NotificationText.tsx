@@ -16,6 +16,12 @@ const KNOWN = new Set([
   'saved_price_drop',
   'saved_low_stock',
   'listing_removed',
+  'new_message',
+  'offer_received',
+  'offer_countered',
+  'offer_accepted',
+  'offer_declined',
+  'offer_expired',
 ])
 export function NotificationText({ n }: { n: Notification }) {
   const { t } = useTranslation()
@@ -30,6 +36,7 @@ export function NotificationText({ n }: { n: Notification }) {
     name: p.name ?? '',
     old: typeof p.old_price_cents === 'number' ? formatMoney(p.old_price_cents) : '',
     price: typeof p.price_cents === 'number' ? formatMoney(p.price_cents) : '',
+    offer: typeof p.amount_cents === 'number' ? formatMoney(p.amount_cents) : '',
   }
   const key = KNOWN.has(n.kind) ? n.kind : 'unknown'
   return <Trans i18nKey={`notifications.kind.${key}`} values={values} components={{ b: <strong /> }} />

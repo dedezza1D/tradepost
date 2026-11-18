@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 from tradepost import jobs
 from tradepost.catalog.router import router as catalog_router
+from tradepost.chat.router import router as chat_router
 from tradepost.config import Settings, get_settings
 from tradepost.db import Database
 from tradepost.deps import DbSession
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(geo_router)
     app.include_router(notifications_router)
     app.include_router(social_router)
+    app.include_router(chat_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

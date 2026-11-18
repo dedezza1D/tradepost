@@ -53,6 +53,20 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: '/inbox',
+        lazy: async () => {
+          const { InboxPage } = await import('./pages/ChatPages')
+          return { element: auth(<InboxPage />) }
+        },
+      },
+      {
+        path: '/inbox/:id',
+        lazy: async () => {
+          const { ConversationPage } = await import('./pages/ChatPages')
+          return { element: auth(<ConversationPage />) }
+        },
+      },
+      {
         path: '/me/saved',
         lazy: async () => {
           const { SavedPage } = await import('./pages/SocialPages')

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.logs import get_logger
@@ -42,6 +43,7 @@ TASKS: dict[str, Task] = {
     "auto_deliver": lambda db, _: processing.auto_deliver(db),
     "seller_payouts": lambda db, ctx: processing.run_payouts(db, ctx.payments),
     "prune_notifications": lambda db, _: prune_notifications(db),
+    "expire_offers": lambda db, _: expire_offers(db),
 }
 
 
