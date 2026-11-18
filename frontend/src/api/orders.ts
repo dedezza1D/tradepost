@@ -119,21 +119,6 @@ export interface SalesSummary {
   payout_account: boolean
 }
 
-export const providerLabel: Record<string, string> = {
-  stripe: 'Stripe (card or Pix)',
-  mercadopago: 'Mercado Pago (Pix or card)',
-  fake: 'Test provider',
-}
-
-export const orderStatusLabel: Record<OrderStatus, string> = {
-  awaiting_payment: 'Awaiting payment',
-  paid: 'Paid',
-  shipped: 'Shipped',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
-  refunded: 'Refunded',
-}
-
 export function useCart(enabled = true) {
   return useQuery({ queryKey: ['cart'], queryFn: () => api<Cart>('/api/cart'), enabled })
 }

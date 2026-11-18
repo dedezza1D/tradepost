@@ -1,52 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   NOTIFICATIONS_KEY,
   fetchNotifications,
   markAllRead,
   useNotificationStream,
-  type Notification,
 } from '../api/notifications'
-import { formatDateTime, formatMoney } from '../lib/format'
+import { notificationTarget } from '../api/notifications'
+import { NotificationText } from './NotificationText'
+import { formatDateTime } from '../lib/format'
+import { Icon } from '../ui/icons'
 
-const KNOWN = new Set([
-  'order_paid',
-  'purchase_confirmed',
-  'order_shipped',
-  'order_delivered',
-  'order_refunded',
-  'payment_refunded',
-  'payout_sent',
-  'review_received',
-])
-
-function target(n: Notification): string {
-  const p = n.payload
-  if (n.kind === 'order_paid' || n.kind === 'order_delivered' || n.kind === 'payout_sent' || n.kind === 'review_received') {
-    return '/seller'
-  }
-  if (p.order_id) return '/orders'
-  return '/'
-}
-
-function NotificationText({ n }: { n: Notification }) {
-  const { t } = useTranslation()
-  const p = n.payload as Record<string, string | number | undefined>
-  const more = Number(p.more_items ?? 0)
-  const title = `${p.title ?? ''}${more ? t('notifications.moreItems', { count: more }) : ''}`
-  const values = {
-    title,
-    total: typeof p.total_cents === 'number' ? formatMoney(p.total_cents) : '',
-    amount: typeof p.amount_cents === 'number' ? formatMoney(p.amount_cents) : '',
-    tracking: p.tracking_code ?? '',
-    rating: p.rating ?? '',
-  }
-  const key = KNOWN.has(n.kind) ? n.kind : 'unknown'
-  return <Trans i18nKey={`notifications.kind.${key}`} values={values} components={{ b: <strong /> }} />
-}
-
+/** Header bell: live unread badge, quick panel on desktop, full page on phones. */
 export function NotificationBell() {
   const { t } = useTranslation()
   const qc = useQueryClient()
@@ -59,6 +26,7 @@ export function NotificationBell() {
     onSuccess: () => qc.invalidateQueries({ queryKey: NOTIFICATIONS_KEY }),
   })
   const unread = data?.unread ?? 0
+  const label = `${t('notifications.open')}${unread ? ` (${t('notifications.unread', { count: unread })})` : ''}`
 
   useEffect(() => {
     if (!open) return
@@ -74,56 +42,48 @@ export function NotificationBell() {
     }
   }, [open])
 
+  const badge = unread > 0 && (
+    <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-danger px-1 text-center text-[11px] leading-5 font-bold text-white">
+      {unread > 99 ? '99+' : unread}
+    </span>
+  )
+
   return (
     <div className="relative" ref={panel}>
-      <button
-        type="button"
-        className="relative rounded-full p-2 text-stone-700 hover:bg-stone-100"
-        aria-label={`${t('notifications.open')}${unread ? ` (${t('notifications.unread', { count: unread })})` : ''}`}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" strokeLinecap="round" />
-        </svg>
-        {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-600 px-1 text-center text-[11px] font-bold leading-5 text-white">
-            {unread > 99 ? '99+' : unread}
-          </span>
-        )}
+      <Link to="/notifications" className="relative block rounded-full p-2 text-fg hover:bg-surface-2 md:hidden" aria-label={label}>
+        <Icon name="bell" />
+        {badge}
+      </Link>
+      <button type="button" className="relative hidden rounded-full p-2 text-fg hover:bg-surface-2 md:block"
+        aria-label={label} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <Icon name="bell" />
+        {badge}
       </button>
       {open && (
-        <div
-          role="dialog"
-          aria-label={t('notifications.title')}
-          className="card absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden"
-        >
-          <div className="flex items-center justify-between border-b border-stone-100 px-4 py-3">
+        <div role="dialog" aria-label={t('notifications.title')} className="card absolute right-0 z-30 mt-2 w-96 overflow-hidden shadow-lg">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <h2 className="font-semibold">{t('notifications.title')}</h2>
             {unread > 0 && (
-              <button className="text-xs font-medium text-brand-700 hover:underline" onClick={() => readAll.mutate()}>
+              <button className="text-xs font-semibold text-primary hover:underline" onClick={() => readAll.mutate()}>
                 {t('notifications.markAllRead')}
               </button>
             )}
           </div>
-          <ul className="max-h-96 divide-y divide-stone-100 overflow-y-auto">
-            {data?.items.length === 0 && (
-              <li className="px-4 py-8 text-center text-sm text-stone-500">{t('notifications.empty')}</li>
-            )}
-            {data?.items.map((n) => (
+          <ul className="max-h-96 divide-y divide-line overflow-y-auto">
+            {data?.items.length === 0 && <li className="px-4 py-8 text-center text-sm text-muted">{t('notifications.empty')}</li>}
+            {data?.items.slice(0, 8).map((n) => (
               <li key={n.id}>
-                <Link
-                  to={target(n)}
-                  onClick={() => setOpen(false)}
-                  className={`block px-4 py-3 text-sm hover:bg-stone-50 ${n.read_at ? 'text-stone-600' : 'bg-brand-50/60 text-stone-900'}`}
-                >
+                <Link to={notificationTarget(n)} onClick={() => setOpen(false)}
+                  className={`block px-4 py-3 text-sm hover:bg-surface-2 ${n.read_at ? 'text-muted' : 'bg-primary-soft/50'}`}>
                   <NotificationText n={n} />
-                  <span className="mt-1 block text-xs text-stone-500">{formatDateTime(n.created_at)}</span>
+                  <span className="mt-1 block text-xs text-muted">{formatDateTime(n.created_at)}</span>
                 </Link>
               </li>
             ))}
           </ul>
+          <Link to="/notifications" onClick={() => setOpen(false)} className="block border-t border-line px-4 py-3 text-center text-sm font-semibold text-primary hover:bg-surface-2">
+            {t('notifications.seeAll')}
+          </Link>
         </div>
       )}
     </div>

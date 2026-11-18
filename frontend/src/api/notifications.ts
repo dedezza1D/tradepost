@@ -68,3 +68,13 @@ export function useNotificationStream(enabled: boolean) {
     }
   }, [enabled, qc])
 }
+
+const SELLER_KINDS = new Set(['order_paid', 'order_delivered', 'payout_sent', 'review_received'])
+
+/** Where tapping a notification goes. */
+export function notificationTarget(n: Notification): string {
+  if (SELLER_KINDS.has(n.kind)) return '/seller'
+  if (n.payload.order_id) return '/orders'
+  return '/'
+}
+

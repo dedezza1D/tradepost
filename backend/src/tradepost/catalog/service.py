@@ -230,6 +230,22 @@ async def delete_photo(
     await storage.delete(photo.key_thumb)
 
 
+async def reorder_photos(db: AsyncSession, listing: Listing, photo_ids: list[uuid.UUID]) -> None:
+    """Set the photo order; the first one is the cover. ``photo_ids`` must list every photo of
+    the listing exactly once."""
+    current = {p.id: p for p in listing.photos}
+    if len(photo_ids) != len(current) or set(photo_ids) != set(current):
+        raise AppError("Send every photo of the listing exactly once.", code="bad_photo_order")
+    # Positions are unique per listing: move them out of the way first, then set the new order.
+    for offset, photo in enumerate(current.values()):
+        photo.position = 1000 + offset
+    await db.flush()
+    for position, photo_id in enumerate(photo_ids):
+        current[photo_id].position = position
+    await db.flush()
+    listing.photos.sort(key=lambda p: p.position)
+
+
 def photo_out(storage: Storage, photo: ListingPhoto) -> PhotoOut:
     return PhotoOut(
         id=photo.id,

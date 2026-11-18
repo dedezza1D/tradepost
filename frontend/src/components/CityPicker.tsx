@@ -28,11 +28,13 @@ export function CityPicker({
   onChange,
   required = false,
   allowCep = true,
+  label,
 }: {
   value: City | null
   onChange: (city: City | null) => void
   required?: boolean
   allowCep?: boolean
+  label?: string
 }) {
   const { t } = useTranslation()
   const id = useId()
@@ -73,7 +75,7 @@ export function CityPicker({
     <div className="space-y-2">
       <div className="relative">
         <label className="label" htmlFor={id}>
-          {t('city.label')}
+          {label ?? t('city.label')}
         </label>
         <input
           id={id}
@@ -106,7 +108,7 @@ export function CityPicker({
         {open && query.length >= 2 && (
           <ul id={`${id}-list`} role="listbox" className="card absolute z-20 mt-1 max-h-60 w-full overflow-y-auto py-1">
             {results.isSuccess && options.length === 0 && (
-              <li className="px-3 py-2 text-sm text-stone-500">{t('city.noResults')}</li>
+              <li className="px-3 py-2 text-sm text-muted">{t('city.noResults')}</li>
             )}
             {options.map((city, i) => (
               <li
@@ -117,9 +119,9 @@ export function CityPicker({
                   e.preventDefault()
                   choose(city)
                 }}
-                className={`cursor-pointer px-3 py-2 text-sm ${i === active ? 'bg-brand-50' : ''}`}
+                className={`cursor-pointer px-3 py-2 text-sm ${i === active ? 'bg-primary-soft' : ''}`}
               >
-                {city.name} <span className="text-stone-500">- {city.state}</span>
+                {city.name} <span className="text-muted">- {city.state}</span>
               </li>
             ))}
           </ul>
@@ -151,7 +153,7 @@ export function CityPicker({
           </button>
         </div>
       )}
-      {cepError && <p className="text-xs text-red-700">{cepError}</p>}
+      {cepError && <p className="text-xs text-danger">{cepError}</p>}
     </div>
   )
 }

@@ -1,39 +1,50 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { ListingCard } from '../api/types'
-import { conditionLabel, formatMoney, statusLabel } from '../lib/format'
+import { formatMoney } from '../lib/format'
+import { Badge } from '../ui/primitives'
+import { Icon } from '../ui/icons'
 
 export function ListingTile({ item, showStatus = false }: { item: ListingCard; showStatus?: boolean }) {
   const { t } = useTranslation()
   return (
     <Link
       to={`/listings/${item.id}`}
-      className="card group flex flex-col overflow-hidden transition hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl bg-surface ring-1 ring-line transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary"
     >
-      <div className="aspect-[4/3] bg-stone-100">
+      <div className="relative aspect-square bg-surface-2">
         {item.thumb_url ? (
           <img
             src={item.thumb_url}
             alt=""
             loading="lazy"
-            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-stone-400">
-            No photo
+          <div className="grid h-full place-items-center text-muted">
+            <Icon name="camera" />
           </div>
         )}
+        {item.condition === 'new' && (
+          <span className="absolute top-2 left-2">
+            <Badge tone="primary">{t('listing.condition.new')}</Badge>
+          </span>
+        )}
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="text-lg font-semibold">{formatMoney(item.price_cents)}</p>
-        <p className="line-clamp-2 text-sm text-stone-700">{item.title}</p>
-        <p className="mt-auto pt-1 text-xs text-stone-500">
-          {conditionLabel[item.condition]} · {item.city}/{item.state}
-          {item.distance_km != null && <> · {t('near.distance', { value: item.distance_km })}</>}
+      <div className="flex flex-1 flex-col gap-0.5 p-2.5 sm:p-3">
+        <p className="text-base font-bold tracking-tight sm:text-lg">{formatMoney(item.price_cents)}</p>
+        <p className="line-clamp-2 text-sm leading-snug">{item.title}</p>
+        <p className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted">
+          <Icon name="pin" size={13} />
+          <span className="truncate">
+            {item.city}
+            {item.distance_km != null && ` · ${t('near.distance', { value: item.distance_km })}`}
+          </span>
         </p>
         {showStatus && (
-          <span className="mt-1 w-fit rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700">
-            {statusLabel[item.status]}
+          <span className="mt-1.5">
+            <Badge tone={item.status === 'active' ? 'success' : 'neutral'}>{t(`listing.status.${item.status}`)}</Badge>
           </span>
         )}
       </div>
@@ -43,10 +54,27 @@ export function ListingTile({ item, showStatus = false }: { item: ListingCard; s
 
 export function ListingGrid({ items, showStatus }: { items: ListingCard[]; showStatus?: boolean }) {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
       {items.map((item) => (
         <li key={item.id}>
           <ListingTile item={item} showStatus={showStatus} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export function ListingGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4" aria-hidden>
+      {Array.from({ length: count }, (_, i) => (
+        <li key={i} className="overflow-hidden rounded-2xl bg-surface ring-1 ring-line">
+          <div className="skeleton aspect-square rounded-none" />
+          <div className="space-y-2 p-3">
+            <div className="skeleton h-5 w-1/2" />
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-3 w-2/3" />
+          </div>
         </li>
       ))}
     </ul>

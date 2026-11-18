@@ -35,6 +35,7 @@ export function useRegister() {
       display_name: string
       city?: string
       state?: string
+      locale?: 'pt-BR' | 'en'
     }) => api<Me>('/api/auth/register', { method: 'POST', body: json(body) }),
     onSuccess: (me) => qc.setQueryData(['me'], me),
   })

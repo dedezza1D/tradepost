@@ -215,3 +215,19 @@ async def test_photo_limit_per_account(seller: Any) -> None:
         settings.max_photos_per_user = previous
     assert codes == [201, 201]
     assert third.json()["error"]["code"] == "photo_limit_reached"
+
+
+async def test_photos_can_be_reordered_by_the_owner_only(seller: Any, buyer: Any) -> None:
+    draft = await create_listing(seller, publish=False)
+    url = f"/api/listings/{draft['id']}/photos"
+    ids = [
+        (await seller.post(url, files={"file": ("p.png", image_bytes(), "image/png")})).json()["id"]
+        for _ in range(3)
+    ]
+    reordered = await seller.put(f"{url}/order", json={"photo_ids": [ids[2], ids[0], ids[1]]})
+    assert reordered.status_code == 200
+    assert [p["id"] for p in reordered.json()["photos"]] == [ids[2], ids[0], ids[1]]
+    partial = await seller.put(f"{url}/order", json={"photo_ids": ids[:2]})
+    assert partial.json()["error"]["code"] == "bad_photo_order"
+    other = await buyer.put(f"{url}/order", json={"photo_ids": ids})
+    assert other.status_code == 404

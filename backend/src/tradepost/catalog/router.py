@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from tradepost.catalog import service
@@ -129,6 +130,19 @@ async def upload_photo(
         raise InvalidImage(f"Photos must be at most {settings.max_photo_bytes // 2**20} MB.")
     photo: ListingPhoto = await service.add_photo(db, storage, settings, listing, data)
     return service.photo_out(storage, photo)
+
+
+class PhotoOrderIn(BaseModel):
+    photo_ids: list[uuid.UUID] = Field(min_length=1, max_length=20)
+
+
+@router.put("/listings/{listing_id}/photos/order")
+async def reorder_photos(
+    listing_id: uuid.UUID, body: PhotoOrderIn, user: CurrentUser, db: DbSession, storage: StorageDep
+) -> ListingOut:
+    listing = await service.get_owned_listing(db, listing_id, user)
+    await service.reorder_photos(db, listing, body.photo_ids)
+    return await service.listing_out(db, storage, listing)
 
 
 @router.delete("/listings/{listing_id}/photos/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)

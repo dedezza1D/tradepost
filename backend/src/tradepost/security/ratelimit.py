@@ -14,6 +14,7 @@ from sqlalchemy import BigInteger, Integer, String, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
+from tradepost.config import get_settings
 from tradepost.db import Base, Database
 from tradepost.errors import TooManyRequests
 from tradepost.security.client import client_ip
@@ -45,7 +46,7 @@ async def hit(database: Database, key: str, *, limit: int, window_seconds: int) 
     async with database.sessionmaker() as db, db.begin():
         params = {"key": key[:200], "window_start": window_start}
         count = (await db.execute(_UPSERT, params)).scalar_one()
-    if count > limit:
+    if count > limit * get_settings().rate_limit_scale:
         raise TooManyRequests(retry_after=window_start + window_seconds - now)
 
 

@@ -27,3 +27,8 @@ var/
 .mcp.json
 skills-lock.json
 .neon
+
+# Playwright output
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/

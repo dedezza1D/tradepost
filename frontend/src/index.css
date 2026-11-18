@@ -1,42 +1,136 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --color-brand-50: #f0fdfa;
-  --color-brand-100: #ccfbf1;
-  --color-brand-500: #14b8a6;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e59;
+/* Dark mode follows a class on <html>, set before first paint (see index.html). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic tokens. Components use these names (bg-surface, text-muted, border-line…), never raw
+ * palette colors, so light and dark themes are a matter of swapping the variables below.
+ */
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --color-bg: var(--tp-bg);
+  --color-surface: var(--tp-surface);
+  --color-surface-2: var(--tp-surface-2);
+  --color-fg: var(--tp-fg);
+  --color-muted: var(--tp-muted);
+  --color-line: var(--tp-line);
+  --color-primary: var(--tp-primary);
+  --color-primary-hover: var(--tp-primary-hover);
+  --color-primary-fg: var(--tp-primary-fg);
+  --color-primary-soft: var(--tp-primary-soft);
+  --color-accent: var(--tp-accent);
+  --color-accent-soft: var(--tp-accent-soft);
+  --color-danger: var(--tp-danger);
+  --color-danger-soft: var(--tp-danger-soft);
+  --color-success: var(--tp-success);
+  --color-success-soft: var(--tp-success-soft);
+  --color-warning-soft: var(--tp-warning-soft);
+  --color-warning-fg: var(--tp-warning-fg);
+
+  --radius-card: 1rem;
+}
+
+:root {
+  color-scheme: light;
+  --tp-bg: #f5f6f3;
+  --tp-surface: #ffffff;
+  --tp-surface-2: #eef1ed;
+  --tp-fg: #13201c;
+  --tp-muted: #56645f;
+  --tp-line: #dde3df;
+  --tp-primary: #0b6b62;
+  --tp-primary-hover: #0a5751;
+  --tp-primary-fg: #ffffff;
+  --tp-primary-soft: #e3f2ef;
+  --tp-accent: #c2410c;
+  --tp-accent-soft: #fff1e6;
+  --tp-danger: #b42318;
+  --tp-danger-soft: #fdecea;
+  --tp-success: #127a3f;
+  --tp-success-soft: #e5f5ea;
+  --tp-warning-soft: #fdf3d7;
+  --tp-warning-fg: #7a4b00;
+}
+
+.dark {
+  color-scheme: dark;
+  --tp-bg: #0c1311;
+  --tp-surface: #131d1a;
+  --tp-surface-2: #1a2723;
+  --tp-fg: #e6eeeb;
+  --tp-muted: #9cadA7;
+  --tp-line: #263530;
+  --tp-primary: #3cc9b6;
+  --tp-primary-hover: #66dccb;
+  --tp-primary-fg: #04201c;
+  --tp-primary-soft: #133430;
+  --tp-accent: #fb923c;
+  --tp-accent-soft: #3a2314;
+  --tp-danger: #f87171;
+  --tp-danger-soft: #3b1b1b;
+  --tp-success: #4ade80;
+  --tp-success-soft: #14301f;
+  --tp-warning-soft: #3a2f12;
+  --tp-warning-fg: #f6d58b;
 }
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-stone-50 text-stone-900 antialiased;
+    @apply bg-bg text-fg antialiased;
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand-600;
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-@utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
-}
-@utility btn-primary {
-  @apply btn bg-brand-700 text-white hover:bg-brand-800;
-}
-@utility btn-secondary {
-  @apply btn border border-stone-300 bg-white text-stone-800 hover:bg-stone-100;
-}
-@utility btn-danger {
-  @apply btn border border-red-200 bg-white text-red-700 hover:bg-red-50;
+/* Shared building blocks (kept as utilities so pages can compose them with Tailwind). */
+@utility card {
+  @apply rounded-[var(--radius-card)] border border-line bg-surface;
 }
 @utility input {
-  @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm shadow-xs placeholder:text-stone-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:outline-none;
+  @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-fg placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none disabled:opacity-60;
 }
 @utility label {
-  @apply mb-1 block text-sm font-medium text-stone-700;
+  @apply mb-1.5 block text-sm font-medium text-fg;
 }
-@utility card {
-  @apply rounded-xl border border-stone-200 bg-white shadow-xs;
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-semibold transition select-none disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-primary text-primary-fg hover:bg-primary-hover;
+}
+@utility btn-secondary {
+  @apply btn border border-line bg-surface text-fg hover:bg-surface-2;
+}
+@utility btn-ghost {
+  @apply btn text-fg hover:bg-surface-2;
+}
+@utility btn-danger {
+  @apply btn border border-danger/30 bg-surface text-danger hover:bg-danger-soft;
+}
+@utility skeleton {
+  @apply animate-pulse rounded-lg bg-surface-2;
+}
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

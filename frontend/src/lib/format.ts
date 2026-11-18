@@ -36,13 +36,3 @@ export function parseMoney(input: string): number | null {
 }
 
 export const centsToInput = (cents: number): string => (cents / 100).toFixed(2).replace('.', ',')
-
-export const conditionLabel = { new: 'New', used: 'Used' } as const
-
-export const statusLabel = {
-  draft: 'Draft',
-  active: 'Active',
-  paused: 'Paused',
-  sold_out: 'Sold out',
-  removed: 'Removed',
-} as const

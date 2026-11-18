@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ApiError } from '../api/client'
-import { CityPicker } from '../components/CityPicker'
-import { errorMessage } from '../lib/errors'
 import { useLogin, useRegister } from '../api/auth'
+import { ApiError } from '../api/client'
+import { CityPicker, type City } from '../components/CityPicker'
+import { currentLanguage } from '../i18n'
+import { errorMessage } from '../lib/errors'
 
 function useReturnTo(): string {
   const location = useLocation()
@@ -12,13 +13,16 @@ function useReturnTo(): string {
   return from && from.startsWith('/') ? from : '/'
 }
 
-function AuthCard({ title, children }: { title: string; children: React.ReactNode }) {
+function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle: string; children: ReactNode; footer: ReactNode }) {
   return (
-    <div className="mx-auto max-w-md">
-      <div className="card p-6">
-        <h1 className="mb-5 text-xl font-semibold">{title}</h1>
-        {children}
+    <div className="mx-auto max-w-md py-4">
+      <div className="mb-6 text-center">
+        <img src="/favicon.svg" alt="" className="mx-auto mb-3 h-12 w-12" />
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <p className="mt-1 text-sm text-muted">{subtitle}</p>
       </div>
+      <div className="card p-5 sm:p-6">{children}</div>
+      <p className="mt-5 text-center text-sm text-muted">{footer}</p>
     </div>
   )
 }
@@ -37,37 +41,25 @@ export function LoginPage() {
   }
 
   return (
-    <AuthCard title="Sign in">
+    <AuthCard
+      title={t('auth.signInTitle')}
+      subtitle={t('auth.signInSubtitle')}
+      footer={<>{t('auth.newHere')} <Link to="/register" className="font-semibold text-primary hover:underline">{t('nav.createAccount')}</Link></>}
+    >
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="label" htmlFor="email">
-            Email
-          </label>
-          <input id="email" type="email" autoComplete="email" required className="input"
-            value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label className="label" htmlFor="email">{t('auth.email')}</label>
+          <input id="email" type="email" autoComplete="email" inputMode="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="password">
-            Password
-          </label>
-          <input id="password" type="password" autoComplete="current-password" required
-            className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <label className="label" htmlFor="password">{t('auth.password')}</label>
+          <input id="password" type="password" autoComplete="current-password" required className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        {login.error && (
-          <p role="alert" className="text-sm text-red-700">
-            {errorMessage(login.error, t)}
-          </p>
-        )}
+        {login.error && <p role="alert" className="text-sm text-danger">{errorMessage(login.error, t)}</p>}
         <button className="btn-primary w-full" disabled={login.isPending}>
-          {login.isPending ? 'Signing in…' : 'Sign in'}
+          {login.isPending ? t('auth.signingIn') : t('nav.signIn')}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-stone-600">
-        New here?{' '}
-        <Link to="/register" className="font-medium text-brand-700 hover:underline">
-          Create an account
-        </Link>
-      </p>
     </AuthCard>
   )
 }
@@ -77,81 +69,49 @@ export function RegisterPage() {
   const register = useRegister()
   const navigate = useNavigate()
   const returnTo = useReturnTo()
-  const [form, setForm] = useState({
-    display_name: '',
-    email: '',
-    password: '',
-    city: '',
-    state: '',
-  })
-  const set = (key: keyof typeof form) => (e: { target: { value: string } }) =>
-    setForm({ ...form, [key]: e.target.value })
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [city, setCity] = useState<City | null>(null)
   const error = register.error instanceof ApiError ? register.error : null
 
   function submit(event: FormEvent) {
     event.preventDefault()
     register.mutate(
-      {
-        email: form.email,
-        password: form.password,
-        display_name: form.display_name,
-        city: form.city || undefined,
-        state: form.state || undefined,
-      },
+      { email, password, display_name: name, city: city?.name, state: city?.state, locale: currentLanguage() },
       { onSuccess: () => navigate(returnTo, { replace: true }) },
     )
   }
 
   return (
-    <AuthCard title="Create your account">
+    <AuthCard
+      title={t('auth.registerTitle')}
+      subtitle={t('auth.registerSubtitle')}
+      footer={<>{t('auth.haveAccount')} <Link to="/login" className="font-semibold text-primary hover:underline">{t('nav.signIn')}</Link></>}
+    >
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="label" htmlFor="display_name">
-            Name shown to buyers
-          </label>
-          <input id="display_name" required minLength={2} maxLength={60} className="input"
-            value={form.display_name} onChange={set('display_name')} />
+          <label className="label" htmlFor="display_name">{t('auth.displayName')}</label>
+          <input id="display_name" required minLength={2} maxLength={60} autoComplete="name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="email">
-            Email
-          </label>
-          <input id="email" type="email" autoComplete="email" required className="input"
-            value={form.email} onChange={set('email')} />
+          <label className="label" htmlFor="email">{t('auth.email')}</label>
+          <input id="email" type="email" autoComplete="email" inputMode="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="password">
-            Password
-          </label>
-          <input id="password" type="password" autoComplete="new-password" required
-            minLength={10} maxLength={128} className="input" value={form.password}
-            onChange={set('password')} aria-describedby="password-hint" />
-          <p id="password-hint" className="mt-1 text-xs text-stone-500">
-            At least 10 characters. A short sentence works well.
-          </p>
-          {error?.fieldMessage('password') && (
-            <p className="mt-1 text-xs text-red-700">{error.fieldMessage('password')}</p>
-          )}
+          <label className="label" htmlFor="password">{t('auth.password')}</label>
+          <input id="password" type="password" autoComplete="new-password" required minLength={10} maxLength={128} className="input"
+            aria-describedby="password-hint" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p id="password-hint" className="mt-1 text-xs text-muted">{t('auth.passwordHint')}</p>
+          {error?.fieldMessage('password') && <p className="mt-1 text-xs text-danger">{t('auth.passwordTooShort')}</p>}
         </div>
-        <CityPicker
-          value={form.city && form.state ? { ibge_code: 0, name: form.city, state: form.state } : null}
-          onChange={(city) => setForm({ ...form, city: city?.name ?? '', state: city?.state ?? '' })}
-        />
-        {error && error.code !== 'validation_error' && (
-          <p role="alert" className="text-sm text-red-700">
-            {errorMessage(error, t)}
-          </p>
-        )}
+        <CityPicker value={city} onChange={setCity} />
+        <p className="text-xs text-muted">{t('auth.cityWhy')}</p>
+        {error && error.code !== 'validation_error' && <p role="alert" className="text-sm text-danger">{errorMessage(error, t)}</p>}
         <button className="btn-primary w-full" disabled={register.isPending}>
-          {register.isPending ? 'Creating account…' : 'Create account'}
+          {register.isPending ? t('auth.creating') : t('nav.createAccount')}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-stone-600">
-        Already have an account?{' '}
-        <Link to="/login" className="font-medium text-brand-700 hover:underline">
-          Sign in
-        </Link>
-      </p>
     </AuthCard>
   )
 }
