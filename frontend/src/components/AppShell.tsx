@@ -84,6 +84,9 @@ function DesktopNav() {
   }
   return (
     <nav className="hidden items-center gap-1 md:flex" aria-label={t('nav.account')}>
+      <NavLink to="/me/saved" className={link}>
+        {t('nav.saved')}
+      </NavLink>
       <NavLink to="/orders" className={link}>
         {t('nav.orders')}
       </NavLink>

@@ -31,7 +31,8 @@
     "main": "Main navigation",
     "skip": "Skip to content",
     "cartCount_one": "Cart, {{count}} item",
-    "cartCount_other": "Cart, {{count}} items"
+    "cartCount_other": "Cart, {{count}} items",
+    "saved": "Saved"
   },
   "notifications": {
     "title": "Notifications",
@@ -50,7 +51,12 @@
       "payment_refunded": "A payment of {{amount}} was returned to you.",
       "payout_sent": "Payout of {{amount}} sent for <b>{{title}}</b>.",
       "review_received": "You got a {{rating}}-star review for <b>{{title}}</b>.",
-      "unknown": "You have something new."
+      "unknown": "You have something new.",
+      "new_follower": "<b>{{name}}</b> started following you.",
+      "listing_saved": "<b>{{name}}</b> saved <b>{{title}}</b>.",
+      "saved_price_drop": "<b>{{title}}</b> dropped from {{old}} to {{price}}.",
+      "saved_low_stock": "Only 1 left of <b>{{title}}</b>.",
+      "listing_removed": "<b>{{title}}</b> was removed by moderation."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -103,7 +109,17 @@
     "invalid_transition": "That action is not possible in the order's current status.",
     "not_delivered": "Review the order after it is delivered.",
     "already_reviewed": "This order was already reviewed.",
-    "payment_provider_error": "The payment provider did not respond. Try again."
+    "payment_provider_error": "The payment provider did not respond. Try again.",
+    "follow_self": "You can't follow yourself.",
+    "block_self": "You can't block yourself.",
+    "blocked": "Not possible with this profile.",
+    "save_own_listing": "You can't save your own listing.",
+    "follow_limit": "You reached this demo account's limit.",
+    "save_limit": "You reached this demo account's limit of saved listings.",
+    "block_limit": "You reached this demo account's limit.",
+    "report_self": "You can't report your own profile or listing.",
+    "city_required": "Choose a city.",
+    "sign_in_required": "Sign in to continue."
   },
   "home": {
     "categories": "Categories",
@@ -243,7 +259,11 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "changePassword": "Change password",
-    "passwordChanged": "Password changed. Other devices were signed out."
+    "passwordChanged": "Password changed. Other devices were signed out.",
+    "bio": "About you",
+    "bioPlaceholder": "What you sell, how you ship, when you reply…",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo"
   },
   "myListings": {
     "emptyTitle": "You have no listings yet",
@@ -401,5 +421,88 @@
     "pets": "Pet Supplies",
     "collectibles": "Collectibles",
     "other": "Other"
+  },
+  "feed": {
+    "label": "Feed",
+    "tabs": {
+      "trending": "Trending",
+      "nearby": "Near you",
+      "following": "Following"
+    },
+    "nearCity": "City",
+    "nearHint": "Listings within 50 km of {{city}}.",
+    "nearEmpty": "Nothing listed near {{city}} yet.",
+    "nearPick": "Pick a city to see what is nearby.",
+    "followingSignIn": "Sign in to see who you follow",
+    "followingText": "Follow sellers to see their new listings here.",
+    "followingEmpty": "You don't follow anyone yet"
+  },
+  "social": {
+    "save": "Save {{title}}",
+    "unsave": "Remove {{title}} from saved",
+    "saveShort": "Save",
+    "saved": "Saved",
+    "savedBy_one": "Saved by {{count}} person",
+    "savedBy_other": "Saved by {{count}} people",
+    "savedTitle": "Saved",
+    "savedEmpty": "Nothing saved yet",
+    "savedEmptyText": "Tap the heart on a listing to keep it here. We'll tell you when the price drops.",
+    "follow": "Follow",
+    "following": "Following",
+    "followers_one": "follower",
+    "followers_other": "followers",
+    "followingCount_one": "following",
+    "followingCount_other": "following",
+    "listings_one": "listing",
+    "listings_other": "listings",
+    "followerCount_one": "{{count}} follower",
+    "followerCount_other": "{{count}} followers",
+    "followingTitle": "Following",
+    "editProfile": "Edit profile",
+    "moreActions": "More actions",
+    "shareProfile": "Share profile",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockConfirm": "Block {{name}}? You will stop seeing each other's listings and stop following each other.",
+    "youBlocked": "You blocked {{name}}",
+    "youBlockedText": "Their listings are hidden from you.",
+    "profileNotFound": "Profile not found",
+    "tabListings": "Listings",
+    "noListings": "No active listings.",
+    "blockedTitle": "Blocked",
+    "blockedText": "People you block can't see your listings, and you don't see theirs.",
+    "blockedEmpty": "You haven't blocked anyone.",
+    "report": {
+      "listing": "Report listing",
+      "user": "Report profile",
+      "title": {
+        "listing": "Report this listing",
+        "user": "Report this profile"
+      },
+      "reason": "Reason",
+      "reasons": {
+        "prohibited": "Prohibited item",
+        "scam": "Scam or fraud",
+        "offensive": "Offensive content",
+        "spam": "Spam or duplicate",
+        "other": "Other"
+      },
+      "details": "Details (optional)",
+      "send": "Send report",
+      "thanks": "Thanks. Moderators will review it."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "empty": "No open reports.",
+      "target": {
+        "listing": "Listing",
+        "user": "Profile"
+      },
+      "count_one": "{{count}} report",
+      "count_other": "{{count}} reports",
+      "dismiss": "Dismiss",
+      "remove": "Remove listing",
+      "actioned": "Mark as handled"
+    }
   }
 }

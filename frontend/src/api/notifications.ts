@@ -73,6 +73,9 @@ const SELLER_KINDS = new Set(['order_paid', 'order_delivered', 'payout_sent', 'r
 
 /** Where tapping a notification goes. */
 export function notificationTarget(n: Notification): string {
+  if (n.kind === 'new_follower' && n.payload.user_id) return `/users/${String(n.payload.user_id)}`
+  if (n.kind === 'listing_removed') return '/me/listings'
+  if (n.payload.listing_id && !n.payload.order_id) return `/listings/${String(n.payload.listing_id)}`
   if (SELLER_KINDS.has(n.kind)) return '/seller'
   if (n.payload.order_id) return '/orders'
   return '/'

@@ -1,54 +1,66 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useMe } from '../api/auth'
 import type { ListingCard } from '../api/types'
 import { formatMoney } from '../lib/format'
 import { Badge } from '../ui/primitives'
 import { Icon } from '../ui/icons'
+import { SaveButton } from './SaveButton'
 
 export function ListingTile({ item, showStatus = false }: { item: ListingCard; showStatus?: boolean }) {
   const { t } = useTranslation()
+  const { data: me } = useMe()
+  const own = Boolean(me && item.seller_id === me.id)
   return (
-    <Link
-      to={`/listings/${item.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl bg-surface ring-1 ring-line transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary"
-    >
-      <div className="relative aspect-square bg-surface-2">
-        {item.thumb_url ? (
-          <img
-            src={item.thumb_url}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="grid h-full place-items-center text-muted">
-            <Icon name="camera" />
-          </div>
-        )}
-        {item.condition === 'new' && (
-          <span className="absolute top-2 left-2">
-            <Badge tone="primary">{t('listing.condition.new')}</Badge>
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-0.5 p-2.5 sm:p-3">
-        <p className="text-base font-bold tracking-tight sm:text-lg">{formatMoney(item.price_cents)}</p>
-        <p className="line-clamp-2 text-sm leading-snug">{item.title}</p>
-        <p className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted">
-          <Icon name="pin" size={13} />
-          <span className="truncate">
-            {item.city}
-            {item.distance_km != null && ` · ${t('near.distance', { value: item.distance_km })}`}
-          </span>
-        </p>
-        {showStatus && (
-          <span className="mt-1.5">
-            <Badge tone={item.status === 'active' ? 'success' : 'neutral'}>{t(`listing.status.${item.status}`)}</Badge>
-          </span>
-        )}
-      </div>
-    </Link>
+    // The heart sits beside the link, not inside it: a button inside a link is not accessible.
+    <div className="group relative h-full">
+      <Link
+        to={`/listings/${item.id}`}
+        className="flex h-full flex-col overflow-hidden rounded-2xl bg-surface ring-1 ring-line transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <div className="relative aspect-square bg-surface-2">
+          {item.thumb_url ? (
+            <img
+              src={item.thumb_url}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="grid h-full place-items-center text-muted">
+              <Icon name="camera" />
+            </div>
+          )}
+          {item.condition === 'new' && (
+            <span className="absolute top-2 left-2">
+              <Badge tone="primary">{t('listing.condition.new')}</Badge>
+            </span>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-0.5 p-2.5 sm:p-3">
+          <p className="text-base font-bold tracking-tight sm:text-lg">{formatMoney(item.price_cents)}</p>
+          <p className="line-clamp-2 text-sm leading-snug">{item.title}</p>
+          <p className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted">
+            <Icon name="pin" size={13} />
+            <span className="truncate">
+              {item.city}
+              {item.distance_km != null && ` · ${t('near.distance', { value: item.distance_km })}`}
+            </span>
+          </p>
+          {showStatus && (
+            <span className="mt-1.5">
+              <Badge tone={item.status === 'active' ? 'success' : 'neutral'}>{t(`listing.status.${item.status}`)}</Badge>
+            </span>
+          )}
+        </div>
+      </Link>
+      {!showStatus && !own && (
+        <span className="absolute top-2 right-2">
+          <SaveButton id={item.id} saved={Boolean(item.saved)} title={item.title} />
+        </span>
+      )}
+    </div>
   )
 }
 

@@ -31,7 +31,8 @@
     "main": "Navegação principal",
     "skip": "Pular para o conteúdo",
     "cartCount_one": "Carrinho, {{count}} item",
-    "cartCount_other": "Carrinho, {{count}} itens"
+    "cartCount_other": "Carrinho, {{count}} itens",
+    "saved": "Salvos"
   },
   "notifications": {
     "title": "Notificações",
@@ -50,7 +51,12 @@
       "payment_refunded": "Um pagamento de {{amount}} foi devolvido a você.",
       "payout_sent": "Repasse de {{amount}} enviado por <b>{{title}}</b>.",
       "review_received": "Você recebeu uma avaliação de {{rating}} estrela(s) por <b>{{title}}</b>.",
-      "unknown": "Você tem uma novidade."
+      "unknown": "Você tem uma novidade.",
+      "new_follower": "<b>{{name}}</b> começou a seguir você.",
+      "listing_saved": "<b>{{name}}</b> salvou <b>{{title}}</b>.",
+      "saved_price_drop": "<b>{{title}}</b> baixou de {{old}} para {{price}}.",
+      "saved_low_stock": "Só resta 1 unidade de <b>{{title}}</b>.",
+      "listing_removed": "<b>{{title}}</b> foi removido pela moderação."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -103,7 +109,17 @@
     "invalid_transition": "Essa ação não é possível no status atual do pedido.",
     "not_delivered": "Avalie depois que o pedido for entregue.",
     "already_reviewed": "Este pedido já foi avaliado.",
-    "payment_provider_error": "O provedor de pagamento não respondeu. Tente de novo."
+    "payment_provider_error": "O provedor de pagamento não respondeu. Tente de novo.",
+    "follow_self": "Você não pode seguir o próprio perfil.",
+    "block_self": "Você não pode bloquear o próprio perfil.",
+    "blocked": "Não é possível com este perfil.",
+    "save_own_listing": "Você não pode salvar o próprio anúncio.",
+    "follow_limit": "Você chegou ao limite desta conta de demonstração.",
+    "save_limit": "Você chegou ao limite de salvos desta conta de demonstração.",
+    "block_limit": "Você chegou ao limite desta conta de demonstração.",
+    "report_self": "Você não pode denunciar o próprio perfil ou anúncio.",
+    "city_required": "Escolha uma cidade.",
+    "sign_in_required": "Entre para continuar."
   },
   "home": {
     "categories": "Categorias",
@@ -243,7 +259,11 @@
     "currentPassword": "Senha atual",
     "newPassword": "Nova senha",
     "changePassword": "Trocar senha",
-    "passwordChanged": "Senha trocada. Outros dispositivos foram desconectados."
+    "passwordChanged": "Senha trocada. Outros dispositivos foram desconectados.",
+    "bio": "Sobre você",
+    "bioPlaceholder": "O que você vende, como entrega, horários…",
+    "changePhoto": "Trocar foto",
+    "removePhoto": "Remover foto"
   },
   "myListings": {
     "emptyTitle": "Você ainda não anunciou nada",
@@ -401,5 +421,88 @@
     "pets": "Pets",
     "collectibles": "Colecionáveis",
     "other": "Outros"
+  },
+  "feed": {
+    "label": "Feed",
+    "tabs": {
+      "trending": "Em alta",
+      "nearby": "Perto de você",
+      "following": "Seguindo"
+    },
+    "nearCity": "Cidade",
+    "nearHint": "Anúncios num raio de 50 km de {{city}}.",
+    "nearEmpty": "Nada anunciado perto de {{city}} ainda.",
+    "nearPick": "Escolha uma cidade para ver o que está perto.",
+    "followingSignIn": "Entre para ver quem você segue",
+    "followingText": "Siga vendedores para ver aqui os anúncios novos deles.",
+    "followingEmpty": "Você ainda não segue ninguém"
+  },
+  "social": {
+    "save": "Salvar {{title}}",
+    "unsave": "Remover {{title}} dos salvos",
+    "saveShort": "Salvar",
+    "saved": "Salvo",
+    "savedBy_one": "{{count}} pessoa salvou",
+    "savedBy_other": "{{count}} pessoas salvaram",
+    "savedTitle": "Salvos",
+    "savedEmpty": "Nada salvo ainda",
+    "savedEmptyText": "Toque no coração de um anúncio para guardá-lo aqui. Avisamos quando o preço baixar.",
+    "follow": "Seguir",
+    "following": "Seguindo",
+    "followers_one": "seguidor",
+    "followers_other": "seguidores",
+    "followingCount_one": "seguindo",
+    "followingCount_other": "seguindo",
+    "listings_one": "anúncio",
+    "listings_other": "anúncios",
+    "followerCount_one": "{{count}} seguidor",
+    "followerCount_other": "{{count}} seguidores",
+    "followingTitle": "Seguindo",
+    "editProfile": "Editar perfil",
+    "moreActions": "Mais ações",
+    "shareProfile": "Compartilhar perfil",
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "blockConfirm": "Bloquear {{name}}? Vocês deixam de ver os anúncios um do outro e de se seguir.",
+    "youBlocked": "Você bloqueou {{name}}",
+    "youBlockedText": "Os anúncios desse perfil ficam escondidos para você.",
+    "profileNotFound": "Perfil não encontrado",
+    "tabListings": "Anúncios",
+    "noListings": "Nenhum anúncio ativo.",
+    "blockedTitle": "Bloqueados",
+    "blockedText": "Perfis bloqueados não veem seus anúncios, e você não vê os deles.",
+    "blockedEmpty": "Você não bloqueou ninguém.",
+    "report": {
+      "listing": "Denunciar anúncio",
+      "user": "Denunciar perfil",
+      "title": {
+        "listing": "Denunciar anúncio",
+        "user": "Denunciar perfil"
+      },
+      "reason": "Motivo",
+      "reasons": {
+        "prohibited": "Item proibido",
+        "scam": "Golpe ou fraude",
+        "offensive": "Conteúdo ofensivo",
+        "spam": "Spam ou repetido",
+        "other": "Outro"
+      },
+      "details": "Detalhes (opcional)",
+      "send": "Enviar denúncia",
+      "thanks": "Obrigado. A moderação vai analisar."
+    },
+    "moderation": {
+      "title": "Moderação",
+      "empty": "Nenhuma denúncia aberta.",
+      "target": {
+        "listing": "Anúncio",
+        "user": "Perfil"
+      },
+      "count_one": "{{count}} denúncia",
+      "count_other": "{{count}} denúncias",
+      "dismiss": "Descartar",
+      "remove": "Remover anúncio",
+      "actioned": "Marcar como resolvida"
+    }
   }
 }

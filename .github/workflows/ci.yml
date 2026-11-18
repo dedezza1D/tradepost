@@ -74,6 +74,7 @@ jobs:
       - run: npm run lint
       - run: npm run check:i18n
       - run: npm run typecheck:functions
+      - run: npm run test:edge
       - run: npm run build
       - name: Dependency audit
         run: npm audit --omit=dev --audit-level=high

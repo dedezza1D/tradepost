@@ -50,6 +50,19 @@ def _encode(image: Image.Image, max_side: int) -> bytes:
     return out.getvalue()
 
 
+OG_SIZE = (1200, 630)
+
+
+def share_preview(data: bytes) -> bytes:
+    """A 1200x630 JPEG for link previews (Open Graph). Messaging apps handle JPEG everywhere,
+    WebP not always. Input is a photo this app already re-encoded, so it is trusted."""
+    with Image.open(io.BytesIO(data)) as image:
+        fitted = ImageOps.fit(image.convert("RGB"), OG_SIZE, Image.Resampling.LANCZOS)
+    out = io.BytesIO()
+    fitted.save(out, format="JPEG", quality=80, optimize=True, progressive=True)
+    return out.getvalue()
+
+
 def process_image(data: bytes, *, max_bytes: int, max_pixels: int) -> ProcessedImage:
     if len(data) > max_bytes:
         raise InvalidImage(f"Photos must be at most {max_bytes // (1024 * 1024)} MB.")

@@ -29,6 +29,7 @@ from tradepost.notifications.service import Broker, asyncpg_dsn
 from tradepost.orders.router import router as orders_router
 from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.reviews.service import router as reviews_router
+from tradepost.social.router import router as social_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -78,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(reviews_router)
     app.include_router(geo_router)
     app.include_router(notifications_router)
+    app.include_router(social_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

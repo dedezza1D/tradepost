@@ -11,6 +11,11 @@ const KNOWN = new Set([
   'payment_refunded',
   'payout_sent',
   'review_received',
+  'new_follower',
+  'listing_saved',
+  'saved_price_drop',
+  'saved_low_stock',
+  'listing_removed',
 ])
 export function NotificationText({ n }: { n: Notification }) {
   const { t } = useTranslation()
@@ -22,6 +27,9 @@ export function NotificationText({ n }: { n: Notification }) {
     amount: typeof p.amount_cents === 'number' ? formatMoney(p.amount_cents) : '',
     tracking: p.tracking_code ?? '',
     rating: p.rating ?? '',
+    name: p.name ?? '',
+    old: typeof p.old_price_cents === 'number' ? formatMoney(p.old_price_cents) : '',
+    price: typeof p.price_cents === 'number' ? formatMoney(p.price_cents) : '',
   }
   const key = KNOWN.has(n.kind) ? n.kind : 'unknown'
   return <Trans i18nKey={`notifications.kind.${key}`} values={values} components={{ b: <strong /> }} />

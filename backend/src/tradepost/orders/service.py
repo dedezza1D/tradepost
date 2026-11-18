@@ -51,6 +51,8 @@ from tradepost.payments.base import (
     PaymentRegistry,
     StatusResult,
 )
+from tradepost.social.blocks import is_blocked
+from tradepost.social.service import alert_low_stock
 
 log = get_logger(__name__)
 
@@ -157,7 +159,11 @@ _RESERVE = text(
            updated_at = now(),
            status = CASE WHEN stock - :q = 0 THEN 'sold_out'::listing_status ELSE status END
      WHERE id = :id AND status = 'active' AND stock >= :q AND seller_id <> :buyer
-    RETURNING seller_id, title, price_cents, shipping_cents, currency
+       AND NOT EXISTS (
+           SELECT 1 FROM blocks
+            WHERE (blocker_id = listings.seller_id AND blocked_id = :buyer)
+               OR (blocker_id = :buyer AND blocked_id = listings.seller_id))
+    RETURNING seller_id, title, price_cents, shipping_cents, currency, stock
     """
 )
 
@@ -184,6 +190,8 @@ async def _explain_unavailable(db: AsyncSession, listing_id: uuid.UUID, buyer: U
         return NotFound("Listing not found.", listing_id=str(listing_id))
     if row.seller_id == buyer.id:
         return AppError("You cannot buy your own listing.", code="own_listing")
+    if await is_blocked(db, buyer.id, row.seller_id):
+        return NotFound("Listing not found.", listing_id=str(listing_id))
     return OutOfStock(
         "Not enough stock for one of the items.",
         listing_id=str(listing_id),
@@ -231,6 +239,8 @@ async def create_checkout(
             # The request transaction rolls back, releasing whatever was reserved before.
             raise await _explain_unavailable(db, line.listing_id, buyer)
         by_seller[row.seller_id].append((line, row))
+        if row.stock == 1:
+            await alert_low_stock(db, line.listing_id, row.title, exclude=buyer.id)
 
     checkout = Checkout(
         id=uuid.uuid4(),

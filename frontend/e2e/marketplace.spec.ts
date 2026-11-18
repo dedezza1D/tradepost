@@ -86,6 +86,21 @@ test('a seller lists an item and a buyer buys, receives and reviews it', async (
   await buyer.page.goto(`/search?q=${encodeURIComponent(title)}`)
   await buyer.page.getByRole('link', { name: new RegExp(title) }).first().click()
   await expect(buyer.page.getByRole('heading', { name: title })).toBeVisible()
+
+  // Social: save the listing, follow the seller and find the listing in the Following tab.
+  const listingUrl = buyer.page.url()
+  await buyer.page.getByRole('button', { name: `Save ${title}` }).click()
+  await expect(buyer.page.getByRole('button', { name: `Remove ${title} from saved` })).toHaveAttribute('aria-pressed', 'true')
+  await buyer.page.getByRole('link', { name: /Vendedora E2E/ }).first().click()
+  await expect(buyer.page.getByRole('heading', { name: 'Vendedora E2E' })).toBeVisible()
+  await buyer.page.getByRole('button', { name: 'Follow', exact: true }).click()
+  await expect(buyer.page.getByRole('button', { name: 'Following', exact: true })).toBeVisible()
+  await buyer.page.goto('/?tab=following')
+  await expect(buyer.page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
+  await buyer.page.goto('/me/saved')
+  await expect(buyer.page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
+  await buyer.page.goto(listingUrl)
+
   await buyer.page.locator('button:visible', { hasText: /Buy (now|for)/ }).first().click()
   await expect(buyer.page.getByRole('heading', { name: 'Checkout' })).toBeVisible()
   await buyer.page.getByRole('button', { name: /Continue to payment/ }).click()
@@ -95,6 +110,8 @@ test('a seller lists an item and a buyer buys, receives and reviews it', async (
   // The seller is told about the sale and ships it.
   await seller.page.goto('/notifications')
   await expect(seller.page.getByText(/Você vendeu/)).toBeVisible()
+  await expect(seller.page.getByText(/começou a seguir você/)).toBeVisible()
+  await expect(seller.page.getByText(/salvou/)).toBeVisible()
   await seller.page.goto('/seller')
   await seller.page.getByPlaceholder('Código de rastreio').fill('BR123456789BR')
   await seller.page.getByRole('button', { name: 'Marcar enviado' }).click()

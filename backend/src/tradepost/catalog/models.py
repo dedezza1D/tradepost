@@ -83,6 +83,9 @@ class Listing(TimestampMixin, Base):
         ForeignKey("municipalities.ibge_code"), index=True
     )
     shipping_cents: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    # Kept in step with ``saves`` by plain UPDATEs, which leave ``version`` alone: a save must
+    # not make the seller's open edit form stale.
+    save_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     status: Mapped[ListingStatus] = mapped_column(
         Enum(ListingStatus, name="listing_status", values_callable=lambda e: [m.value for m in e]),
         nullable=False,

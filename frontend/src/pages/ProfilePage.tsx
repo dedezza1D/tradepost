@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLogout, useMe } from '../api/auth'
 import { api, json } from '../api/client'
 import type { Me } from '../api/types'
+import { Avatar } from '../components/Avatar'
 import { CityPicker } from '../components/CityPicker'
 import { LANGUAGES, currentLanguage, type Language } from '../i18n'
 import { errorMessage } from '../lib/errors'
@@ -47,9 +48,10 @@ function ProfileForm({ me }: { me: Me }) {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const [name, setName] = useState(me.display_name)
+  const [bio, setBio] = useState(me.bio ?? '')
   const [city, setCity] = useState(me.city && me.state ? { ibge_code: me.municipality_id ?? 0, name: me.city, state: me.state } : null)
   const save = useMutation({
-    mutationFn: () => api<Me>('/api/auth/me', { method: 'PATCH', body: json({ display_name: name, city: city?.name ?? null, state: city?.state ?? null }) }),
+    mutationFn: () => api<Me>('/api/auth/me', { method: 'PATCH', body: json({ display_name: name, bio, city: city?.name ?? null, state: city?.state ?? null }) }),
     onSuccess: (updated) => qc.setQueryData(['me'], updated),
   })
   function submit(e: FormEvent) {
@@ -62,11 +64,54 @@ function ProfileForm({ me }: { me: Me }) {
         <label className="label" htmlFor="display_name">{t('profile.name')}</label>
         <input id="display_name" className="input" required minLength={2} maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
       </div>
+      <div>
+        <label className="label" htmlFor="bio">{t('profile.bio')}</label>
+        <textarea id="bio" className="input min-h-24" maxLength={300} value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('profile.bioPlaceholder')} />
+        <p className="mt-1 text-right text-xs text-muted">{bio.length}/300</p>
+      </div>
       <CityPicker value={city} onChange={setCity} />
       {save.isError && <p role="alert" className="text-sm text-danger">{errorMessage(save.error, t)}</p>}
       {save.isSuccess && <p className="text-sm text-success">{t('common.saved')}</p>}
       <button className="btn-primary" disabled={save.isPending}>{t('common.save')}</button>
     </form>
+  )
+}
+
+function AvatarEditor({ me }: { me: Me }) {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const input = useRef<HTMLInputElement>(null)
+  const refresh = () => void qc.invalidateQueries({ queryKey: ['me'] })
+  const upload = useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      return api<unknown>('/api/me/avatar', { method: 'POST', body: form })
+    },
+    onSuccess: refresh,
+  })
+  const remove = useMutation({ mutationFn: () => api<void>('/api/me/avatar', { method: 'DELETE' }), onSuccess: refresh })
+  function pick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) upload.mutate(file)
+    e.target.value = ''
+  }
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <button type="button" className="relative rounded-full focus-visible:ring-2 focus-visible:ring-primary" onClick={() => input.current?.click()} aria-label={t('profile.changePhoto')}>
+        <Avatar name={me.display_name} url={me.avatar_url} size="lg" />
+        <span className="absolute -right-1 -bottom-1 grid h-7 w-7 place-items-center rounded-full bg-primary text-white ring-2 ring-surface">
+          <Icon name="camera" size={15} />
+        </span>
+      </button>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={pick} tabIndex={-1} aria-hidden />
+      {me.avatar_url && (
+        <button type="button" className="text-xs text-muted hover:text-danger" disabled={remove.isPending} onClick={() => remove.mutate()}>
+          {t('profile.removePhoto')}
+        </button>
+      )}
+      {(upload.isError || remove.isError) && <p role="alert" className="text-xs text-danger">{errorMessage(upload.error ?? remove.error, t)}</p>}
+    </div>
   )
 }
 
@@ -119,9 +164,7 @@ export function ProfilePage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <header className="flex items-center gap-4">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-2xl font-bold text-primary">
-          {me.display_name.slice(0, 1).toUpperCase()}
-        </span>
+        <AvatarEditor me={me} />
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{me.display_name}</h1>
           <p className="truncate text-sm text-muted">{me.email}</p>
@@ -131,9 +174,13 @@ export function ProfilePage() {
 
       <ul className="card divide-y divide-line overflow-hidden">
         <Row to="/me/listings" icon="tag" label={t('profile.myListings')} />
+        <Row to="/me/saved" icon="heart" label={t('social.savedTitle')} />
+        <Row to="/me/following" icon="users" label={t('social.followingTitle')} />
         <Row to="/orders" icon="box" label={t('nav.orders')} />
         <Row to="/seller" icon="store" label={t('nav.selling')} />
         <Row to="/cart" icon="cart" label={t('nav.cart')} />
+        <Row to="/me/blocks" icon="ban" label={t('social.blockedTitle')} />
+        {me.is_admin && <Row to="/admin/reports" icon="shield" label={t('social.moderation.title')} />}
       </ul>
 
       <section className="card space-y-4 p-5">

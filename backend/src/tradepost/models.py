@@ -19,12 +19,15 @@ from tradepost.orders.models import (
 )
 from tradepost.reviews.service import Review
 from tradepost.security.ratelimit import RateLimitBucket
+from tradepost.social.models import Block, Follow, Report, Save
 
 __all__ = [
     "Base",
+    "Block",
     "CartItem",
     "Category",
     "Checkout",
+    "Follow",
     "LedgerEntry",
     "Listing",
     "ListingPhoto",
@@ -36,7 +39,9 @@ __all__ = [
     "PaymentAttempt",
     "PaymentEvent",
     "RateLimitBucket",
+    "Report",
     "Review",
+    "Save",
     "SellerAccount",
     "Session",
     "StockReservation",

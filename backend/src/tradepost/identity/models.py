@@ -1,7 +1,17 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, LargeBinary, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from tradepost.db import Base, TimestampMixin, new_id
@@ -22,6 +32,19 @@ class User(TimestampMixin, Base):
     )
     locale: Mapped[str] = mapped_column(String(5), nullable=False, server_default="pt-BR")
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    bio: Mapped[str | None] = mapped_column(String(300))
+    avatar_key: Mapped[str | None] = mapped_column(String(200))
+    # Stored size of the avatar, counted against the media quota.
+    avatar_bytes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    # Kept in step with ``follows`` in the same transaction as each follow or unfollow.
+    follower_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    following_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     password_changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

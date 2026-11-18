@@ -12,6 +12,8 @@ export interface Me {
   locale: 'pt-BR' | 'en'
   is_admin: boolean
   created_at: string
+  bio: string | null
+  avatar_url: string | null
 }
 
 export interface Category {
@@ -31,6 +33,7 @@ export interface Photo {
 export interface Seller {
   id: string
   display_name: string
+  avatar_url: string | null
   rating_avg: number | null
   rating_count: number
 }
@@ -54,10 +57,13 @@ export interface Listing {
   photos: Photo[]
   created_at: string
   published_at: string | null
+  save_count: number
+  saved: boolean
 }
 
 export interface ListingCard {
   id: string
+  seller_id?: string | null
   title: string
   price_cents: number
   currency: string
@@ -68,6 +74,8 @@ export interface ListingCard {
   thumb_url: string | null
   published_at: string | null
   distance_km?: number | null
+  save_count?: number
+  saved?: boolean
 }
 
 export interface ListingPage {
@@ -91,3 +99,47 @@ export const BR_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
   'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ] as const
+
+export type FeedTab = 'trending' | 'nearby' | 'following'
+
+export interface Profile {
+  id: string
+  display_name: string
+  bio: string | null
+  avatar_url: string | null
+  city: string | null
+  state: string | null
+  member_since: string
+  rating_avg: number | null
+  rating_count: number
+  follower_count: number
+  following_count: number
+  listing_count: number
+  is_me: boolean
+  following: boolean
+  blocked: boolean
+}
+
+export interface UserSummary {
+  id: string
+  display_name: string
+  avatar_url: string | null
+  city: string | null
+  state: string | null
+  follower_count: number
+}
+
+export type ReportReason = 'prohibited' | 'scam' | 'offensive' | 'spam' | 'other'
+export const REPORT_REASONS: ReportReason[] = ['prohibited', 'scam', 'offensive', 'spam', 'other']
+
+export interface AdminReport {
+  id: string
+  target_type: 'listing' | 'user'
+  target_id: string
+  reason: ReportReason
+  details: string | null
+  status: 'open' | 'dismissed' | 'actioned'
+  created_at: string
+  target_label: string
+  reports_on_target: number
+}

@@ -30,6 +30,13 @@ from tradepost.security.passwords import hash_password, needs_rehash, verify_pas
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+def me_out(request: Request, user: User) -> MeOut:
+    storage = request.app.state.storage
+    out = MeOut.model_validate(user)
+    out.avatar_url = storage.url(user.avatar_key) if user.avatar_key else None
+    return out
+
+
 @router.post(
     "/register",
     status_code=status.HTTP_201_CREATED,
@@ -53,7 +60,7 @@ async def register(body: RegisterIn, request: Request, response: Response, db: D
     except IntegrityError:
         raise Conflict("This email is already registered.", code="email_taken") from None
     await create_session(db, response, user, user_agent=request.headers.get("user-agent"))
-    return MeOut.model_validate(user)
+    return me_out(request, user)
 
 
 @router.post(
@@ -71,7 +78,7 @@ async def login(body: LoginIn, request: Request, response: Response, db: DbSessi
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(body.password)
     await create_session(db, response, user, user_agent=request.headers.get("user-agent"))
-    return MeOut.model_validate(user)
+    return me_out(request, user)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -82,24 +89,28 @@ async def logout(principal: OptionalPrincipal, response: Response, db: DbSession
 
 
 @router.get("/me")
-async def me(user: CurrentUser) -> MeOut:
-    return MeOut.model_validate(user)
+async def me(request: Request, user: CurrentUser) -> MeOut:
+    return me_out(request, user)
 
 
 @router.patch("/me")
-async def update_profile(body: ProfileUpdateIn, user: CurrentUser, db: DbSession) -> MeOut:
+async def update_profile(
+    body: ProfileUpdateIn, request: Request, user: CurrentUser, db: DbSession
+) -> MeOut:
     changes = body.model_dump(exclude_unset=True)
     if "display_name" in changes and body.display_name:
         user.display_name = body.display_name
     if body.locale:
         user.locale = body.locale
+    if "bio" in changes:
+        user.bio = body.bio or None
     if "city" in changes or "state" in changes:
         city, state = changes.get("city", user.city), changes.get("state", user.state)
         if city and state:
             await _set_city(db, user, city, state)
         else:
             user.city, user.state, user.municipality_id = None, None, None
-    return MeOut.model_validate(user)
+    return me_out(request, user)
 
 
 async def _set_city(db: DbSession, user: User, city: str, state: str) -> None:

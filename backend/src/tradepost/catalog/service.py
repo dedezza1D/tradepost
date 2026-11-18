@@ -20,11 +20,12 @@ from tradepost.geo.service import resolve_city
 from tradepost.identity.models import User
 from tradepost.media.images import process_image
 from tradepost.media.storage import Storage
+from tradepost.social.blocks import is_blocked
 
 # Image decoding is CPU and memory heavy; the free instance has 512 MB.
-_image_slots = asyncio.Semaphore(2)
+image_slots = asyncio.Semaphore(2)
 
-_MEDIA_QUOTA_LOCK = 7_301_002
+MEDIA_QUOTA_LOCK = 7_301_002
 
 
 class StorageFull(AppError):
@@ -33,6 +34,13 @@ class StorageFull(AppError):
 
 
 PUBLIC_STATUSES = frozenset({ListingStatus.ACTIVE, ListingStatus.PAUSED, ListingStatus.SOLD_OUT})
+
+
+async def media_used(db: AsyncSession) -> int:
+    """Bytes stored for listing photos and avatars, counted against the media quota."""
+    photos = select(func.coalesce(func.sum(ListingPhoto.bytes), 0)).scalar_subquery()
+    avatars = select(func.coalesce(func.sum(User.avatar_bytes), 0)).scalar_subquery()
+    return int((await db.execute(select(photos + avatars))).scalar_one())
 
 
 async def _require_category(db: AsyncSession, slug: str) -> None:
@@ -53,6 +61,8 @@ async def get_visible_listing(
     listing = await get_listing(db, listing_id)
     is_owner = viewer is not None and (viewer.id == listing.seller_id or viewer.is_admin)
     if listing.status not in PUBLIC_STATUSES and not is_owner:
+        raise NotFound("Listing not found.")
+    if viewer is not None and not is_owner and await is_blocked(db, viewer.id, listing.seller_id):
         raise NotFound("Listing not found.")
     return listing
 
@@ -99,6 +109,7 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
             current_version=listing.version,
         )
     changes = body.model_dump(exclude_unset=True, exclude={"version"})
+    old_price, old_stock = listing.price_cents, listing.stock
     if "category_slug" in changes and changes["category_slug"] is not None:
         await _require_category(db, changes["category_slug"])
     if changes.get("city") or changes.get("state"):
@@ -120,6 +131,12 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
             code="stale_version",
         ) from None
     await db.refresh(listing)
+    from tradepost.social.service import alert_low_stock, alert_price_drop
+
+    if listing.price_cents < old_price:
+        await alert_price_drop(db, listing.id, listing.title, old_price, listing.price_cents)
+    if listing.stock == 1 and old_stock > 1:
+        await alert_low_stock(db, listing.id, listing.title)
     return listing
 
 
@@ -170,7 +187,7 @@ async def add_photo(
             "Delete photos from old listings to add new ones.",
             code="photo_limit_reached",
         )
-    async with _image_slots:
+    async with image_slots:
         processed = await asyncio.to_thread(
             process_image,
             data,
@@ -180,8 +197,8 @@ async def add_photo(
     size = len(processed.full) + len(processed.thumb)
     # One upload at a time checks and claims space, so concurrent uploads cannot overshoot
     # the quota. The lock is released when the request's transaction ends.
-    await db.execute(text("SELECT pg_advisory_xact_lock(:id)"), {"id": _MEDIA_QUOTA_LOCK})
-    used = (await db.execute(select(func.coalesce(func.sum(ListingPhoto.bytes), 0)))).scalar_one()
+    await db.execute(text("SELECT pg_advisory_xact_lock(:id)"), {"id": MEDIA_QUOTA_LOCK})
+    used = await media_used(db)
     if used + size > settings.media_quota_bytes:
         raise StorageFull("Photo storage for this demo is full. Try again later.")
     photo_id = uuid.uuid4()
@@ -257,11 +274,14 @@ def photo_out(storage: Storage, photo: ListingPhoto) -> PhotoOut:
     )
 
 
-async def listing_out(db: AsyncSession, storage: Storage, listing: Listing) -> ListingOut:
+async def listing_out(
+    db: AsyncSession, storage: Storage, listing: Listing, viewer_id: uuid.UUID | None = None
+) -> ListingOut:
     seller = await db.get(User, listing.seller_id)
     if seller is None:  # pragma: no cover - FK guarantees it
         raise Forbidden("Seller not found.")
     from tradepost.reviews.service import seller_rating
+    from tradepost.social.service import has_saved
 
     rating_avg, rating_count = await seller_rating(db, seller.id)
     return ListingOut(
@@ -269,6 +289,7 @@ async def listing_out(db: AsyncSession, storage: Storage, listing: Listing) -> L
         seller=SellerOut(
             id=seller.id,
             display_name=seller.display_name,
+            avatar_url=storage.url(seller.avatar_key) if seller.avatar_key else None,
             rating_avg=rating_avg,
             rating_count=rating_count,
         ),
@@ -288,4 +309,6 @@ async def listing_out(db: AsyncSession, storage: Storage, listing: Listing) -> L
         photos=[photo_out(storage, p) for p in listing.photos],
         created_at=listing.created_at,
         published_at=listing.published_at,
+        save_count=listing.save_count,
+        saved=viewer_id is not None and await has_saved(db, viewer_id, listing.id),
     )

@@ -53,6 +53,34 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: '/me/saved',
+        lazy: async () => {
+          const { SavedPage } = await import('./pages/SocialPages')
+          return { element: auth(<SavedPage />) }
+        },
+      },
+      {
+        path: '/me/following',
+        lazy: async () => {
+          const { FollowingPage } = await import('./pages/SocialPages')
+          return { element: auth(<FollowingPage />) }
+        },
+      },
+      {
+        path: '/me/blocks',
+        lazy: async () => {
+          const { BlockedPage } = await import('./pages/SocialPages')
+          return { element: auth(<BlockedPage />) }
+        },
+      },
+      {
+        path: '/admin/reports',
+        lazy: async () => {
+          const { AdminReportsPage } = await import('./pages/SocialPages')
+          return { element: auth(<AdminReportsPage />) }
+        },
+      },
+      {
         path: '/me/listings',
         lazy: async () => {
           const { MyListingsPage } = await import('./pages/MyListingsPage')

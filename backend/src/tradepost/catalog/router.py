@@ -1,7 +1,8 @@
+import asyncio
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -20,8 +21,9 @@ from tradepost.catalog.schemas import (
 from tradepost.catalog.search import search_listings
 from tradepost.config import get_settings
 from tradepost.deps import DbSession
+from tradepost.errors import NotFound
 from tradepost.identity.sessions import CurrentUser, OptionalPrincipal
-from tradepost.media.images import InvalidImage
+from tradepost.media.images import InvalidImage, share_preview
 from tradepost.media.storage import Storage
 from tradepost.security.ratelimit import rate_limit
 
@@ -47,9 +49,17 @@ async def list_categories(db: DbSession) -> list[CategoryOut]:
     dependencies=[Depends(rate_limit("search", limit=120, window_seconds=60))],
 )
 async def search(
-    params: Annotated[SearchParams, Query()], db: DbSession, storage: StorageDep
+    params: Annotated[SearchParams, Query()],
+    principal: OptionalPrincipal,
+    db: DbSession,
+    storage: StorageDep,
 ) -> ListingPage:
-    return await search_listings(db, storage, params)
+    from tradepost.social.service import mark_saved
+
+    viewer_id = principal.user.id if principal else None
+    page = await search_listings(db, storage, params, viewer_id)
+    await mark_saved(db, viewer_id, page.items)
+    return page
 
 
 @router.get("/listings/{listing_id}")
@@ -58,7 +68,26 @@ async def get_listing(
 ) -> ListingOut:
     viewer = principal.user if principal else None
     listing = await service.get_visible_listing(db, listing_id, viewer)
-    return await service.listing_out(db, storage, listing)
+    return await service.listing_out(db, storage, listing, viewer.id if viewer else None)
+
+
+@router.get(
+    "/listings/{listing_id}/og.jpg",
+    dependencies=[Depends(rate_limit("og_image", limit=60, window_seconds=60))],
+    response_class=Response,
+)
+async def share_image(listing_id: uuid.UUID, db: DbSession, storage: StorageDep) -> Response:
+    """Link-preview image of a public listing, rendered on demand. The edge caches it, so
+    the API renders each one rarely."""
+    listing = await service.get_visible_listing(db, listing_id, None)
+    data = await storage.get(listing.photos[0].key_full) if listing.photos else None
+    if data is None:
+        raise NotFound("No photo.")
+    async with service.image_slots:
+        jpeg = await asyncio.to_thread(share_preview, data)
+    return Response(
+        jpeg, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    )
 
 
 @router.post(

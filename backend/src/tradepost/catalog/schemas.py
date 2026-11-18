@@ -76,6 +76,7 @@ class PhotoOut(BaseModel):
 class SellerOut(BaseModel):
     id: uuid.UUID
     display_name: str
+    avatar_url: str | None = None
     rating_avg: float | None = None
     rating_count: int = 0
 
@@ -99,10 +100,13 @@ class ListingOut(BaseModel):
     photos: list[PhotoOut]
     created_at: datetime
     published_at: datetime | None
+    save_count: int = 0
+    saved: bool = False
 
 
 class ListingCard(BaseModel):
     id: uuid.UUID
+    seller_id: uuid.UUID | None = None
     title: str
     price_cents: int
     currency: str
@@ -113,6 +117,9 @@ class ListingCard(BaseModel):
     thumb_url: str | None
     published_at: datetime | None
     distance_km: float | None = None
+    save_count: int = 0
+    # Whether the signed-in viewer saved it (always false for anonymous visitors).
+    saved: bool = False
 
 
 class ListingPage(BaseModel):

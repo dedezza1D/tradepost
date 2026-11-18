@@ -26,6 +26,12 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 - **Seller money**: commission per sale, funds held until the buyer confirms delivery, payout
   to the seller's Stripe Connect account, balance dashboard.
 - **Reviews**: one per delivered order, seller rating on listings and profile.
+- **Social layer**: follow sellers, save listings (with alerts when the price drops or one unit
+  is left), a home feed with *Trending*, *Near you* and *Following* tabs, public profiles with
+  photo, bio and follower counts, link previews for shared listings.
+- **Safety**: block a user (hides each other's listings, profiles and purchases in both
+  directions and cuts follows and saves), report listings and profiles, moderation queue.
+- **Live notifications** over server-sent events, in Portuguese or English.
 
 ## Architecture
 
@@ -137,7 +143,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 55 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 85 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -145,10 +151,19 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
 - Domain tests drive the HTTP API with the in-memory provider: reservation, idempotency,
   concurrency, webhook replay, lost webhooks, expiry races, double and late payments, the order
   lifecycle, payouts, refunds, reviews and access control.
+- Social tests cover counters, idempotent follow and save, price-drop and last-unit alerts,
+  feed ordering and cursor pagination, trending pages that stay stable while new saves arrive,
+  blocks hiding content in both directions, report deduplication and moderation.
 - Adapter tests verify webhook signatures with locally signed payloads (no network).
 - `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix
   under review cannot be cancelled.
+
+The web app has a Playwright suite (`npm run e2e`) that runs the production build against the
+API and PostgreSQL on a phone and a desktop viewport: a seller lists an item in Portuguese, a
+buyer in English saves it, follows the seller, finds it in the Following tab, pays with the test
+card, gets it shipped and reviews it; axe checks the main pages for accessibility violations.
+`npm run test:edge` unit-tests the link-preview tags built at the edge.
 
 CI (GitHub Actions) runs lint, strict type checking, migrations up → down → up on an empty
 database, a drift check between models and migrations, the tests, dependency audits, the web
@@ -222,6 +237,17 @@ uv run python scripts/stripe_listen.py
   waits on the checkout page, and every 30 seconds in the background). The webhook handler and
   its signature check are implemented and tested; turning it on is one secret in the API's
   environment.
+- **Feed computed on read ("pull"), not fanned out on write.** The Following tab joins
+  `follows` with the sellers' newest listings through the `(seller_id, created_at)` index;
+  Trending scores saves and sales in the last two weeks with exponential decay. At this scale
+  one query per page is cheaper than writing every new listing into each follower's timeline.
+  Fan-out on write starts paying off when sellers have thousands of followers and reads far
+  outnumber writes; the switch would add a `timeline` table filled by a background job.
+- **Counters updated in the same transaction** as the follow or save they count (atomic
+  `x = x + 1`), so they never drift and need no reconciliation job.
+- **Link previews rendered at the edge.** A Pages Function adds Open Graph tags to
+  `/listings/:id` for messaging-app crawlers; the preview image is a JPEG the API renders on
+  demand (WebP is not shown everywhere) and the edge caches for a day.
 - **Migrations at container start**, because the free tier has no pre-deploy step. They are
   written expand/contract so the running release keeps working while they apply.
 

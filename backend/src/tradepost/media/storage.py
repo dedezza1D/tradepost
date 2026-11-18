@@ -9,6 +9,7 @@ from tradepost.config import Settings
 
 class Storage(Protocol):
     async def put(self, key: str, data: bytes, content_type: str) -> None: ...
+    async def get(self, key: str) -> bytes | None: ...
     async def delete(self, key: str) -> None: ...
     def url(self, key: str) -> str: ...
 
@@ -30,6 +31,12 @@ class LocalStorage:
         path = self._path(key)
         await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
         await asyncio.to_thread(path.write_bytes, data)
+
+    async def get(self, key: str) -> bytes | None:
+        path = self._path(key)
+        if not await asyncio.to_thread(path.is_file):
+            return None
+        return await asyncio.to_thread(path.read_bytes)
 
     async def delete(self, key: str) -> None:
         await asyncio.to_thread(self._path(key).unlink, missing_ok=True)
@@ -67,6 +74,17 @@ class S3Storage:
             ContentType=content_type,
             CacheControl="public, max-age=31536000, immutable",
         )
+
+    async def get(self, key: str) -> bytes | None:
+        def read() -> bytes | None:
+            try:
+                response = self._client.get_object(Bucket=self._bucket, Key=key)
+            except self._client.exceptions.NoSuchKey:
+                return None
+            body: bytes = response["Body"].read()
+            return body
+
+        return await asyncio.to_thread(read)
 
     async def delete(self, key: str) -> None:
         await asyncio.to_thread(self._client.delete_object, Bucket=self._bucket, Key=key)

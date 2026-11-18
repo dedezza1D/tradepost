@@ -20,6 +20,7 @@ from tradepost.catalog.schemas import ListingCard, ListingPage, SearchParams
 from tradepost.errors import AppError
 from tradepost.geo.models import Municipality
 from tradepost.media.storage import Storage
+from tradepost.social.blocks import blocked_either_way
 
 MAX_RELEVANCE_OFFSET = 600
 
@@ -54,8 +55,34 @@ def _thumb_subquery() -> Any:
     )
 
 
-def _filters(params: SearchParams) -> list[ColumnElement[bool]]:
+def to_card(listing: Listing, thumb_key: str | None, km: Any, storage: Storage) -> ListingCard:
+    return ListingCard(
+        id=listing.id,
+        seller_id=listing.seller_id,
+        title=listing.title,
+        price_cents=listing.price_cents,
+        currency=listing.currency,
+        condition=listing.condition,
+        city=listing.city,
+        state=listing.state,
+        status=listing.status,
+        thumb_url=storage.url(thumb_key) if thumb_key else None,
+        published_at=listing.published_at,
+        distance_km=round(float(km), 1) if km is not None else None,
+        save_count=listing.save_count,
+    )
+
+
+def visible_to(viewer_id: uuid.UUID | None) -> list[ColumnElement[bool]]:
+    """Active listings, minus those of sellers the viewer blocked or was blocked by."""
     clauses: list[ColumnElement[bool]] = [Listing.status == ListingStatus.ACTIVE]
+    if viewer_id is not None:
+        clauses.append(~blocked_either_way(viewer_id, Listing.seller_id))
+    return clauses
+
+
+def _filters(params: SearchParams, viewer_id: uuid.UUID | None) -> list[ColumnElement[bool]]:
+    clauses = visible_to(viewer_id)
     if params.category:
         clauses.append(Listing.category_slug == params.category)
     if params.condition:
@@ -69,7 +96,12 @@ def _filters(params: SearchParams) -> list[ColumnElement[bool]]:
     return clauses
 
 
-async def search_listings(db: AsyncSession, storage: Storage, params: SearchParams) -> ListingPage:
+async def search_listings(
+    db: AsyncSession,
+    storage: Storage,
+    params: SearchParams,
+    viewer_id: uuid.UUID | None = None,
+) -> ListingPage:
     query = (params.q or "").strip()
     sort = params.sort
     if (sort == "relevance" and not query) or (sort == "nearest" and params.near is None):
@@ -91,14 +123,14 @@ async def search_listings(db: AsyncSession, storage: Storage, params: SearchPara
             select(Listing, thumb, distance)
             .join(Municipality, Municipality.ibge_code == Listing.municipality_id)
             .where(
-                *_filters(params),
+                *_filters(params, viewer_id),
                 # The box test can use the GiST index; the exact distance trims its corners.
                 func.earth_box(here, params.radius_km * 1000).op("@>")(there),
                 meters <= params.radius_km * 1000,
             )
         )
     else:
-        stmt = select(Listing, thumb, distance).where(*_filters(params))
+        stmt = select(Listing, thumb, distance).where(*_filters(params, viewer_id))
 
     if query:
         tsquery = func.websearch_to_tsquery("portuguese", func.immutable_unaccent(query))
@@ -142,22 +174,7 @@ async def search_listings(db: AsyncSession, storage: Storage, params: SearchPara
     rows = (await db.execute(stmt.limit(limit + 1))).all()
     has_more = len(rows) > limit
     rows = rows[:limit]
-    items = [
-        ListingCard(
-            id=listing.id,
-            title=listing.title,
-            price_cents=listing.price_cents,
-            currency=listing.currency,
-            condition=listing.condition,
-            city=listing.city,
-            state=listing.state,
-            status=listing.status,
-            thumb_url=storage.url(thumb_key) if thumb_key else None,
-            published_at=listing.published_at,
-            distance_km=round(float(km), 1) if km is not None else None,
-        )
-        for listing, thumb_key, km in rows
-    ]
+    items = [to_card(listing, thumb_key, km, storage) for listing, thumb_key, km in rows]
 
     next_cursor = None
     if has_more and rows:

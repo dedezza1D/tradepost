@@ -29,7 +29,13 @@ const paths = {
   drag: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
   check: 'm5 12 5 5L20 7',
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-5v-5m0-3h.01',
-  store: 'M4 9h16l-1-4H5L4 9Zm0 0v11h16V9M9 20v-6h6v6',
+  heart: 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20Z',
+  flag: 'M5 21V4m0 0h11l-2 4 2 4H5',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  ban: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM5.6 5.6l12.8 12.8',
+  users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 10a7 7 0 0 1 14 0M16 3.2a4 4 0 0 1 0 7.6M22 21a7 7 0 0 0-4-6.3',
+  trending: 'm3 17 6-6 4 4 8-8M15 7h6v6',
+  store:'M4 9h16l-1-4H5L4 9Zm0 0v11h16V9M9 20v-6h6v6',
 } as const
 
 export type IconName = keyof typeof paths

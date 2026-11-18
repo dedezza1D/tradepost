@@ -10,6 +10,9 @@ import { errorMessage } from '../lib/errors'
 import { formatMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
 import { Badge, EmptyState, ErrorState, Sheet, Stars } from '../ui/primitives'
+import { Avatar } from '../components/Avatar'
+import { ReportSheet } from '../components/ReportSheet'
+import { SaveButton } from '../components/SaveButton'
 
 function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
   const { t } = useTranslation()
@@ -168,6 +171,7 @@ export function ListingPage() {
   const { id } = useParams()
   const { data: me } = useMe()
   const { data: categories } = useCategories()
+  const [reporting, setReporting] = useState(false)
   const listing = useQuery({
     queryKey: ['listing', id],
     queryFn: () => api<Listing>(`/api/listings/${id}`),
@@ -225,9 +229,7 @@ export function ListingPage() {
         ) : null}
 
         <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft font-bold text-primary">
-            {item.seller.display_name.slice(0, 1).toUpperCase()}
-          </span>
+          <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />
           <span className="min-w-0 flex-1">
             <span className="block truncate font-semibold">{item.seller.display_name}</span>
             <span className="flex items-center gap-1 text-xs text-muted">
@@ -238,7 +240,20 @@ export function ListingPage() {
           </span>
           <Icon name="chevronRight" className="text-muted" />
         </Link>
-        <ShareButton title={item.title} />
+        <div className="flex flex-wrap items-center gap-1">
+          {!isOwner && <SaveButton id={item.id} saved={item.saved} title={item.title} variant="inline" />}
+          <ShareButton title={item.title} />
+          {item.save_count > 0 && (
+            <span className="ml-auto text-xs text-muted">{t('social.savedBy', { count: item.save_count })}</span>
+          )}
+        </div>
+        {me && !isOwner && (
+          <button type="button" className="flex items-center gap-1.5 text-xs text-muted hover:text-danger" onClick={() => setReporting(true)}>
+            <Icon name="flag" size={14} />
+            {t('social.report.listing')}
+          </button>
+        )}
+        <ReportSheet open={reporting} onClose={() => setReporting(false)} target={{ type: 'listing', id: item.id }} />
       </aside>
 
       <section className="card p-5 md:col-start-1">

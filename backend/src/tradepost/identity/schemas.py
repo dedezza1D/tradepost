@@ -13,6 +13,7 @@ Locale = Literal["pt-BR", "en"]
 Password = Annotated[str, StringConstraints(min_length=10, max_length=128)]
 DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=60)]
 City = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80)]
+Bio = Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)]
 
 
 def _validate_state(value: str | None) -> str | None:
@@ -47,6 +48,8 @@ class ChangePasswordIn(BaseModel):
 
 class ProfileUpdateIn(BaseModel):
     display_name: DisplayName | None = None
+    # An empty string clears the bio.
+    bio: Bio | None = None
     city: City | None = None
     state: str | None = None
     locale: Locale | None = None
@@ -66,6 +69,8 @@ class MeOut(BaseModel):
     locale: str
     is_admin: bool
     created_at: datetime
+    bio: str | None = None
+    avatar_url: str | None = None
 
 
 class PublicUserOut(BaseModel):
