@@ -95,7 +95,7 @@ async def revoke_all_sessions(
     await db.execute(stmt.values(revoked_at=datetime.now(UTC)))
 
 
-async def _load_principal(request: Request, db: AsyncSession) -> Principal | None:
+async def load_principal(request: Request, db: AsyncSession) -> Principal | None:
     token = request.cookies.get(SESSION_COOKIE)
     if not token or len(token) > 100:
         return None
@@ -128,7 +128,7 @@ def _check_csrf(request: Request, session: Session) -> None:
 
 
 async def optional_principal(request: Request, db: DbSession) -> Principal | None:
-    principal = await _load_principal(request, db)
+    principal = await load_principal(request, db)
     if principal is not None:
         _check_csrf(request, principal.session)
     return principal

@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tradepost.catalog.models import Listing, ListingPhoto, ListingStatus
 from tradepost.catalog.schemas import ListingCard, ListingPage, SearchParams
 from tradepost.errors import AppError
+from tradepost.geo.models import Municipality
 from tradepost.media.storage import Storage
 
 MAX_RELEVANCE_OFFSET = 600
@@ -70,11 +71,34 @@ def _filters(params: SearchParams) -> list[ColumnElement[bool]]:
 
 async def search_listings(db: AsyncSession, storage: Storage, params: SearchParams) -> ListingPage:
     query = (params.q or "").strip()
-    sort = params.sort if (params.sort != "relevance" or query) else "newest"
+    sort = params.sort
+    if (sort == "relevance" and not query) or (sort == "nearest" and params.near is None):
+        sort = "newest"
     cursor = decode_cursor(params.cursor) if params.cursor else None
 
     thumb = _thumb_subquery().label("thumb")
-    stmt: Select[Any] = select(Listing, thumb).where(*_filters(params))
+    distance: Any = literal(None).label("distance_km")
+    stmt: Select[Any]
+    if params.near is not None:
+        origin = await db.get(Municipality, params.near)
+        if origin is None:
+            raise AppError("Unknown city.", code="unknown_city")
+        here = func.ll_to_earth(origin.lat, origin.lng)
+        there = func.ll_to_earth(Municipality.lat, Municipality.lng)
+        meters = func.earth_distance(here, there)
+        distance = (meters / 1000.0).label("distance_km")
+        stmt = (
+            select(Listing, thumb, distance)
+            .join(Municipality, Municipality.ibge_code == Listing.municipality_id)
+            .where(
+                *_filters(params),
+                # The box test can use the GiST index; the exact distance trims its corners.
+                func.earth_box(here, params.radius_km * 1000).op("@>")(there),
+                meters <= params.radius_km * 1000,
+            )
+        )
+    else:
+        stmt = select(Listing, thumb, distance).where(*_filters(params))
 
     if query:
         tsquery = func.websearch_to_tsquery("portuguese", func.immutable_unaccent(query))
@@ -91,11 +115,12 @@ async def search_listings(db: AsyncSession, storage: Storage, params: SearchPara
 
     limit = params.limit
     offset = 0
-    if sort == "relevance":
+    if sort in ("relevance", "nearest"):
         offset = int(cursor.get("o", 0)) if cursor else 0
         if offset < 0 or offset > MAX_RELEVANCE_OFFSET:
             raise InvalidCursor("Invalid page cursor.")
-        stmt = stmt.order_by(rank.desc(), Listing.id).offset(offset)
+        order = rank.desc() if sort == "relevance" else distance.asc()
+        stmt = stmt.order_by(order, Listing.id).offset(offset)
     elif sort == "newest":
         if cursor:
             stmt = stmt.where(
@@ -129,14 +154,15 @@ async def search_listings(db: AsyncSession, storage: Storage, params: SearchPara
             status=listing.status,
             thumb_url=storage.url(thumb_key) if thumb_key else None,
             published_at=listing.published_at,
+            distance_km=round(float(km), 1) if km is not None else None,
         )
-        for listing, thumb_key in rows
+        for listing, thumb_key, km in rows
     ]
 
     next_cursor = None
     if has_more and rows:
         last: Listing = rows[-1][0]
-        if sort == "relevance":
+        if sort in ("relevance", "nearest"):
             if offset + limit <= MAX_RELEVANCE_OFFSET:
                 next_cursor = encode_cursor({"o": offset + limit})
         elif sort == "newest":

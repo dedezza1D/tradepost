@@ -29,6 +29,7 @@ from tradepost.config import Settings
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
 from tradepost.identity.models import User
 from tradepost.logs import get_logger
+from tradepost.notifications.service import notify
 from tradepost.orders.models import (
     AttemptStatus,
     CartItem,
@@ -54,6 +55,19 @@ from tradepost.payments.base import (
 log = get_logger(__name__)
 
 MAX_LINES = 20
+
+
+def order_summary(order: Order) -> dict[str, object]:
+    """Language-neutral facts a notification about an order needs."""
+    items = list(order.items)
+    return {
+        "order_id": str(order.id),
+        "title": items[0].title if items else "",
+        "more_items": max(len(items) - 1, 0),
+        "total_cents": order.total_cents,
+    }
+
+
 EXPIRY_GRACE = timedelta(minutes=10)
 MAX_QUANTITY = 10
 
@@ -451,6 +465,12 @@ async def apply_status(
     await provider.refund(attempt.provider_ref, attempt.amount_cents, f"refund-{attempt.id}")
     attempt.status = AttemptStatus.REFUNDED
     attempt.status_detail = reason
+    await notify(
+        db,
+        checkout.buyer_id,
+        "payment_refunded",
+        {"checkout_id": str(checkout.id), "amount_cents": attempt.amount_cents, "reason": reason},
+    )
     log.warning("payment_refunded", attempt=str(attempt.id), reason=reason)
 
 
@@ -469,6 +489,8 @@ async def _mark_paid(db: AsyncSession, checkout: Checkout, attempt: PaymentAttem
     for order in checkout.orders:
         _transition(db, order, OrderStatus.PAID, actor="provider")
         order.paid_at = now
+        await notify(db, order.seller_id, "order_paid", order_summary(order))
+        await notify(db, order.buyer_id, "purchase_confirmed", order_summary(order))
         await _ledger(db, order, LedgerKind.SALE, order.total_cents, attempt.provider_ref)
         await _ledger(db, order, LedgerKind.PLATFORM_FEE, -order.platform_fee_cents, None)
         listing_ids += [item.listing_id for item in order.items]
@@ -616,6 +638,9 @@ async def mark_shipped(db: AsyncSession, order: Order, seller: User, tracking: s
     order = await _locked_order(db, order.id)
     _transition(db, order, OrderStatus.SHIPPED, actor="seller", note=tracking)
     order.tracking_code = tracking
+    await notify(
+        db, order.buyer_id, "order_shipped", {**order_summary(order), "tracking_code": tracking}
+    )
     order.shipped_at = _now()
     return order
 
@@ -626,6 +651,7 @@ async def confirm_delivery(db: AsyncSession, order: Order, buyer: User) -> Order
     order = await _locked_order(db, order.id)
     _transition(db, order, OrderStatus.DELIVERED, actor="buyer")
     order.delivered_at = _now()
+    await notify(db, order.seller_id, "order_delivered", order_summary(order))
     return order
 
 
@@ -644,6 +670,7 @@ async def refund_order(
     await provider.refund(attempt.provider_ref, order.total_cents, f"refund-order-{order.id}")
     await _ledger(db, order, LedgerKind.REFUND, -order.total_cents, attempt.provider_ref)
     await _ledger(db, order, LedgerKind.FEE_REVERSAL, order.platform_fee_cents, None)
+    await notify(db, order.buyer_id, "order_refunded", order_summary(order))
     for item in order.items:
         await db.execute(_RELEASE, {"id": item.listing_id, "q": item.quantity})
     return order

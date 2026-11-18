@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.identity.models import User
 from tradepost.logs import get_logger
+from tradepost.notifications.service import notify
 from tradepost.orders import service
 from tradepost.orders.models import (
     AttemptStatus,
@@ -166,6 +167,7 @@ async def auto_deliver(db: AsyncSession) -> int:
     for order in orders:
         service._transition(db, order, OrderStatus.DELIVERED, actor="system", note="auto")
         order.delivered_at = _now()
+        await notify(db, order.seller_id, "order_delivered", service.order_summary(order))
         count += 1
     return count
 
@@ -215,6 +217,12 @@ async def run_payouts(db: AsyncSession, registry: PaymentRegistry) -> int:
             idempotency_key=f"payout-{order.id}",
         )
         await service._ledger(db, order, LedgerKind.PAYOUT, -order.seller_net_cents, transfer_ref)
+        await notify(
+            db,
+            order.seller_id,
+            "payout_sent",
+            {**service.order_summary(order), "amount_cents": order.seller_net_cents},
+        )
         count += 1
     return count
 

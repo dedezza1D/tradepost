@@ -79,6 +79,9 @@ class Listing(TimestampMixin, Base):
     stock: Mapped[int] = mapped_column(Integer, nullable=False)
     city: Mapped[str] = mapped_column(String(80), nullable=False)
     state: Mapped[str] = mapped_column(String(2), nullable=False)
+    municipality_id: Mapped[int | None] = mapped_column(
+        ForeignKey("municipalities.ibge_code"), index=True
+    )
     shipping_cents: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     status: Mapped[ListingStatus] = mapped_column(
         Enum(ListingStatus, name="listing_status", values_callable=lambda e: [m.value for m in e]),

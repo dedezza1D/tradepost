@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
@@ -14,6 +15,7 @@ from tradepost.config import Settings, get_settings
 from tradepost.db import Database
 from tradepost.deps import DbSession
 from tradepost.errors import install_error_handlers
+from tradepost.geo.router import router as geo_router
 from tradepost.identity.router import router as identity_router
 from tradepost.logs import configure_logging
 from tradepost.media.storage import build_storage
@@ -22,6 +24,8 @@ from tradepost.middleware import (
     ProxyGuardMiddleware,
     RequestContextMiddleware,
 )
+from tradepost.notifications.router import router as notifications_router
+from tradepost.notifications.service import Broker, asyncpg_dsn
 from tradepost.orders.router import router as orders_router
 from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.reviews.service import router as reviews_router
@@ -37,6 +41,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.storage = build_storage(settings)
         app.state.payments = await drop_live_accounts(build_registry(settings))
         app.state.jobs = jobs.JobContext(settings=settings, payments=app.state.payments)
+        app.state.http = httpx.AsyncClient(headers={"User-Agent": "tradepost"})
+        app.state.broker = Broker(asyncpg_dsn(settings.database_url))
+        app.state.broker.start()
         worker: asyncio.Task[None] | None = None
         if settings.run_worker:
             worker = asyncio.create_task(jobs.run_worker(app.state.db, app.state.jobs))
@@ -47,6 +54,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 worker.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await worker
+            await app.state.broker.stop()
+            await app.state.http.aclose()
             await app.state.db.dispose()
 
     app = FastAPI(
@@ -67,6 +76,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(catalog_router)
     app.include_router(orders_router)
     app.include_router(reviews_router)
+    app.include_router(geo_router)
+    app.include_router(notifications_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

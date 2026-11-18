@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from tradepost.deps import DbSession
 from tradepost.errors import AppError, Conflict, Unauthorized
+from tradepost.geo.service import resolve_city
 from tradepost.identity.models import User
 from tradepost.identity.schemas import (
     ChangePasswordIn,
@@ -42,9 +43,10 @@ async def register(body: RegisterIn, request: Request, response: Response, db: D
         email=email,
         password_hash=hash_password(body.password),
         display_name=body.display_name,
-        city=body.city,
-        state=body.state,
+        locale=body.locale,
     )
+    if body.city and body.state:
+        await _set_city(db, user, body.city, body.state)
     db.add(user)
     try:
         await db.flush()
@@ -85,10 +87,29 @@ async def me(user: CurrentUser) -> MeOut:
 
 
 @router.patch("/me")
-async def update_profile(body: ProfileUpdateIn, user: CurrentUser) -> MeOut:
-    for field, value in body.model_dump(exclude_unset=True).items():
-        setattr(user, field, value)
+async def update_profile(body: ProfileUpdateIn, user: CurrentUser, db: DbSession) -> MeOut:
+    changes = body.model_dump(exclude_unset=True)
+    if "display_name" in changes and body.display_name:
+        user.display_name = body.display_name
+    if body.locale:
+        user.locale = body.locale
+    if "city" in changes or "state" in changes:
+        city, state = changes.get("city", user.city), changes.get("state", user.state)
+        if city and state:
+            await _set_city(db, user, city, state)
+        else:
+            user.city, user.state, user.municipality_id = None, None, None
     return MeOut.model_validate(user)
+
+
+async def _set_city(db: DbSession, user: User, city: str, state: str) -> None:
+    """Store the canonical city (spelling from the IBGE list) and its code."""
+    municipality = await resolve_city(db, city, state)
+    user.city, user.state, user.municipality_id = (
+        municipality.name,
+        municipality.state,
+        municipality.ibge_code,
+    )
 
 
 @router.post(

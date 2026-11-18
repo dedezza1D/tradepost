@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.logs import get_logger
+from tradepost.notifications.service import prune as prune_notifications
 from tradepost.orders import processing
 from tradepost.payments.base import PaymentRegistry
 from tradepost.security.ratelimit import purge_old_buckets
@@ -40,6 +41,7 @@ TASKS: dict[str, Task] = {
     "expire_checkouts": lambda db, ctx: processing.expire_due(db, ctx.payments),
     "auto_deliver": lambda db, _: processing.auto_deliver(db),
     "seller_payouts": lambda db, ctx: processing.run_payouts(db, ctx.payments),
+    "prune_notifications": lambda db, _: prune_notifications(db),
 }
 
 

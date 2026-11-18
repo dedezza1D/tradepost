@@ -17,6 +17,10 @@ class User(TimestampMixin, Base):
     display_name: Mapped[str] = mapped_column(String(60), nullable=False)
     city: Mapped[str | None] = mapped_column(String(80))
     state: Mapped[str | None] = mapped_column(String(2))
+    municipality_id: Mapped[int | None] = mapped_column(
+        ForeignKey("municipalities.ibge_code", ondelete="SET NULL")
+    )
+    locale: Mapped[str] = mapped_column(String(5), nullable=False, server_default="pt-BR")
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     password_changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

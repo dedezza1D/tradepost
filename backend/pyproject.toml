@@ -59,7 +59,7 @@ mypy_path = "src"
 packages = ["tradepost"]
 
 [[tool.mypy.overrides]]
-module = ["testcontainers.*", "stripe.*"]
+module = ["testcontainers.*", "stripe.*", "asyncpg.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

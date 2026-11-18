@@ -24,6 +24,7 @@ from tradepost.deps import DbSession
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
 from tradepost.identity.models import User
 from tradepost.identity.sessions import CurrentUser
+from tradepost.notifications.service import notify
 from tradepost.orders.models import Order, OrderStatus
 
 
@@ -117,6 +118,12 @@ async def create_review(
     except IntegrityError:
         raise Conflict("This order was already reviewed.", code="already_reviewed") from None
     await db.refresh(review)
+    await notify(
+        db,
+        order.seller_id,
+        "review_received",
+        {"order_id": str(order.id), "rating": review.rating, "title": order.items[0].title},
+    )
     return ReviewOut(
         id=review.id,
         rating=review.rating,

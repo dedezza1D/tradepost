@@ -17,7 +17,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-PRESERVED_TABLES = {"categories", "alembic_version"}
+PRESERVED_TABLES = {"categories", "alembic_version", "municipalities"}
 
 
 @pytest.fixture(scope="session")

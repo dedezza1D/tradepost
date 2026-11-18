@@ -2,7 +2,9 @@
 
 from tradepost.catalog.models import Category, Listing, ListingPhoto
 from tradepost.db import Base
+from tradepost.geo.models import Municipality
 from tradepost.identity.models import Session, User
+from tradepost.notifications.models import Notification
 from tradepost.orders.models import (
     CartItem,
     Checkout,
@@ -26,6 +28,8 @@ __all__ = [
     "LedgerEntry",
     "Listing",
     "ListingPhoto",
+    "Municipality",
+    "Notification",
     "Order",
     "OrderEvent",
     "OrderItem",

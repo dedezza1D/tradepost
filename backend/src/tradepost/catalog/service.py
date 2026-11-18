@@ -16,6 +16,7 @@ from tradepost.catalog.schemas import (
 )
 from tradepost.config import Settings
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
+from tradepost.geo.service import resolve_city
 from tradepost.identity.models import User
 from tradepost.media.images import process_image
 from tradepost.media.storage import Storage
@@ -68,7 +69,15 @@ async def get_owned_listing(db: AsyncSession, listing_id: uuid.UUID, user: User)
 
 async def create_listing(db: AsyncSession, seller: User, body: ListingCreate) -> Listing:
     await _require_category(db, body.category_slug)
-    listing = Listing(seller_id=seller.id, status=ListingStatus.DRAFT, **body.model_dump())
+    city = await resolve_city(db, body.city, body.state)
+    listing = Listing(
+        seller_id=seller.id,
+        status=ListingStatus.DRAFT,
+        **body.model_dump(exclude={"city", "state"}),
+        city=city.name,
+        state=city.state,
+        municipality_id=city.ibge_code,
+    )
     db.add(listing)
     await db.flush()
     await db.refresh(listing)
@@ -92,6 +101,13 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
     changes = body.model_dump(exclude_unset=True, exclude={"version"})
     if "category_slug" in changes and changes["category_slug"] is not None:
         await _require_category(db, changes["category_slug"])
+    if changes.get("city") or changes.get("state"):
+        city = await resolve_city(
+            db,
+            changes.pop("city", None) or listing.city,
+            changes.pop("state", None) or listing.state,
+        )
+        listing.city, listing.state, listing.municipality_id = city.name, city.state, city.ibge_code
     for field, value in changes.items():
         if value is not None:
             setattr(listing, field, value)

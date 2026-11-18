@@ -111,6 +111,7 @@ class ListingCard(BaseModel):
     status: ListingStatus
     thumb_url: str | None
     published_at: datetime | None
+    distance_km: float | None = None
 
 
 class ListingPage(BaseModel):
@@ -118,7 +119,7 @@ class ListingPage(BaseModel):
     next_cursor: str | None
 
 
-SortOrder = Literal["relevance", "newest", "price_asc", "price_desc"]
+SortOrder = Literal["relevance", "newest", "price_asc", "price_desc", "nearest"]
 
 
 class SearchParams(BaseModel):
@@ -128,6 +129,9 @@ class SearchParams(BaseModel):
     state: str | None = None
     min_price: int | None = Field(default=None, ge=0)
     max_price: int | None = Field(default=None, ge=0)
+    # City (IBGE code) to measure distance from, and the search radius.
+    near: int | None = Field(default=None, ge=1_000_000, le=9_999_999)
+    radius_km: int = Field(default=50, ge=1, le=500)
     sort: SortOrder = "relevance"
     cursor: str | None = Field(default=None, max_length=200)
     limit: int = Field(default=24, ge=1, le=60)

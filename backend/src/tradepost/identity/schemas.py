@@ -1,12 +1,14 @@
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
 BR_STATES = frozenset(
     "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split()
 )
+
+Locale = Literal["pt-BR", "en"]
 
 Password = Annotated[str, StringConstraints(min_length=10, max_length=128)]
 DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=60)]
@@ -28,6 +30,7 @@ class RegisterIn(BaseModel):
     display_name: DisplayName
     city: City | None = None
     state: str | None = None
+    locale: Locale = "pt-BR"
 
     _state = field_validator("state")(_validate_state)
 
@@ -46,6 +49,7 @@ class ProfileUpdateIn(BaseModel):
     display_name: DisplayName | None = None
     city: City | None = None
     state: str | None = None
+    locale: Locale | None = None
 
     _state = field_validator("state")(_validate_state)
 
@@ -58,6 +62,8 @@ class MeOut(BaseModel):
     display_name: str
     city: str | None
     state: str | None
+    municipality_id: int | None
+    locale: str
     is_admin: bool
     created_at: datetime
 

@@ -20,7 +20,7 @@ target_metadata = Base.metadata
 
 # Expression indexes with operator classes are written by hand in migrations and cannot be
 # expressed on the models; autogenerate must not try to drop them.
-_MANUAL_INDEXES = frozenset({"ix_listings_title_trgm"})
+_MANUAL_INDEXES = frozenset({"ix_listings_title_trgm", "ix_municipalities_earth"})
 
 
 def include_object(obj: object, name: str | None, type_: str, reflected: bool, _: object) -> bool:
