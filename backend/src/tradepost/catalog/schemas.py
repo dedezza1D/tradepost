@@ -93,6 +93,7 @@ class ListingOut(BaseModel):
     stock: int
     city: str
     state: str
+    municipality_id: int | None
     status: ListingStatus
     version: int
     photos: list[PhotoOut]

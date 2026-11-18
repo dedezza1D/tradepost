@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Carregando…",
+    "language": "Idioma",
+    "close": "Fechar",
+    "retry": "Tentar de novo"
+  },
+  "nav": {
+    "search": "Buscar",
+    "searchPlaceholder": "Busque bicicletas, celulares, livros…",
+    "searchLabel": "Buscar anúncios",
+    "signIn": "Entrar",
+    "createAccount": "Criar conta",
+    "selling": "Vendas",
+    "orders": "Pedidos",
+    "cart": "Carrinho",
+    "signOut": "Sair",
+    "account": "Conta",
+    "demoBanner": "Marketplace de demonstração. Os pagamentos rodam em <strong>modo de teste</strong>: nenhum dinheiro de verdade é movimentado.",
+    "footer": "tradepost é um projeto de portfólio. Anúncios e pagamentos são apenas demonstrativos."
+  },
+  "notifications": {
+    "title": "Notificações",
+    "open": "Abrir notificações",
+    "unread_one": "{{count}} não lida",
+    "unread_other": "{{count}} não lidas",
+    "empty": "Nenhuma notificação por enquanto.",
+    "markAllRead": "Marcar todas como lidas",
+    "loadMore": "Ver mais",
+    "kind": {
+      "order_paid": "Você vendeu <b>{{title}}</b> por {{total}}. Agora é só enviar.",
+      "purchase_confirmed": "Pagamento confirmado: <b>{{title}}</b>.",
+      "order_shipped": "<b>{{title}}</b> foi enviado. Rastreio: {{tracking}}.",
+      "order_delivered": "O comprador recebeu <b>{{title}}</b>.",
+      "order_refunded": "Você foi reembolsado por <b>{{title}}</b> ({{total}}).",
+      "payment_refunded": "Um pagamento de {{amount}} foi devolvido a você.",
+      "payout_sent": "Repasse de {{amount}} enviado por <b>{{title}}</b>.",
+      "review_received": "Você recebeu uma avaliação de {{rating}} estrela(s) por <b>{{title}}</b>.",
+      "unknown": "Você tem uma novidade."
+    },
+    "moreItems_one": " e mais {{count}} item",
+    "moreItems_other": " e mais {{count}} itens"
+  },
+  "city": {
+    "label": "Cidade",
+    "placeholder": "Digite a cidade",
+    "cep": "CEP",
+    "cepPlaceholder": "00000-000",
+    "useCep": "Usar CEP",
+    "noResults": "Nenhuma cidade encontrada.",
+    "clear": "Limpar cidade"
+  },
+  "near": {
+    "title": "Perto de",
+    "anywhere": "Qualquer lugar",
+    "radius": "Raio",
+    "km": "{{value}} km",
+    "distance": "a {{value}} km",
+    "nearest": "Mais perto"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente de novo.",
+    "network": "Sem conexão com o servidor. Verifique a internet.",
+    "validation_error": "Confira os campos destacados.",
+    "unauthorized": "Entre para continuar.",
+    "invalid_credentials": "E-mail ou senha incorretos.",
+    "email_taken": "Este e-mail já está cadastrado.",
+    "weak_password": "A senha não pode ser o seu e-mail.",
+    "rate_limited": "Muitas tentativas. Aguarde um pouco e tente de novo.",
+    "csrf_failed": "Sua sessão expirou. Recarregue a página.",
+    "bad_origin": "Requisição recusada por segurança.",
+    "not_found": "Não encontrado.",
+    "unknown_city": "Cidade não encontrada nesse estado.",
+    "unknown_category": "Categoria inválida.",
+    "invalid_cep": "O CEP tem 8 dígitos.",
+    "cep_not_found": "CEP não encontrado.",
+    "cep_unavailable": "A consulta de CEP está indisponível agora.",
+    "stale_version": "O anúncio mudou em outra aba. Recarregue a página.",
+    "photo_required": "Adicione ao menos uma foto.",
+    "stock_required": "Informe a quantidade disponível.",
+    "too_many_photos": "Limite de fotos por anúncio atingido.",
+    "photo_limit_reached": "Você atingiu o limite de fotos da conta.",
+    "storage_full": "O armazenamento de fotos da demonstração está cheio.",
+    "invalid_image": "Arquivo de imagem inválido. Use JPEG, PNG ou WebP até 5 MB.",
+    "out_of_stock": "Um dos itens não está mais disponível nessa quantidade.",
+    "own_listing": "Você não pode comprar o próprio anúncio.",
+    "checkout_closed": "Este checkout não está mais aberto para pagamento.",
+    "invalid_transition": "Essa ação não é possível no status atual do pedido.",
+    "not_delivered": "Avalie depois que o pedido for entregue.",
+    "already_reviewed": "Este pedido já foi avaliado.",
+    "payment_provider_error": "O provedor de pagamento não respondeu. Tente de novo."
+  }
+}

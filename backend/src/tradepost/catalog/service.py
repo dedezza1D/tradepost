@@ -266,6 +266,7 @@ async def listing_out(db: AsyncSession, storage: Storage, listing: Listing) -> L
         stock=listing.stock,
         city=listing.city,
         state=listing.state,
+        municipality_id=listing.municipality_id,
         status=listing.status,
         version=listing.version,
         photos=[photo_out(storage, p) for p in listing.photos],

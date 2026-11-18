@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { ListingCard } from '../api/types'
 import { conditionLabel, formatMoney, statusLabel } from '../lib/format'
 
 export function ListingTile({ item, showStatus = false }: { item: ListingCard; showStatus?: boolean }) {
+  const { t } = useTranslation()
   return (
     <Link
       to={`/listings/${item.id}`}
@@ -27,6 +29,7 @@ export function ListingTile({ item, showStatus = false }: { item: ListingCard; s
         <p className="line-clamp-2 text-sm text-stone-700">{item.title}</p>
         <p className="mt-auto pt-1 text-xs text-stone-500">
           {conditionLabel[item.condition]} · {item.city}/{item.state}
+          {item.distance_km != null && <> · {t('near.distance', { value: item.distance_km })}</>}
         </p>
         {showStatus && (
           <span className="mt-1 w-fit rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700">

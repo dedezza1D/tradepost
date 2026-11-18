@@ -3,7 +3,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCategories } from '../api/catalog'
 import { ApiError, api, json } from '../api/client'
-import { BR_STATES, type Condition, type Listing, type ListingInput, type Photo } from '../api/types'
+import { type Condition, type Listing, type ListingInput, type Photo } from '../api/types'
+import { CityPicker } from '../components/CityPicker'
 import { useMe } from '../api/auth'
 import { centsToInput, parseMoney, statusLabel } from '../lib/format'
 
@@ -201,21 +202,11 @@ export function SellPage() {
               value={form.stock} onChange={set('stock')} />
           </div>
         </div>
-        <div className="grid grid-cols-[1fr_96px] gap-4">
-          <div>
-            <label className="label" htmlFor="city">City</label>
-            <input id="city" className="input" required minLength={2} maxLength={80}
-              value={form.city} onChange={set('city')} />
-          </div>
-          <div>
-            <label className="label" htmlFor="state">State</label>
-            <select id="state" className="input" required value={form.state}
-              onChange={set('state')}>
-              <option value="">—</option>
-              {BR_STATES.map((s) => (<option key={s}>{s}</option>))}
-            </select>
-          </div>
-        </div>
+        <CityPicker
+          required
+          value={form.city && form.state ? { ibge_code: listing.data?.municipality_id ?? 0, name: form.city, state: form.state } : null}
+          onChange={(city) => setForm({ ...form, city: city?.name ?? '', state: city?.state ?? '' })}
+        />
         {(formError || saveError) && (
           <p role="alert" className="text-sm text-red-700">
             {formError ??

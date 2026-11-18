@@ -1,14 +1,18 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams, type SetURLSearchParams } from 'react-router-dom'
 import { useCategories } from '../api/catalog'
 import { api } from '../api/client'
 import { BR_STATES, type ListingPage } from '../api/types'
+import { CityPicker } from '../components/CityPicker'
 import { ListingGrid } from '../components/ListingGrid'
 import { parseMoney } from '../lib/format'
 
-const FILTER_KEYS = ['q', 'category', 'condition', 'state', 'min_price', 'max_price', 'sort'] as const
+const FILTER_KEYS = ['q', 'category', 'condition', 'state', 'min_price', 'max_price', 'sort', 'near', 'radius_km'] as const
+const RADII = [5, 10, 25, 50, 100, 250, 500]
 
 export function SearchPage() {
+  const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const { data: categories } = useCategories()
   const filters = Object.fromEntries(
@@ -114,6 +118,7 @@ export function SearchPage() {
             ))}
           </select>
         </div>
+        <NearFilter params={params} setParams={setParams} />
       </aside>
 
       <section aria-live="polite">
@@ -132,6 +137,7 @@ export function SearchPage() {
               <option value="newest">Newest</option>
               <option value="price_asc">Lowest price</option>
               <option value="price_desc">Highest price</option>
+              {params.get('near') && <option value="nearest">{t('near.nearest')}</option>}
             </select>
           </label>
         </div>
@@ -156,6 +162,56 @@ export function SearchPage() {
           </div>
         )}
       </section>
+    </div>
+  )
+}
+
+/** "Near" filter: a city (stored in the URL with its label) and a radius in km. */
+function NearFilter({ params, setParams }: { params: URLSearchParams; setParams: SetURLSearchParams }) {
+  const { t } = useTranslation()
+  const near = params.get('near')
+  const value = near
+    ? { ibge_code: Number(near), name: params.get('near_name') ?? '', state: params.get('near_uf') ?? '' }
+    : null
+  function update(changes: Record<string, string | null>) {
+    const next = new URLSearchParams(params)
+    for (const [k, v] of Object.entries(changes)) {
+      if (v) next.set(k, v)
+      else next.delete(k)
+    }
+    if (!next.get('near') && next.get('sort') === 'nearest') next.delete('sort')
+    setParams(next, { replace: true })
+  }
+  return (
+    <div className="space-y-2">
+      <span className="label">{t('near.title')}</span>
+      <CityPicker
+        allowCep={false}
+        value={value}
+        onChange={(city) =>
+          update({
+            near: city ? String(city.ibge_code) : null,
+            near_name: city?.name ?? null,
+            near_uf: city?.state ?? null,
+          })
+        }
+      />
+      {near && (
+        <label className="flex items-center gap-2 text-sm text-stone-600">
+          {t('near.radius')}
+          <select
+            className="input w-auto"
+            value={params.get('radius_km') ?? '50'}
+            onChange={(e) => update({ radius_km: e.target.value })}
+          >
+            {RADII.map((r) => (
+              <option key={r} value={r}>
+                {t('near.km', { value: r })}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
     </div>
   )
 }

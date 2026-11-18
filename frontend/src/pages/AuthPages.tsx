@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import { BR_STATES } from '../api/types'
+import { CityPicker } from '../components/CityPicker'
+import { errorMessage } from '../lib/errors'
 import { useLogin, useRegister } from '../api/auth'
 
 function useReturnTo(): string {
@@ -22,6 +24,7 @@ function AuthCard({ title, children }: { title: string; children: React.ReactNod
 }
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const login = useLogin()
   const navigate = useNavigate()
   const returnTo = useReturnTo()
@@ -52,7 +55,7 @@ export function LoginPage() {
         </div>
         {login.error && (
           <p role="alert" className="text-sm text-red-700">
-            {login.error.message}
+            {errorMessage(login.error, t)}
           </p>
         )}
         <button className="btn-primary w-full" disabled={login.isPending}>
@@ -70,6 +73,7 @@ export function LoginPage() {
 }
 
 export function RegisterPage() {
+  const { t } = useTranslation()
   const register = useRegister()
   const navigate = useNavigate()
   const returnTo = useReturnTo()
@@ -129,29 +133,13 @@ export function RegisterPage() {
             <p className="mt-1 text-xs text-red-700">{error.fieldMessage('password')}</p>
           )}
         </div>
-        <div className="grid grid-cols-[1fr_96px] gap-3">
-          <div>
-            <label className="label" htmlFor="city">
-              City
-            </label>
-            <input id="city" className="input" maxLength={80} value={form.city}
-              onChange={set('city')} />
-          </div>
-          <div>
-            <label className="label" htmlFor="state">
-              State
-            </label>
-            <select id="state" className="input" value={form.state} onChange={set('state')}>
-              <option value="">—</option>
-              {BR_STATES.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <CityPicker
+          value={form.city && form.state ? { ibge_code: 0, name: form.city, state: form.state } : null}
+          onChange={(city) => setForm({ ...form, city: city?.name ?? '', state: city?.state ?? '' })}
+        />
         {error && error.code !== 'validation_error' && (
           <p role="alert" className="text-sm text-red-700">
-            {error.message}
+            {errorMessage(error, t)}
           </p>
         )}
         <button className="btn-primary w-full" disabled={register.isPending}>

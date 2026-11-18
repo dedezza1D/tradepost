@@ -1,6 +1,24 @@
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+import { currentLanguage } from '../i18n'
 
-export const formatMoney = (cents: number): string => brl.format(cents / 100)
+// Prices are always in BRL; only the formatting follows the interface language.
+const formatters = new Map<string, Intl.NumberFormat>()
+
+export function formatMoney(cents: number): string {
+  const locale = currentLanguage() === 'en' ? 'en-US' : 'pt-BR'
+  let formatter = formatters.get(locale)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale, { style: 'currency', currency: 'BRL' })
+    formatters.set(locale, formatter)
+  }
+  return formatter.format(cents / 100)
+}
+
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(currentLanguage() === 'en' ? 'en-US' : 'pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
 
 /** Parses "1.234,56", "1234.56" or "1234" into cents; null when not a valid amount. */
 export function parseMoney(input: string): number | null {

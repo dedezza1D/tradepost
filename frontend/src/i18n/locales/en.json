@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "language": "Language",
+    "close": "Close",
+    "retry": "Try again"
+  },
+  "nav": {
+    "search": "Search",
+    "searchPlaceholder": "Search for bikes, phones, books…",
+    "searchLabel": "Search listings",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "selling": "Selling",
+    "orders": "Orders",
+    "cart": "Cart",
+    "signOut": "Sign out",
+    "account": "Account",
+    "demoBanner": "Demo marketplace. Payments run in <strong>test mode</strong>: no real money moves.",
+    "footer": "tradepost is a portfolio project. Listings and payments are for demonstration only."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "open": "Open notifications",
+    "unread_one": "{{count}} unread",
+    "unread_other": "{{count}} unread",
+    "empty": "No notifications yet.",
+    "markAllRead": "Mark all as read",
+    "loadMore": "Load more",
+    "kind": {
+      "order_paid": "You sold <b>{{title}}</b> for {{total}}. Time to ship it.",
+      "purchase_confirmed": "Payment confirmed: <b>{{title}}</b>.",
+      "order_shipped": "<b>{{title}}</b> has shipped. Tracking: {{tracking}}.",
+      "order_delivered": "The buyer received <b>{{title}}</b>.",
+      "order_refunded": "You were refunded for <b>{{title}}</b> ({{total}}).",
+      "payment_refunded": "A payment of {{amount}} was returned to you.",
+      "payout_sent": "Payout of {{amount}} sent for <b>{{title}}</b>.",
+      "review_received": "You got a {{rating}}-star review for <b>{{title}}</b>.",
+      "unknown": "You have something new."
+    },
+    "moreItems_one": " and {{count}} more item",
+    "moreItems_other": " and {{count}} more items"
+  },
+  "city": {
+    "label": "City",
+    "placeholder": "Type the city",
+    "cep": "Postal code (CEP)",
+    "cepPlaceholder": "00000-000",
+    "useCep": "Use CEP",
+    "noResults": "No city found.",
+    "clear": "Clear city"
+  },
+  "near": {
+    "title": "Near",
+    "anywhere": "Anywhere",
+    "radius": "Radius",
+    "km": "{{value}} km",
+    "distance": "{{value}} km away",
+    "nearest": "Nearest"
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "network": "Cannot reach the server. Check your connection.",
+    "validation_error": "Check the highlighted fields.",
+    "unauthorized": "Sign in to continue.",
+    "invalid_credentials": "Wrong email or password.",
+    "email_taken": "This email is already registered.",
+    "weak_password": "The password must not be your email.",
+    "rate_limited": "Too many attempts. Wait a moment and try again.",
+    "csrf_failed": "Your session expired. Reload the page.",
+    "bad_origin": "Request refused for security reasons.",
+    "not_found": "Not found.",
+    "unknown_city": "City not found in that state.",
+    "unknown_category": "Invalid category.",
+    "invalid_cep": "A CEP has 8 digits.",
+    "cep_not_found": "CEP not found.",
+    "cep_unavailable": "Postal code lookup is unavailable right now.",
+    "stale_version": "The listing changed in another tab. Reload the page.",
+    "photo_required": "Add at least one photo.",
+    "stock_required": "Set the available quantity.",
+    "too_many_photos": "Photo limit per listing reached.",
+    "photo_limit_reached": "You reached your account's photo limit.",
+    "storage_full": "Photo storage for this demo is full.",
+    "invalid_image": "Invalid image. Use JPEG, PNG or WebP up to 5 MB.",
+    "out_of_stock": "One of the items is no longer available in that quantity.",
+    "own_listing": "You cannot buy your own listing.",
+    "checkout_closed": "This checkout is no longer open for payment.",
+    "invalid_transition": "That action is not possible in the order's current status.",
+    "not_delivered": "Review the order after it is delivered.",
+    "already_reviewed": "This order was already reviewed.",
+    "payment_provider_error": "The payment provider did not respond. Try again."
+  }
+}

@@ -1,6 +1,6 @@
 export type ListingStatus = 'draft' | 'active' | 'paused' | 'sold_out' | 'removed'
 export type Condition = 'new' | 'used'
-export type SortOrder = 'relevance' | 'newest' | 'price_asc' | 'price_desc'
+export type SortOrder = 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'nearest'
 
 export interface Me {
   id: string
@@ -8,6 +8,8 @@ export interface Me {
   display_name: string
   city: string | null
   state: string | null
+  municipality_id: number | null
+  locale: 'pt-BR' | 'en'
   is_admin: boolean
   created_at: string
 }
@@ -46,6 +48,7 @@ export interface Listing {
   stock: number
   city: string
   state: string
+  municipality_id: number | null
   status: ListingStatus
   version: number
   photos: Photo[]
@@ -64,6 +67,7 @@ export interface ListingCard {
   status: ListingStatus
   thumb_url: string | null
   published_at: string | null
+  distance_km?: number | null
 }
 
 export interface ListingPage {

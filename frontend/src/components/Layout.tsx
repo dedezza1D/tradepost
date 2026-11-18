@@ -1,9 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLogout, useMe } from '../api/auth'
 import { useCart } from '../api/orders'
+import { currentLanguage } from '../i18n'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { NotificationBell } from './NotificationBell'
 
 function SearchBox() {
+  const { t } = useTranslation()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [q, setQ] = useState(params.get('q') ?? '')
@@ -18,38 +23,45 @@ function SearchBox() {
   return (
     <form onSubmit={submit} role="search" className="flex flex-1">
       <label htmlFor="site-search" className="sr-only">
-        Search listings
+        {t('nav.searchLabel')}
       </label>
       <input
         id="site-search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search for bikes, phones, books…"
+        placeholder={t('nav.searchPlaceholder')}
         className="input rounded-r-none"
         maxLength={100}
       />
       <button type="submit" className="btn-primary rounded-l-none">
-        Search
+        {t('nav.search')}
       </button>
     </form>
   )
 }
 
 function AccountMenu() {
+  const { t, i18n } = useTranslation()
   const { data: me } = useMe()
   const { data: cart } = useCart(Boolean(me))
   const count = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
   const logout = useLogout()
   const navigate = useNavigate()
 
+  // A signed-in user's saved language wins over this browser's default.
+  useEffect(() => {
+    if (me?.locale && me.locale !== currentLanguage()) void i18n.changeLanguage(me.locale)
+  }, [me?.locale, i18n])
+
   if (!me) {
     return (
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <Link to="/login" className="btn-secondary">
-          Sign in
+          {t('nav.signIn')}
         </Link>
         <Link to="/register" className="btn-primary hidden sm:inline-flex">
-          Create account
+          {t('nav.createAccount')}
         </Link>
       </div>
     )
@@ -57,33 +69,36 @@ function AccountMenu() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-md px-2 py-1 text-sm font-medium ${isActive ? 'text-brand-700' : 'text-stone-700 hover:text-stone-950'}`
   return (
-    <nav className="flex items-center gap-1 sm:gap-3" aria-label="Account">
+    <nav className="flex items-center gap-1 sm:gap-2" aria-label={t('nav.account')}>
       <NavLink to="/seller" className={linkClass}>
-        Selling
+        {t('nav.selling')}
       </NavLink>
       <NavLink to="/orders" className={linkClass}>
-        Orders
+        {t('nav.orders')}
       </NavLink>
       <NavLink to="/cart" className={linkClass}>
-        Cart{count ? ` (${count})` : ''}
+        {t('nav.cart')}
+        {count ? ` (${count})` : ''}
       </NavLink>
-      <span className="hidden text-sm text-stone-500 md:inline">{me.display_name}</span>
+      <NotificationBell />
+      <LanguageSwitcher />
       <button
         type="button"
         className="btn-secondary px-3 py-1.5"
         onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/') })}
       >
-        Sign out
+        {t('nav.signOut')}
       </button>
     </nav>
   )
 }
 
 export function Layout() {
+  const { t } = useTranslation()
   return (
     <div className="flex min-h-screen flex-col">
       <div className="bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">
-        Demo marketplace. Payments run in <strong>test mode</strong>: no real money moves.
+        <Trans i18nKey="nav.demoBanner" components={{ strong: <strong /> }} />
       </div>
       <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
@@ -103,7 +118,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-stone-200 py-6 text-center text-xs text-stone-500">
-        tradepost is a portfolio project. Listings and payments are for demonstration only.
+        {t('nav.footer')}
       </footer>
     </div>
   )
