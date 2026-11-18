@@ -181,6 +181,7 @@ export function ProfilePage() {
         <Row to="/cart" icon="cart" label={t('nav.cart')} />
         <Row to="/me/blocks" icon="ban" label={t('social.blockedTitle')} />
         {me.is_admin && <Row to="/admin/reports" icon="shield" label={t('social.moderation.title')} />}
+        {me.is_admin && <Row to="/admin/disputes" icon="info" label={t('disputes.adminTitle')} />}
       </ul>
 
       <section className="card space-y-4 p-5">

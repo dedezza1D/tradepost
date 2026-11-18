@@ -47,6 +47,7 @@ class Delivery(BaseModel):
     # City to ship to (IBGE code); defaults to the buyer's city. Used by calculated shipping.
     ship_to: int | None = Field(default=None, ge=1_000_000, le=9_999_999)
     shipping_service: ShippingService = "standard"
+    coupon_code: str | None = Field(default=None, max_length=20)
 
 
 class CheckoutIn(Delivery):
@@ -110,7 +111,11 @@ class OrderOut(BaseModel):
     items: list[OrderItemOut]
     items_cents: int
     shipping_cents: int
+    discount_cents: int = 0
     total_cents: int
+    installments: int | None = None
+    dispute_id: uuid.UUID | None = None
+    dispute_status: str | None = None
     platform_fee_cents: int | None = None  # seller only
     seller_net_cents: int | None = None  # seller only
     tracking_code: str | None
@@ -192,6 +197,7 @@ class QuoteOrderOut(BaseModel):
     items: list[QuoteLineOut]
     items_cents: int
     shipping_cents: int
+    discount_cents: int
     total_cents: int
     shipping_service: str | None
     shipping_days: int | None

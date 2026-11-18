@@ -258,7 +258,7 @@ function CardPanel({ checkout, last }: { checkout: Checkout; last?: Attempt }) {
       {last?.status === 'failed' && <p role="alert" className="text-sm text-danger">{t('checkout.declined')}</p>}
       <CardPayment
         initialization={{ amount: checkout.total_cents / 100 }}
-        customization={{ paymentMethods: { maxInstallments: 1 } }}
+        customization={{ paymentMethods: { maxInstallments: checkout.provider_config.max_installments ?? 1 } }}
         onSubmit={async (form) => {
           await start.mutateAsync({
             method: 'card',
@@ -280,15 +280,31 @@ function CardPanel({ checkout, last }: { checkout: Checkout; last?: Attempt }) {
 
 // --- Test provider (end-to-end tests and offline demos) -----------------------------------------
 
+function Installments({ total, max, value, onChange }: { total: number; max: number; value: number; onChange: (n: number) => void }) {
+  const { t } = useTranslation()
+  return (
+    <div>
+      <label className="label" htmlFor="installments">{t('checkout.installments')}</label>
+      <select id="installments" className="input" value={value} onChange={(e) => onChange(Number(e.target.value))}>
+        {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
+          <option key={n} value={n}>{t('checkout.installmentOption', { count: n, amount: formatMoney(Math.round(total / n)) })}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 function FakePayment({ checkout }: { checkout: Checkout }) {
   const { t } = useTranslation()
   const start = useStartPayment(checkout.id)
+  const [installments, setInstallments] = useState(1)
   return (
     <div className="card space-y-3 p-5">
       <p className="font-semibold">{t('checkout.fake.title')}</p>
       <p className="text-sm text-muted">{t('checkout.fake.text')}</p>
+      <Installments total={checkout.total_cents} max={checkout.provider_config.max_installments ?? 1} value={installments} onChange={setInstallments} />
       <button className="btn-primary w-full" disabled={start.isPending}
-        onClick={() => start.mutate({ method: 'card', card: { token: 'tok_approved', payment_method_id: 'visa', installments: 1, payer_email: 'buyer@example.com' } })}>
+        onClick={() => start.mutate({ method: 'card', card: { token: 'tok_approved', payment_method_id: 'visa', installments, payer_email: 'buyer@example.com' } })}>
         {t('checkout.fake.pay')}
       </button>
       {start.isError && <p className="text-sm text-danger">{errorMessage(start.error, t)}</p>}

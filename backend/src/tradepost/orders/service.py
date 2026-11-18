@@ -31,6 +31,7 @@ from tradepost.catalog.models import (
     ShippingMode,
 )
 from tradepost.config import Settings
+from tradepost.coupons import discount_for, find_usable, release_use, reserve_use
 from tradepost.errors import AppError, Conflict, Forbidden, NotFound
 from tradepost.geo.models import Municipality
 from tradepost.identity.models import User
@@ -172,13 +173,14 @@ def _request_hash(
     offer_id: uuid.UUID | None = None,
     ship_to: int | None = None,
     service: str = "standard",
+    coupon_code: str | None = None,
 ) -> str:
     payload = json.dumps(
         {
             "p": provider,
             "l": [[str(x.listing_id), str(x.variant_id or ""), x.quantity] for x in lines],
             "o": str(offer_id) if offer_id else None,
-            "d": [ship_to, service],
+            "d": [ship_to, service, coupon_code.upper() if coupon_code else None],
         },
         separators=(",", ":"),
     )
@@ -311,6 +313,8 @@ class SellerDraft:
     lines: list[PricedLine]
     shipping_service: str | None
     shipping_days: int | None
+    discount_cents: int = 0
+    coupon_id: uuid.UUID | None = None
 
     @property
     def items_cents(self) -> int:
@@ -322,7 +326,7 @@ class SellerDraft:
 
     @property
     def total_cents(self) -> int:
-        return self.items_cents + self.shipping_cents
+        return self.items_cents + self.shipping_cents - self.discount_cents
 
 
 @dataclass
@@ -379,6 +383,7 @@ async def price_lines(
     ship_to: int | None,
     service: Service,
     agreed: AgreedPrice | None,
+    coupon_code: str | None = None,
 ) -> Pricing:
     """Prices, shipping and totals per seller. Used to quote and, after the stock is reserved,
     to create the orders: the buyer sees exactly what will be charged."""
@@ -411,7 +416,21 @@ async def price_lines(
     by_service: dict[str, int] = {
         svc: sum(d.shipping_cents for d in build(svc)) for svc in (SERVICES if calculated else ())
     }
-    return Pricing(drafts=build(service), destination=dest, shipping_by_service=by_service)
+    drafts = build(service)
+    if coupon_code:
+        if agreed is not None:
+            raise AppError("Coupons do not apply to an agreed offer.", code="coupon_not_with_offer")
+        coupon = await find_usable(db, coupon_code, {d.seller_id for d in drafts}, buyer.id)
+        draft = next(d for d in drafts if d.seller_id == coupon.seller_id)
+        if draft.items_cents < coupon.min_items_cents:
+            raise AppError(
+                "This coupon needs a larger purchase from this seller.",
+                code="coupon_min",
+                min_items_cents=coupon.min_items_cents,
+            )
+        draft.discount_cents = discount_for(coupon, draft.items_cents, draft.shipping_cents)
+        draft.coupon_id = coupon.id
+    return Pricing(drafts=drafts, destination=dest, shipping_by_service=by_service)
 
 
 async def quote_checkout(
@@ -422,6 +441,7 @@ async def quote_checkout(
     ship_to: int | None,
     service: Service,
     agreed: AgreedPrice | None = None,
+    coupon_code: str | None = None,
 ) -> Pricing:
     """What a checkout would cost, without reserving anything."""
     if agreed is not None:
@@ -443,7 +463,9 @@ async def quote_checkout(
                 available=available,
             )
         items.append((line, listing, variant.name if variant else None))
-    return await price_lines(db, buyer, items, ship_to=ship_to, service=service, agreed=agreed)
+    return await price_lines(
+        db, buyer, items, ship_to=ship_to, service=service, agreed=agreed, coupon_code=coupon_code
+    )
 
 
 async def create_checkout(
@@ -458,6 +480,7 @@ async def create_checkout(
     *,
     ship_to: int | None = None,
     service: Service = "standard",
+    coupon_code: str | None = None,
 ) -> tuple[Checkout, bool]:
     """Reserve stock and open a checkout. Returns (checkout, created).
 
@@ -468,7 +491,7 @@ async def create_checkout(
         lines = [Line(agreed.listing_id, agreed.quantity, agreed.variant_id)]
     lines = _normalize(lines)
     request_hash = _request_hash(
-        provider, lines, agreed.offer_id if agreed else None, ship_to, service
+        provider, lines, agreed.offer_id if agreed else None, ship_to, service, coupon_code
     )
 
     existing = (
@@ -516,7 +539,12 @@ async def create_checkout(
         assert listing is not None
         items.append((line, listing, variant_name))
 
-    pricing = await price_lines(db, buyer, items, ship_to=ship_to, service=service, agreed=agreed)
+    pricing = await price_lines(
+        db, buyer, items, ship_to=ship_to, service=service, agreed=agreed, coupon_code=coupon_code
+    )
+    for draft in pricing.drafts:
+        if draft.coupon_id is not None:
+            await reserve_use(db, draft.coupon_id)
     checkout = Checkout(
         id=uuid.uuid4(),
         buyer_id=buyer.id,
@@ -539,8 +567,13 @@ async def create_checkout(
             seller_id=draft.seller_id,
             items_cents=draft.items_cents,
             shipping_cents=draft.shipping_cents,
+            discount_cents=draft.discount_cents,
+            coupon_id=draft.coupon_id,
             total_cents=draft.total_cents,
-            platform_fee_cents=platform_fee(draft.items_cents, settings.platform_fee_bps),
+            # Commission on what the buyer pays for the items, after the seller's discount.
+            platform_fee_cents=platform_fee(
+                draft.items_cents - draft.discount_cents, settings.platform_fee_bps
+            ),
             shipping_service=draft.shipping_service,
             shipping_days=draft.shipping_days,
             ship_to=f"{dest.name} - {dest.state}" if dest and draft.shipping_service else None,
@@ -620,6 +653,7 @@ async def start_payment(
     buyer: User,
     method: Method,
     card: CardData | None,
+    max_installments: int = 12,
 ) -> PaymentAttempt:
     if checkout.status != CheckoutStatus.PENDING or checkout.expires_at <= _now():
         raise Conflict("This checkout is no longer open for payment.", code="checkout_closed")
@@ -628,6 +662,12 @@ async def start_payment(
         raise AppError("Payment method not available for this provider.", code="bad_method")
     if method == "card" and card is None and "element" not in provider.methods:
         raise AppError("Card details are required.", code="card_required")
+    if card is not None and card.installments > max_installments:
+        raise AppError(
+            f"At most {max_installments} installments.",
+            code="too_many_installments",
+            max_installments=max_installments,
+        )
 
     # Reuse an open attempt for the same method (a Stripe PaymentIntent handles retries itself;
     # a Pix QR code stays valid until it expires).
@@ -656,6 +696,7 @@ async def start_payment(
         method=result.method,
         status=AttemptStatus.PENDING,
         amount_cents=checkout.total_cents,
+        installments=card.installments if card is not None else None,
         client_data=result.client_data,
         status_detail=result.status_detail,
     )
@@ -807,8 +848,9 @@ async def _ledger(
 _ORDER_TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
     OrderStatus.AWAITING_PAYMENT: {OrderStatus.PAID, OrderStatus.CANCELLED},
     OrderStatus.PAID: {OrderStatus.SHIPPED, OrderStatus.REFUNDED},
-    OrderStatus.SHIPPED: {OrderStatus.DELIVERED},
-    OrderStatus.DELIVERED: set(),
+    # A dispute refunds a shipped or delivered order in full.
+    OrderStatus.SHIPPED: {OrderStatus.DELIVERED, OrderStatus.REFUNDED},
+    OrderStatus.DELIVERED: {OrderStatus.REFUNDED},
     OrderStatus.CANCELLED: set(),
     OrderStatus.REFUNDED: set(),
 }
@@ -900,6 +942,8 @@ async def close_unpaid(
     await db.refresh(checkout, ["orders"])
     for order in checkout.orders:
         _transition(db, order, OrderStatus.CANCELLED, actor="system", note=note)
+        if order.coupon_id is not None:
+            await release_use(db, order.coupon_id)
     return checkout
 
 

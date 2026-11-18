@@ -180,12 +180,19 @@ def payout_provider(registry: PaymentRegistry, name: str) -> PayoutProvider | No
     return provider if hasattr(provider, "transfer") else None  # type: ignore[return-value]
 
 
-async def run_payouts(db: AsyncSession, registry: PaymentRegistry) -> int:
-    """Pay sellers their share once the buyer has the item (escrow-like). Only for providers
-    that can transfer to a seller account; for the others the ledger records what is owed."""
+async def run_payouts(
+    db: AsyncSession, registry: PaymentRegistry, hold: timedelta = timedelta(0)
+) -> int:
+    """Pay sellers their share once the buyer has the item and the dispute window has passed
+    (escrow-like), never while a dispute is open. The amount is the order's ledger balance, so a
+    partial refund lowers it. Only for providers that can transfer to a seller account; for the
+    others the ledger records what is owed."""
+    from tradepost.disputes import ACTIVE, Dispute
+
     paid_out = exists().where(
         LedgerEntry.order_id == Order.id, LedgerEntry.kind == LedgerKind.PAYOUT
     )
+    disputed = exists().where(Dispute.order_id == Order.id, Dispute.status.in_(ACTIVE))
     rows = (
         await db.execute(
             select(Order, Checkout, SellerAccount)
@@ -197,7 +204,12 @@ async def run_payouts(db: AsyncSession, registry: PaymentRegistry) -> int:
                     SellerAccount.provider == Checkout.provider,
                 ),
             )
-            .where(Order.status == OrderStatus.DELIVERED, ~paid_out)
+            .where(
+                Order.status == OrderStatus.DELIVERED,
+                Order.delivered_at <= _now() - hold,
+                ~paid_out,
+                ~disputed,
+            )
             .limit(BATCH)
             .with_for_update(skip_locked=True, of=Order)
         )
@@ -207,21 +219,33 @@ async def run_payouts(db: AsyncSession, registry: PaymentRegistry) -> int:
         provider = payout_provider(registry, checkout.provider)
         if provider is None:
             continue
+        balance = int(
+            await db.scalar(
+                select(func.coalesce(func.sum(LedgerEntry.amount_cents), 0)).where(
+                    LedgerEntry.order_id == order.id
+                )
+            )
+            or 0
+        )
+        if balance <= 0:
+            # Fully refunded: record a zero payout so the order is not picked again.
+            await service._ledger(db, order, LedgerKind.PAYOUT, 0, None)
+            continue
         attempt = await db.get(PaymentAttempt, checkout.paid_attempt_id)
         transfer_ref = await provider.transfer(
             account_id=account.provider_account_id,
-            amount_cents=order.seller_net_cents,
+            amount_cents=balance,
             currency=checkout.currency,
             charge_ref=attempt.charge_ref if attempt else None,
             group=str(checkout.id),
             idempotency_key=f"payout-{order.id}",
         )
-        await service._ledger(db, order, LedgerKind.PAYOUT, -order.seller_net_cents, transfer_ref)
+        await service._ledger(db, order, LedgerKind.PAYOUT, -balance, transfer_ref)
         await notify(
             db,
             order.seller_id,
             "payout_sent",
-            {**service.order_summary(order), "amount_cents": order.seller_net_cents},
+            {**service.order_summary(order), "amount_cents": balance},
         )
         count += 1
     return count

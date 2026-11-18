@@ -9,6 +9,8 @@ import { formatDateTime, formatMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
 import { EmptyState, PageHeader } from '../ui/primitives'
 import { OrderItems, StatusBadge } from './OrdersPage'
+import { DisputeBadge } from './DisputePages'
+import { Coupons } from '../components/Coupons'
 
 function Stat({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
@@ -51,6 +53,12 @@ function SellerOrder({ order }: { order: Order }) {
         <div><dt className="text-muted">{t('seller.youReceive')}</dt><dd className="font-semibold text-success">{formatMoney(order.seller_net_cents ?? 0)}</dd></div>
       </dl>
       {order.tracking_code && <p className="text-sm text-muted">{t('orders.tracking')}: <code className="font-mono">{order.tracking_code}</code></p>}
+      {order.dispute_id && order.dispute_status && (
+        <Link to={`/disputes/${order.dispute_id}`} className="flex items-center justify-between rounded-xl bg-warning-soft px-3 py-2 text-sm hover:underline">
+          {t('disputes.view')} <DisputeBadge status={order.dispute_status} />
+        </Link>
+      )}
+      {order.discount_cents > 0 && <p className="text-sm text-muted">{t('coupons.applied', { amount: formatMoney(order.discount_cents) })}</p>}
       {order.shipping_service && (
         <p className="text-sm text-muted">
           {t(`shipping.service.${order.shipping_service}`)} · {t('shipping.days', { count: order.shipping_days ?? 0 })}
@@ -129,6 +137,7 @@ export function SellerPage() {
           {history.map((o) => <SellerOrder key={o.id} order={o} />)}
         </section>
       )}
+      <Coupons />
     </div>
   )
 }

@@ -128,7 +128,7 @@ class Order(TimestampMixin, Base):
         Index("ix_orders_buyer", "buyer_id", "created_at"),
         Index("ix_orders_seller", "seller_id", "created_at"),
         CheckConstraint("platform_fee_cents >= 0 AND platform_fee_cents <= total_cents", "fee"),
-        CheckConstraint("total_cents = items_cents + shipping_cents", "total"),
+        CheckConstraint("total_cents = items_cents + shipping_cents - discount_cents", "total"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
@@ -140,6 +140,11 @@ class Order(TimestampMixin, Base):
     )
     items_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     shipping_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    # Seller coupon applied to this order's items.
+    discount_cents: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, default=0, server_default="0"
+    )
+    coupon_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("coupons.id"), index=True)
     total_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     platform_fee_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     tracking_code: Mapped[str | None] = mapped_column(String(60))
@@ -232,6 +237,7 @@ class PaymentAttempt(TimestampMixin, Base):
         _enum(AttemptStatus, "attempt_status"), nullable=False, default=AttemptStatus.PENDING
     )
     amount_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    installments: Mapped[int | None] = mapped_column(SmallInteger)
     # Card network / bank reference needed later (Stripe charge id for transfers).
     charge_ref: Mapped[str | None] = mapped_column(String(120))
     status_detail: Mapped[str | None] = mapped_column(String(80))

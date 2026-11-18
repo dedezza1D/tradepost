@@ -45,7 +45,9 @@ class FakeProvider:
         self.uncancellable: set[str] = set()
 
     def public_config(self) -> dict[str, Any]:
-        return {"methods": list(self.methods)}
+        from tradepost.config import get_settings
+
+        return {"methods": list(self.methods), "max_installments": get_settings().max_installments}
 
     async def start(
         self, checkout: CheckoutRef, method: Method, card: CardData | None

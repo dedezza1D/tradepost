@@ -65,7 +65,14 @@
       "offer_declined": "<b>{{name}}</b> declined {{offer}} for <b>{{title}}</b>.",
       "offer_expired": "Your offer of {{offer}} for <b>{{title}}</b> expired.",
       "question_received": "<b>{{name}}</b> asked about <b>{{title}}</b>.",
-      "question_answered": "The seller answered your question about <b>{{title}}</b>."
+      "question_answered": "The seller answered your question about <b>{{title}}</b>.",
+      "dispute_opened": "The buyer opened a dispute about <b>{{title}}</b>.",
+      "dispute_message": "New message in the dispute about <b>{{title}}</b>.",
+      "dispute_refunded": "The dispute about <b>{{title}}</b> ended in a refund of {{amount}}.",
+      "dispute_seller_rejected": "The seller declined the dispute about <b>{{title}}</b>. You can ask tradepost to decide.",
+      "dispute_rejected": "The dispute about <b>{{title}}</b> was closed without a refund.",
+      "dispute_escalated": "The dispute about <b>{{title}}</b> went to tradepost to decide.",
+      "dispute_cancelled": "The buyer closed the dispute about <b>{{title}}</b>."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -149,7 +156,20 @@
     "package_required": "Calculated shipping needs the package weight and size.",
     "destination_required": "Choose the delivery city.",
     "shipping_unavailable": "Shipping for this listing cannot be calculated right now.",
-    "offer_checkout_open": "There is already an open payment for this offer."
+    "offer_checkout_open": "There is already an open payment for this offer.",
+    "too_many_installments": "Too many installments.",
+    "coupon_invalid": "This coupon is not valid for these items.",
+    "coupon_used": "You already used this coupon.",
+    "coupon_min": "This coupon needs a larger purchase from this seller.",
+    "coupon_not_with_offer": "Coupons do not apply to accepted offers.",
+    "coupon_exists": "You already have a coupon with this code.",
+    "coupon_limit": "Coupon limit reached.",
+    "dispute_window_closed": "Disputes open after shipping and up to 7 days after delivery.",
+    "dispute_exists": "This order already has a dispute.",
+    "dispute_closed": "This dispute does not accept that action now.",
+    "dispute_not_escalable": "The seller still has time to answer.",
+    "refund_too_large": "A refund cannot exceed what the buyer paid.",
+    "already_paid_out": "The seller was already paid for this order."
   },
   "home": {
     "categories": "Categories",
@@ -436,7 +456,10 @@
       "title": "Test provider",
       "text": "This environment uses a simulated provider, without Stripe or Mercado Pago.",
       "pay": "Pay with a test card"
-    }
+    },
+    "installments": "Installments",
+    "installmentOption_one": "Single payment: {{amount}}",
+    "installmentOption_other": "{{count}} x {{amount}}"
   },
   "orders": {
     "title": "My orders",
@@ -452,7 +475,9 @@
       "delivered": "Delivered",
       "cancelled": "Cancelled",
       "refunded": "Refunded"
-    }
+    },
+    "installments_one": "single payment",
+    "installments_other": "in {{count}} installments"
   },
   "categories": {
     "electronics": "Electronics",
@@ -694,5 +719,86 @@
     "days_one": "{{count}} business day",
     "days_other": "{{count}} business days",
     "simulated": "Prices from a demo table, by distance and weight."
+  },
+  "coupons": {
+    "title": "Discount coupons",
+    "code": "Code",
+    "kind": "Type",
+    "percent": "Percentage",
+    "fixed": "Fixed amount",
+    "valuePercent": "Discount (%)",
+    "valueFixed": "Discount (R$)",
+    "minimum": "Minimum purchase (R$)",
+    "maxUses": "Use limit",
+    "expires": "Valid until",
+    "create": "Create coupon",
+    "uses": "{{uses}} of {{max}} uses",
+    "active": "Active",
+    "inactive": "Off",
+    "activate": "Turn on",
+    "deactivate": "Turn off",
+    "have": "Have a coupon?",
+    "apply": "Apply",
+    "remove": "Remove",
+    "discount": "Coupon {{code}}",
+    "saved": "saved {{amount}}",
+    "applied": "Coupon applied: −{{amount}}"
+  },
+  "disputes": {
+    "title": "Dispute",
+    "adminTitle": "Disputes to decide",
+    "adminEmpty": "No disputes waiting for a decision.",
+    "view": "View dispute",
+    "openLink": "Problem with this order?",
+    "openTitle": "Open a dispute",
+    "openText": "The seller has 72 hours to answer. Without an agreement, tradepost decides. The seller's payout is held meanwhile.",
+    "reasonLabel": "Reason",
+    "reason": {
+      "not_received": "Not received",
+      "not_as_described": "Not as described",
+      "damaged": "Arrived damaged or faulty",
+      "other": "Other"
+    },
+    "describe": "Tell what happened",
+    "open": "Open dispute",
+    "status": {
+      "open": "With the seller",
+      "seller_rejected": "Seller declined",
+      "escalated": "With tradepost",
+      "refunded": "Refunded",
+      "rejected": "Closed without refund",
+      "cancelled": "Closed by the buyer"
+    },
+    "explain": {
+      "open": "The seller can refund (in full or in part) or decline. With no answer in 72 hours, tradepost takes over.",
+      "seller_rejected": "The seller declined. The buyer can ask tradepost to decide.",
+      "escalated": "tradepost will review and decide.",
+      "refunded": "The refund went back to the original payment method.",
+      "rejected": "The dispute was closed without a refund.",
+      "cancelled": "The buyer closed the dispute."
+    },
+    "orderTotal": "Order total",
+    "opened": "Opened on {{date}}",
+    "refunded": "Refunded: {{amount}}",
+    "thread": "Dispute thread",
+    "role": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "platform": "tradepost"
+    },
+    "messageLabel": "Message",
+    "send": "Send",
+    "decide": "Decision",
+    "refundTitle": "Refund",
+    "full": "Full ({{amount}})",
+    "partial": "Partial",
+    "amount": "Refund amount (R$)",
+    "note": "Note (optional)",
+    "refund": "Refund",
+    "rejectNote": "Why you decline",
+    "reject": "Decline",
+    "escalate": "Ask tradepost to decide",
+    "cancel": "Close dispute",
+    "cancelConfirm": "Close the dispute? The seller's payout will be released."
   }
 }

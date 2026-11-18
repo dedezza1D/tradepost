@@ -13,8 +13,10 @@ from tradepost import jobs
 from tradepost.catalog.router import router as catalog_router
 from tradepost.chat.router import router as chat_router
 from tradepost.config import Settings, get_settings
+from tradepost.coupons import router as coupons_router
 from tradepost.db import Database
 from tradepost.deps import DbSession
+from tradepost.disputes import router as disputes_router
 from tradepost.errors import install_error_handlers
 from tradepost.geo.router import router as geo_router
 from tradepost.identity.router import router as identity_router
@@ -84,6 +86,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(social_router)
     app.include_router(chat_router)
     app.include_router(questions_router)
+    app.include_router(coupons_router)
+    app.include_router(disputes_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

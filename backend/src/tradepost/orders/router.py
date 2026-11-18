@@ -114,6 +114,19 @@ async def _orders_out(
                     created_at=e.created_at,
                 )
             )
+    from tradepost.disputes import Dispute
+
+    disputes = {
+        d.order_id: d
+        for d in (
+            await db.execute(select(Dispute).where(Dispute.order_id.in_([o.id for o in orders])))
+        ).scalars()
+    }
+    installments: dict[uuid.UUID, int | None] = {}
+    for o in orders:
+        if o.checkout.paid_attempt_id and o.checkout_id not in installments:
+            paid = await db.get(PaymentAttempt, o.checkout.paid_attempt_id)
+            installments[o.checkout_id] = paid.installments if paid else None
     out = []
     for o in orders:
         is_seller = viewer.id == o.seller_id
@@ -138,7 +151,11 @@ async def _orders_out(
                 ],
                 items_cents=o.items_cents,
                 shipping_cents=o.shipping_cents,
+                discount_cents=o.discount_cents,
                 total_cents=o.total_cents,
+                installments=installments.get(o.checkout_id),
+                dispute_id=disputes[o.id].id if o.id in disputes else None,
+                dispute_status=disputes[o.id].status if o.id in disputes else None,
                 platform_fee_cents=o.platform_fee_cents if is_seller else None,
                 seller_net_cents=o.seller_net_cents if is_seller else None,
                 tracking_code=o.tracking_code,
@@ -301,6 +318,7 @@ async def create_checkout(
         idempotency_key,
         ship_to=body.ship_to,
         service=body.shipping_service,
+        coupon_code=body.coupon_code,
     )
     if not created:
         response.status_code = status.HTTP_200_OK
@@ -380,7 +398,13 @@ async def quote(body: QuoteIn, user: CurrentUser, db: DbSession) -> QuoteOut:
     else:
         lines = [service.Line(i.listing_id, i.quantity, i.variant_id) for i in body.items or []]
     pricing = await service.quote_checkout(
-        db, user, lines, ship_to=body.ship_to, service=body.shipping_service, agreed=agreed
+        db,
+        user,
+        lines,
+        ship_to=body.ship_to,
+        service=body.shipping_service,
+        agreed=agreed,
+        coupon_code=body.coupon_code,
     )
     dest = pricing.destination
     return QuoteOut(
@@ -401,6 +425,7 @@ async def quote(body: QuoteIn, user: CurrentUser, db: DbSession) -> QuoteOut:
                 ],
                 items_cents=d.items_cents,
                 shipping_cents=d.shipping_cents,
+                discount_cents=d.discount_cents,
                 total_cents=d.total_cents,
                 shipping_service=d.shipping_service,
                 shipping_days=d.shipping_days,
@@ -461,7 +486,9 @@ async def start_payment(
         if body.card
         else None
     )
-    await service.start_payment(db, payments, checkout, user, body.method, card)
+    await service.start_payment(
+        db, payments, checkout, user, body.method, card, get_settings().max_installments
+    )
     await db.refresh(checkout, ["attempts", "orders"])
     return await _checkout_out(db, storage, payments, checkout, user)
 

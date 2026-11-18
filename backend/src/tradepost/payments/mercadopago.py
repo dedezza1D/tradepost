@@ -69,7 +69,9 @@ class MercadoPagoProvider:
         )
 
     def public_config(self) -> dict[str, Any]:
-        return {"public_key": self._public_key}
+        from tradepost.config import get_settings
+
+        return {"public_key": self._public_key, "max_installments": get_settings().max_installments}
 
     async def is_sandbox(self) -> bool:
         """Mercado Pago test credentials look like live ones (``APP_USR-``); the account they

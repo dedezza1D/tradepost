@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api, json } from '../api/client'
 import type { Order } from '../api/orders'
 import { errorMessage } from '../lib/errors'
 import { formatDateTime, formatMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
-import { Badge, EmptyState, ErrorState, PageHeader } from '../ui/primitives'
+import { Badge, EmptyState, ErrorState, PageHeader, Sheet } from '../ui/primitives'
+import { DisputeBadge } from './DisputePages'
 
 const STATUS_TONE = {
   awaiting_payment: 'neutral',
@@ -107,7 +108,11 @@ function BuyerOrder({ order }: { order: Order }) {
       <OrderProgress status={order.status} />
       <OrderItems order={order} />
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3 text-sm">
-        <span>{t('cart.total')} <strong>{formatMoney(order.total_cents)}</strong></span>
+        <span>
+          {t('cart.total')} <strong>{formatMoney(order.total_cents)}</strong>
+          {order.installments && order.installments > 1 && <span className="text-muted"> · {t('orders.installments', { count: order.installments })}</span>}
+          {order.discount_cents > 0 && <span className="text-success"> · {t('coupons.saved', { amount: formatMoney(order.discount_cents) })}</span>}
+        </span>
         {order.tracking_code && <span className="text-muted">{t('orders.tracking')}: <code className="font-mono">{order.tracking_code}</code></span>}
         {order.shipping_service && (
           <span className="text-muted">
@@ -119,9 +124,61 @@ function BuyerOrder({ order }: { order: Order }) {
           <button className="btn-primary" onClick={() => deliver.mutate()} disabled={deliver.isPending}>{t('orders.received')}</button>
         )}
       </footer>
+      <DisputeEntry order={order} />
       {order.status === 'delivered' && !order.reviewed && <ReviewForm orderId={order.id} />}
       {order.reviewed && <p className="text-xs text-muted">{t('reviews.thanks')}</p>}
     </article>
+  )
+}
+
+const DISPUTE_WINDOW_MS = 7 * 24 * 3600 * 1000
+const REASONS = ['not_received', 'not_as_described', 'damaged', 'other'] as const
+
+function DisputeEntry({ order }: { order: Order }) {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState<(typeof REASONS)[number]>('not_as_described')
+  const [body, setBody] = useState('')
+  const start = useMutation({
+    mutationFn: () => api<{ id: string }>(`/api/orders/${order.id}/dispute`, { method: 'POST', body: json({ reason, body: body.trim() }) }),
+    onSuccess: (d) => navigate(`/disputes/${d.id}`),
+  })
+  if (order.dispute_id && order.dispute_status) {
+    return (
+      <Link to={`/disputes/${order.dispute_id}`} className="flex items-center justify-between rounded-xl bg-surface-2 px-3 py-2 text-sm hover:underline">
+        {t('disputes.view')} <DisputeBadge status={order.dispute_status} />
+      </Link>
+    )
+  }
+  const eligible =
+    order.status === 'shipped' ||
+    (order.status === 'delivered' && order.delivered_at != null && Date.now() - new Date(order.delivered_at).getTime() < DISPUTE_WINDOW_MS)
+  if (!eligible) return null
+  return (
+    <>
+      <button type="button" className="text-sm text-muted hover:text-danger" onClick={() => setOpen(true)}>{t('disputes.openLink')}</button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('disputes.openTitle')}>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); start.mutate() }}>
+          <p className="text-sm text-muted">{t('disputes.openText')}</p>
+          <fieldset className="space-y-2">
+            <legend className="label">{t('disputes.reasonLabel')}</legend>
+            {REASONS.map((r) => (
+              <label key={r} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-line px-3 has-checked:border-primary has-checked:bg-primary-soft">
+                <input type="radio" name="dispute-reason" checked={reason === r} onChange={() => setReason(r)} />
+                <span className="text-sm">{t(`disputes.reason.${r}`)}</span>
+              </label>
+            ))}
+          </fieldset>
+          <div>
+            <label className="label" htmlFor="dispute-body">{t('disputes.describe')}</label>
+            <textarea id="dispute-body" className="input min-h-24" maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />
+          </div>
+          {start.isError && <p role="alert" className="text-sm text-danger">{errorMessage(start.error, t)}</p>}
+          <button className="btn-primary w-full" disabled={body.trim().length < 3 || start.isPending}>{t('disputes.open')}</button>
+        </form>
+      </Sheet>
+    </>
   )
 }
 

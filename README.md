@@ -43,6 +43,13 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 - **Options** (size, color...) with their own stock, chosen before buying.
 - **Calculated shipping** by distance and package weight (standard or express), quoted on the
   listing and at checkout, with the service, delivery time and destination on the order.
+- **Installments** on cards (Mercado Pago and the test provider, up to a configured maximum;
+  Stripe charges Brazilian cards in one payment), recorded on the order.
+- **Seller coupons**: percentage or fixed amount off that seller's items, with a minimum, a use
+  limit and an expiry date; one use per buyer.
+- **Disputes and returns**: the buyer opens a dispute after shipping or up to 7 days after
+  delivery; buyer, seller and platform talk in a thread; the seller refunds (all or part) or
+  declines, and declined or unanswered disputes go to the platform to decide.
 - **Live notifications** over server-sent events, in Portuguese or English.
 
 ## Architecture
@@ -155,7 +162,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 122 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 132 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -279,6 +286,15 @@ uv run python scripts/stripe_listen.py
 - **Options keep the listing's stock as their sum.** A reservation takes the option first and
   then the listing, always in the same order (listing id, then option), so concurrent checkouts
   neither oversell an option nor deadlock.
+- **Payouts wait for the dispute window.** A seller is paid 7 days after delivery, never while a
+  dispute is open, and the amount is the order's ledger balance, so a partial refund lowers it
+  and a full refund cancels it. Refunds therefore never have to claw back a transfer. A dispute
+  refund uses the provider's refund with a per-dispute idempotency key and the same ledger
+  entries as a cancellation, once per order.
+- **Coupon uses are reserved, not counted after payment.** Opening a checkout takes a use with a
+  conditional UPDATE under the limit, and an expired or cancelled checkout gives it back, so
+  concurrent buyers cannot exceed the limit. The platform fee is charged on the discounted price;
+  shipping is never discounted.
 - **Counters updated in the same transaction** as the follow or save they count (atomic
   `x = x + 1`), so they never drift and need no reconciliation job.
 - **Link previews rendered at the edge.** A Pages Function adds Open Graph tags to

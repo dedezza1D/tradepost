@@ -73,6 +73,10 @@ export interface Order {
   shipping_service: string | null
   shipping_days: number | null
   ship_to: string | null
+  discount_cents: number
+  installments: number | null
+  dispute_id: string | null
+  dispute_status: 'open' | 'seller_rejected' | 'escalated' | 'refunded' | 'rejected' | 'cancelled' | null
   created_at: string
   paid_at: string | null
   shipped_at: string | null
@@ -100,7 +104,7 @@ export interface Checkout {
   id: string
   status: CheckoutStatus
   provider: string
-  provider_config: { publishable_key?: string; public_key?: string; methods?: string[] }
+  provider_config: { publishable_key?: string; public_key?: string; methods?: string[]; max_installments?: number }
   total_cents: number
   currency: string
   expires_at: string

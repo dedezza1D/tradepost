@@ -192,8 +192,14 @@ test('public questions are answered by the seller', async ({ browser }, info) =>
   const buyer = await newUser(browser, 'en', info.project.name)
   await register(buyer.page, 'Ana Compradora', buyer.email, 'Olinda', /Create your account/)
   await buyer.page.goto(listingUrl)
-  await buyer.page.getByLabel('Your question').fill('Does it come with the receipt?')
-  await buyer.page.getByRole('button', { name: 'Ask', exact: true }).click()
+  const ask = buyer.page.getByRole('button', { name: 'Ask', exact: true })
+  // On slow runners the first keystrokes can land while the page is still settling: type
+  // again until the form has the text, as a person would.
+  await expect(async () => {
+    await buyer.page.getByLabel('Your question').fill('Does it come with the receipt?')
+    await expect(ask).toBeEnabled({ timeout: 2_000 })
+  }).toPass({ timeout: 20_000 })
+  await ask.click()
   await expect(buyer.page.getByText("Waiting for the seller's answer.")).toBeVisible()
 
   await seller.page.goto(listingUrl)
@@ -217,7 +223,8 @@ test('public questions are answered by the seller', async ({ browser }, info) =>
   await expect(page.getByRole('heading', { name: 'How reputation works' })).toBeVisible()
 })
 
-test('an item with options and calculated shipping is bought with express delivery', async ({ browser }, info) => {
+test('an item with options and shipping is bought with a coupon in installments, then disputed and refunded', async ({ browser }, info) => {
+  test.setTimeout(180_000)
   const title = `Camiseta e2e ${unique()}`
   const seller = await newUser(browser, 'pt-BR', info.project.name)
   await register(seller.page, 'Loja Opções', seller.email, 'Recife', /Crie sua conta/)
@@ -246,6 +253,13 @@ test('an item with options and calculated shipping is bought with express delive
   await expect(s.getByRole('heading', { name: title })).toBeVisible()
   const listingUrl = s.url()
 
+  // A 10% coupon from this seller.
+  await s.goto('/seller')
+  await s.getByLabel('Código').fill('CAMISA10')
+  await s.getByLabel('Desconto (%)').fill('10')
+  await s.getByRole('button', { name: 'Criar cupom' }).click()
+  await expect(s.getByText('CAMISA10', { exact: true })).toBeVisible()
+
   const buyer = await newUser(browser, 'en', info.project.name)
   await register(buyer.page, 'Buyer Options', buyer.email, 'Porto Alegre', /Create your account/)
   const b = buyer.page
@@ -261,13 +275,41 @@ test('an item with options and calculated shipping is bought with express delive
   await expect(b.getByRole('heading', { name: 'Checkout' })).toBeVisible()
   await expect(b.getByText(`1 × ${title} (G)`)).toBeVisible()
   await b.getByText('Express', { exact: true }).click()
+  await b.getByLabel('Have a coupon?').fill('camisa10')
+  await b.getByRole('button', { name: 'Apply' }).click()
+  await expect(b.getByText('Coupon camisa10')).toBeVisible()
+  await expect(b.getByText(/R\$\s?8\.00/).first()).toBeVisible() // 10% of 80.00
   await b.getByRole('button', { name: /Continue to payment/ }).click()
+  await b.getByLabel('Installments').selectOption('3')
   await b.getByRole('button', { name: 'Pay with a test card' }).click()
   await expect(b.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible()
 
   await b.goto('/orders')
   await expect(b.getByText(`1 × ${title} (G)`)).toBeVisible()
   await expect(b.getByText(/Express · \d+ business days? · Porto Alegre - RS/)).toBeVisible()
+  await expect(b.getByText('in 3 installments')).toBeVisible()
+  await expect(b.getByText(/saved R\$\s?8\.00/)).toBeVisible()
+
+  // Shipped, the shirt arrives damaged: the buyer disputes and the seller refunds it all.
+  await s.goto('/seller')
+  await s.getByPlaceholder('Código de rastreio').fill('BR987654321BR')
+  await s.getByRole('button', { name: 'Marcar enviado' }).click()
+  await expect(s.getByText('BR987654321BR')).toBeVisible()
+  await b.goto('/orders')
+  await b.getByRole('button', { name: 'Problem with this order?' }).click()
+  await b.getByText('Arrived damaged or faulty').click()
+  await b.getByLabel('Tell what happened').fill('The shirt came torn.')
+  await b.getByRole('button', { name: 'Open dispute', exact: true }).click()
+  await expect(b.getByRole('heading', { name: 'Dispute' })).toBeVisible()
+  await expect(b.getByText('With the seller')).toBeVisible()
+
+  await s.goto('/seller')
+  await s.getByRole('link', { name: /Ver disputa/ }).click()
+  await expect(s.getByText('The shirt came torn.')).toBeVisible()
+  await s.getByRole('button', { name: 'Reembolsar' }).click()
+  await expect(s.getByText('Reembolsada').first()).toBeVisible()
+  await b.reload()
+  await expect(b.getByText('Refunded', { exact: true })).toBeVisible()
   // The G option is sold out; M still has stock.
   await b.goto(listingUrl)
   await expect(b.locator('input[name=variant]').nth(1)).toBeDisabled()

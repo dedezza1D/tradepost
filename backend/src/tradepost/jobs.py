@@ -8,6 +8,7 @@ dedicated worker later) never processes the same task twice at the same time.
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import timedelta
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
 from tradepost.db import Database
+from tradepost.disputes import escalate_overdue as escalate_disputes
 from tradepost.logs import get_logger
 from tradepost.notifications.service import prune as prune_notifications
 from tradepost.orders import processing
@@ -41,9 +43,12 @@ TASKS: dict[str, Task] = {
     "reconcile_payments": lambda db, ctx: processing.reconcile_pending(db, ctx.payments),
     "expire_checkouts": lambda db, ctx: processing.expire_due(db, ctx.payments),
     "auto_deliver": lambda db, _: processing.auto_deliver(db),
-    "seller_payouts": lambda db, ctx: processing.run_payouts(db, ctx.payments),
+    "seller_payouts": lambda db, ctx: processing.run_payouts(
+        db, ctx.payments, timedelta(hours=ctx.settings.payout_hold_hours)
+    ),
     "prune_notifications": lambda db, _: prune_notifications(db),
     "expire_offers": lambda db, _: expire_offers(db),
+    "escalate_disputes": lambda db, _: escalate_disputes(db),
 }
 
 

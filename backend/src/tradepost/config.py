@@ -62,6 +62,10 @@ class Settings(BaseSettings):
 
     platform_fee_bps: int = Field(default=1000, ge=0, le=5000)
     reservation_ttl_minutes: int = 15
+    # Card installments accepted (Mercado Pago and the test provider; Stripe charges at once).
+    max_installments: int = Field(default=12, ge=1, le=12)
+    # Seller payouts wait for the dispute window to close after delivery.
+    payout_hold_hours: int = Field(default=168, ge=0, le=24 * 60)
 
     # Providers offered at checkout, among those with credentials configured.
     payment_providers: list[str] = ["stripe", "mercadopago"]

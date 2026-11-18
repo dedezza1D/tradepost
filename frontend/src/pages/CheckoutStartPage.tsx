@@ -17,6 +17,7 @@ interface Quote {
     items: { listing_id: string; variant_id: string | null; title: string; variant_name: string | null; quantity: number; unit_price_cents: number; shipping_cents: number }[]
     items_cents: number
     shipping_cents: number
+    discount_cents: number
     total_cents: number
     shipping_service: string | null
     shipping_days: number | null
@@ -47,6 +48,8 @@ export function CheckoutStartPage() {
   const [city, setCity] = useState<City | null>(null)
   const destination = city ?? own
   const [service, setService] = useState<Service>('standard')
+  const [couponInput, setCouponInput] = useState('')
+  const [coupon, setCoupon] = useState<string | null>(null)
   // One key per visit: a double tap or a retry reuses the same checkout instead of reserving twice.
   const [idempotencyKey] = useState(() => crypto.randomUUID())
 
@@ -55,7 +58,7 @@ export function CheckoutStartPage() {
     : fromCart
       ? { from_cart: true }
       : { items: [{ listing_id: listingId, quantity, ...(variantId ? { variant_id: variantId } : {}) }] }
-  const delivery = { ship_to: destination?.ibge_code ?? null, shipping_service: service }
+  const delivery = { ship_to: destination?.ibge_code ?? null, shipping_service: service, ...(coupon ? { coupon_code: coupon } : {}) }
 
   const quote = useQuery({
     queryKey: ['checkout-quote', what, delivery],
@@ -63,6 +66,8 @@ export function CheckoutStartPage() {
     retry: false,
   })
   const needsCity = quote.error instanceof ApiError && quote.error.code === 'destination_required'
+  const couponError = coupon && quote.error instanceof ApiError && quote.error.code.startsWith('coupon') ? errorMessage(quote.error, t) : null
+  const discount = quote.data?.orders.reduce((s, o) => s + o.discount_cents, 0) ?? 0
   const calculated = Object.keys(quote.data?.shipping_by_service ?? {}).length > 0
 
   const create = useMutation({
@@ -110,7 +115,7 @@ export function CheckoutStartPage() {
       )}
 
       {quote.isPending && <div className="skeleton h-40" />}
-      {quote.isError && !needsCity && <p role="alert" className="text-sm text-danger">{errorMessage(quote.error, t)}</p>}
+      {quote.isError && !needsCity && !couponError && <p role="alert" className="text-sm text-danger">{errorMessage(quote.error, t)}</p>}
       {q && (
         <section className="card divide-y divide-line">
           {q.orders.flatMap((o) => o.items).map((l, i) => (
@@ -126,8 +131,23 @@ export function CheckoutStartPage() {
             </span>
             <span>{formatMoney(shipping)}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between p-4 text-sm text-success"><span>{t('coupons.discount', { code: coupon })}</span><span>− {formatMoney(discount)}</span></div>
+          )}
           <div className="flex justify-between p-4 text-base font-bold"><span>{t('cart.total')}</span><span>{formatMoney(q.total_cents)}</span></div>
         </section>
+      )}
+
+      {!offerId && (
+        <form className="card space-y-2 p-4" onSubmit={(e) => { e.preventDefault(); setCoupon(couponInput.trim() || null) }}>
+          <label className="label" htmlFor="coupon">{t('coupons.have')}</label>
+          <div className="flex gap-2">
+            <input id="coupon" className="input flex-1 uppercase" maxLength={20} value={couponInput} onChange={(e) => setCouponInput(e.target.value)} />
+            <button className="btn-secondary shrink-0">{t('coupons.apply')}</button>
+            {coupon && <button type="button" className="btn-ghost shrink-0" onClick={() => { setCoupon(null); setCouponInput('') }}>{t('coupons.remove')}</button>}
+          </div>
+          {couponError && <p role="alert" className="text-sm text-danger">{couponError}</p>}
+        </form>
       )}
 
       <fieldset className="card space-y-2 p-4">

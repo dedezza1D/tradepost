@@ -2,7 +2,9 @@
 
 from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingVariant
 from tradepost.chat.models import Conversation, Message, Offer
+from tradepost.coupons import Coupon
 from tradepost.db import Base
+from tradepost.disputes import Dispute, DisputeMessage
 from tradepost.geo.models import Municipality
 from tradepost.identity.models import Session, User
 from tradepost.notifications.models import Notification
@@ -30,6 +32,9 @@ __all__ = [
     "Category",
     "Checkout",
     "Conversation",
+    "Coupon",
+    "Dispute",
+    "DisputeMessage",
     "Follow",
     "LedgerEntry",
     "Listing",

@@ -44,6 +44,8 @@ def settings_env(database_url: str, tmp_path_factory: pytest.TempPathFactory) ->
         "TP_PUBLIC_ORIGIN": "http://testserver",
         # Tests never call real providers, whatever keys a local .env holds.
         "TP_PAYMENT_PROVIDERS": '["fake"]',
+        # Tests that need the dispute window set it themselves.
+        "TP_PAYOUT_HOLD_HOURS": "0",
     }
     previous = {k: os.environ.get(k) for k in env}
     os.environ.update(env)

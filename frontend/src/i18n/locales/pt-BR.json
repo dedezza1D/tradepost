@@ -65,7 +65,14 @@
       "offer_declined": "<b>{{name}}</b> recusou {{offer}} por <b>{{title}}</b>.",
       "offer_expired": "Sua oferta de {{offer}} por <b>{{title}}</b> expirou.",
       "question_received": "<b>{{name}}</b> perguntou sobre <b>{{title}}</b>.",
-      "question_answered": "O vendedor respondeu sua pergunta sobre <b>{{title}}</b>."
+      "question_answered": "O vendedor respondeu sua pergunta sobre <b>{{title}}</b>.",
+      "dispute_opened": "O comprador abriu uma disputa sobre <b>{{title}}</b>.",
+      "dispute_message": "Nova mensagem na disputa de <b>{{title}}</b>.",
+      "dispute_refunded": "A disputa de <b>{{title}}</b> terminou em reembolso de {{amount}}.",
+      "dispute_seller_rejected": "O vendedor recusou a disputa de <b>{{title}}</b>. Você pode pedir que o tradepost decida.",
+      "dispute_rejected": "A disputa de <b>{{title}}</b> foi encerrada sem reembolso.",
+      "dispute_escalated": "A disputa de <b>{{title}}</b> foi para a decisão do tradepost.",
+      "dispute_cancelled": "O comprador encerrou a disputa de <b>{{title}}</b>."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -149,7 +156,20 @@
     "package_required": "O frete calculado precisa do peso e das medidas do pacote.",
     "destination_required": "Escolha a cidade de entrega.",
     "shipping_unavailable": "Não é possível calcular o frete deste anúncio agora.",
-    "offer_checkout_open": "Já existe um pagamento em aberto para esta oferta."
+    "offer_checkout_open": "Já existe um pagamento em aberto para esta oferta.",
+    "too_many_installments": "Número de parcelas acima do permitido.",
+    "coupon_invalid": "Cupom inválido para estes itens.",
+    "coupon_used": "Você já usou este cupom.",
+    "coupon_min": "Este cupom exige uma compra maior deste vendedor.",
+    "coupon_not_with_offer": "Cupons não valem em ofertas aceitas.",
+    "coupon_exists": "Você já tem um cupom com este código.",
+    "coupon_limit": "Limite de cupons atingido.",
+    "dispute_window_closed": "Disputas abrem após o envio e até 7 dias depois da entrega.",
+    "dispute_exists": "Este pedido já tem uma disputa.",
+    "dispute_closed": "Esta disputa não aceita essa ação agora.",
+    "dispute_not_escalable": "O vendedor ainda tem prazo para responder.",
+    "refund_too_large": "O reembolso não pode passar do valor pago.",
+    "already_paid_out": "O vendedor já recebeu por este pedido."
   },
   "home": {
     "categories": "Categorias",
@@ -436,7 +456,10 @@
       "title": "Provedor de teste",
       "text": "Este ambiente usa um provedor simulado, sem Stripe nem Mercado Pago.",
       "pay": "Pagar com cartão de teste"
-    }
+    },
+    "installments": "Parcelas",
+    "installmentOption_one": "À vista: {{amount}}",
+    "installmentOption_other": "{{count}}x de {{amount}}"
   },
   "orders": {
     "title": "Meus pedidos",
@@ -452,7 +475,9 @@
       "delivered": "Entregue",
       "cancelled": "Cancelado",
       "refunded": "Reembolsado"
-    }
+    },
+    "installments_one": "à vista",
+    "installments_other": "em {{count}}x"
   },
   "categories": {
     "electronics": "Eletrônicos",
@@ -694,5 +719,86 @@
     "days_one": "{{count}} dia útil",
     "days_other": "{{count}} dias úteis",
     "simulated": "Valores de uma tabela de demonstração, por distância e peso."
+  },
+  "coupons": {
+    "title": "Cupons de desconto",
+    "code": "Código",
+    "kind": "Tipo",
+    "percent": "Porcentagem",
+    "fixed": "Valor fixo",
+    "valuePercent": "Desconto (%)",
+    "valueFixed": "Desconto (R$)",
+    "minimum": "Compra mínima (R$)",
+    "maxUses": "Limite de usos",
+    "expires": "Válido até",
+    "create": "Criar cupom",
+    "uses": "{{uses}} de {{max}} usos",
+    "active": "Ativo",
+    "inactive": "Desativado",
+    "activate": "Ativar",
+    "deactivate": "Desativar",
+    "have": "Tem um cupom?",
+    "apply": "Aplicar",
+    "remove": "Remover",
+    "discount": "Cupom {{code}}",
+    "saved": "economizou {{amount}}",
+    "applied": "Cupom aplicado: −{{amount}}"
+  },
+  "disputes": {
+    "title": "Disputa",
+    "adminTitle": "Disputas para decidir",
+    "adminEmpty": "Nenhuma disputa esperando decisão.",
+    "view": "Ver disputa",
+    "openLink": "Problema com o pedido?",
+    "openTitle": "Abrir disputa",
+    "openText": "O vendedor tem 72 horas para responder. Se não houver acordo, o tradepost decide. O repasse ao vendedor fica retido enquanto isso.",
+    "reasonLabel": "Motivo",
+    "reason": {
+      "not_received": "Não recebi",
+      "not_as_described": "Diferente do anúncio",
+      "damaged": "Chegou com defeito ou danificado",
+      "other": "Outro"
+    },
+    "describe": "Conte o que aconteceu",
+    "open": "Abrir disputa",
+    "status": {
+      "open": "Com o vendedor",
+      "seller_rejected": "Vendedor recusou",
+      "escalated": "Com o tradepost",
+      "refunded": "Reembolsada",
+      "rejected": "Encerrada sem reembolso",
+      "cancelled": "Encerrada pelo comprador"
+    },
+    "explain": {
+      "open": "O vendedor pode reembolsar (total ou parcial) ou recusar. Sem resposta em 72 horas, o tradepost assume.",
+      "seller_rejected": "O vendedor recusou. O comprador pode pedir que o tradepost decida.",
+      "escalated": "O tradepost vai analisar e decidir.",
+      "refunded": "O reembolso foi enviado ao meio de pagamento original.",
+      "rejected": "A disputa foi encerrada sem reembolso.",
+      "cancelled": "O comprador encerrou a disputa."
+    },
+    "orderTotal": "Valor do pedido",
+    "opened": "Aberta em {{date}}",
+    "refunded": "Reembolsado: {{amount}}",
+    "thread": "Conversa da disputa",
+    "role": {
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "platform": "tradepost"
+    },
+    "messageLabel": "Mensagem",
+    "send": "Enviar",
+    "decide": "Decisão",
+    "refundTitle": "Reembolso",
+    "full": "Total ({{amount}})",
+    "partial": "Parcial",
+    "amount": "Valor do reembolso (R$)",
+    "note": "Observação (opcional)",
+    "refund": "Reembolsar",
+    "rejectNote": "Motivo da recusa",
+    "reject": "Recusar",
+    "escalate": "Pedir decisão do tradepost",
+    "cancel": "Encerrar disputa",
+    "cancelConfirm": "Encerrar a disputa? O repasse ao vendedor será liberado."
   }
 }
