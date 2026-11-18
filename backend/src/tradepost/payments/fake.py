@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import itertools
 import json
+import uuid
 from collections.abc import Mapping
 from typing import Any
 
@@ -54,7 +55,9 @@ class FakeProvider:
             from tradepost.payments.base import PaymentProviderError
 
             raise PaymentProviderError("Provider unavailable.")
-        ref = f"fake_{next(self._ids)}"
+        # Unique across restarts, like a real provider's ids: a counter would reuse refs that
+        # an older run already stored.
+        ref = f"fake_{uuid.uuid4().hex[:16]}"
         status = AttemptStatus.PENDING
         if method == "card" and card is not None:
             approved = card.token == APPROVED_TEST_TOKEN

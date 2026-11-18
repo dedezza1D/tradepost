@@ -135,3 +135,15 @@ async def test_responses_carry_request_id_and_security_headers(client: Any) -> N
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Cache-Control"] == "no-store"
     assert len(response.headers["X-Request-ID"]) >= 8
+
+
+async def test_writes_are_committed_before_the_response_is_sent(client: Any, app: Any) -> None:
+    """A response must never report success for data another request cannot read yet."""
+    from sqlalchemy import text
+
+    await register(client)
+    await client.patch("/api/auth/me", json={"display_name": "Committed Name"})
+    # Read straight from the database, outside the app, right after the response.
+    async with app.state.db.sessionmaker() as db:
+        names = (await db.execute(text("SELECT display_name FROM users"))).scalars().all()
+    assert "Committed Name" in names

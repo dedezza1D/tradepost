@@ -18,5 +18,8 @@ async def get_db(request: Request) -> AsyncIterator[AsyncSession]:
         yield session
 
 
-DbSession = Annotated[AsyncSession, Depends(get_db)]
+# scope="function": the session commits when the endpoint returns, *before* the response is
+# sent. With FastAPI's default ("request") the commit would run after the client already got its
+# 200: a follow-up read could see the old data, and a failed commit would go unreported.
+DbSession = Annotated[AsyncSession, Depends(get_db, scope="function")]
 AppSettings = Annotated[Settings, Depends(get_settings)]
