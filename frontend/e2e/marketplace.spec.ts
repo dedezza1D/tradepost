@@ -52,7 +52,8 @@ async function register(page: Page, name: string, email: string, city: string, t
   await page.locator('#display_name').fill(name)
   await page.locator('#email').fill(email)
   await page.locator('#password').fill('e2e password that is long')
-  await page.getByRole('combobox').first().fill(city)
+  // The city picker inside the page (the header search box is also a combobox).
+  await page.getByRole('main').getByRole('combobox').first().fill(city)
   await page.getByRole('option', { name: new RegExp(`^${city}`) }).first().click()
   await page.locator('form button[class*="btn-primary"]').click()
   await expect(page).toHaveURL('/')
