@@ -281,7 +281,7 @@ export function ListingPage() {
   const variant = item.variants.find((v) => v.id === variantId) ?? null
 
   return (
-    <article className="grid gap-6 pb-16 md:grid-cols-[1fr_380px] md:items-start md:pb-0">
+    <article className="grid gap-6 pb-36 md:grid-cols-[1fr_380px] md:items-start md:pb-0">
       <Gallery photos={item.photos} title={item.title} />
 
       <aside className="space-y-4 md:sticky md:top-24">

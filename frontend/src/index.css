@@ -79,6 +79,16 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    /* Anything scrolled into view (keyboard focus, links to an anchor) stops clear of the
+       sticky header instead of hiding under it. */
+    scroll-padding-top: 5rem;
+  }
+  @media (width < 48rem) {
+    html {
+      /* On phones the tab bar and, on some pages, an action bar are fixed at the bottom:
+         keep focused and scrolled-to elements above them (WCAG 2.4.11, focus not obscured). */
+      scroll-padding-bottom: calc(9rem + env(safe-area-inset-bottom));
+    }
   }
   body {
     @apply bg-bg text-fg antialiased;

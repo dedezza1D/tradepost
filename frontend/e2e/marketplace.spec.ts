@@ -192,12 +192,9 @@ test('public questions are answered by the seller', async ({ browser }, info) =>
   const buyer = await newUser(browser, 'en', info.project.name)
   await register(buyer.page, 'Ana Compradora', buyer.email, 'Olinda', /Create your account/)
   await buyer.page.goto(listingUrl)
-  // Submitted with Enter, as on a phone keyboard. On slow CI runners the page keeps settling
-  // (photo, lazy chunks) and the Ask button can fail Playwright's "stable" check for the
-  // whole test, although it works for a person.
-  const question = buyer.page.getByLabel('Your question')
-  await question.fill('Does it come with the receipt?')
-  await question.press('Enter')
+  await buyer.page.getByLabel('Your question').fill('Does it come with the receipt?')
+  // On phones this button sits low on the page: it must not end up under the fixed bars.
+  await buyer.page.getByRole('button', { name: 'Ask', exact: true }).click()
   await expect(buyer.page.getByText("Waiting for the seller's answer.")).toBeVisible()
 
   await seller.page.goto(listingUrl)
