@@ -192,14 +192,12 @@ test('public questions are answered by the seller', async ({ browser }, info) =>
   const buyer = await newUser(browser, 'en', info.project.name)
   await register(buyer.page, 'Ana Compradora', buyer.email, 'Olinda', /Create your account/)
   await buyer.page.goto(listingUrl)
-  const ask = buyer.page.getByRole('button', { name: 'Ask', exact: true })
-  // On slow runners the first keystrokes can land while the page is still settling: type
-  // again until the form has the text, as a person would.
-  await expect(async () => {
-    await buyer.page.getByLabel('Your question').fill('Does it come with the receipt?')
-    await expect(ask).toBeEnabled({ timeout: 2_000 })
-  }).toPass({ timeout: 20_000 })
-  await ask.click()
+  // Submitted with Enter, as on a phone keyboard. On slow CI runners the page keeps settling
+  // (photo, lazy chunks) and the Ask button can fail Playwright's "stable" check for the
+  // whole test, although it works for a person.
+  const question = buyer.page.getByLabel('Your question')
+  await question.fill('Does it come with the receipt?')
+  await question.press('Enter')
   await expect(buyer.page.getByText("Waiting for the seller's answer.")).toBeVisible()
 
   await seller.page.goto(listingUrl)
