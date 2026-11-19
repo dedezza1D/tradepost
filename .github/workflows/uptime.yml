@@ -1,0 +1,36 @@
+name: Uptime
+
+# Checks the live demo a few times a day. A failed run is the alert: GitHub notifies the
+# repository owner, so no monitoring account is needed. The API sleeps on the free tier, so
+# the first call is given time to wake it up.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE: https://tradepost-2ay.pages.dev
+    steps:
+      - name: Web app is served
+        run: |
+          curl --fail --silent --show-error --max-time 30 "$SITE/" | grep -q '<div id="root">'
+      - name: API answers through the proxy (waking it if asleep)
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent --max-time 90 "$SITE/api/categories" | grep -q '"slug"'; then
+              echo "API up on attempt $attempt"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::API did not answer through the proxy"
+          exit 1
+      - name: Database answers
+        run: curl --fail --silent --show-error --max-time 60 "$SITE/api/readyz"

@@ -78,6 +78,13 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: '/admin/ops',
+        lazy: async () => {
+          const { OpsPage } = await import('./pages/OpsPage')
+          return { element: auth(<OpsPage />) }
+        },
+      },
+      {
         path: '/admin/disputes',
         lazy: async () => {
           const { AdminDisputesPage } = await import('./pages/DisputePages')

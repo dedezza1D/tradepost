@@ -1,5 +1,6 @@
 from typing import Any
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -84,6 +85,14 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def unhandled(request: Request, exc: Exception) -> JSONResponse:
-        # Details go to the log, never to the client.
+        # Details go to the log and the error table, never to the client.
         log.exception("unhandled_error", path=request.url.path)
+        from tradepost.ops.metrics import record_error, route_of
+
+        await record_error(
+            request.app.state.db,
+            exc,
+            f"{request.method} {route_of(request.url.path)}",
+            structlog.contextvars.get_contextvars().get("request_id"),
+        )
         return JSONResponse(_body("internal_error", "Something went wrong."), status_code=500)

@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse, Response
 
 from tradepost.config import Settings
 from tradepost.logs import get_logger
+from tradepost.ops.metrics import collector
 
 log = get_logger("tradepost.http")
 
@@ -35,6 +36,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         start = time.perf_counter()
         response = await call_next(request)
         elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
+        collector.observe(request.method, request.url.path, response.status_code, elapsed_ms)
         response.headers["X-Request-ID"] = request_id
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")

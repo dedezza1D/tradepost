@@ -13,12 +13,17 @@ from datetime import timedelta
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tradepost.ai.client import purge_cache as purge_ai_cache
 from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.disputes import escalate_overdue as escalate_disputes
 from tradepost.logs import get_logger
 from tradepost.notifications.service import prune as prune_notifications
+from tradepost.ops.metrics import flush as flush_metrics
+from tradepost.ops.metrics import purge as purge_metrics
+from tradepost.ops.metrics import record_error
+from tradepost.ops.service import notify_alerts, track_job
 from tradepost.orders import processing
 from tradepost.payments.base import PaymentRegistry
 from tradepost.security.ratelimit import purge_old_buckets
@@ -49,6 +54,10 @@ TASKS: dict[str, Task] = {
     "prune_notifications": lambda db, _: prune_notifications(db),
     "expire_offers": lambda db, _: expire_offers(db),
     "escalate_disputes": lambda db, _: escalate_disputes(db),
+    "flush_metrics": lambda db, _: flush_metrics(db),
+    "purge_metrics": lambda db, _: purge_metrics(db),
+    "purge_ai_cache": lambda db, _: purge_ai_cache(db),
+    "ops_alerts": lambda db, ctx: notify_alerts(db, ctx.settings),
 }
 
 
@@ -56,7 +65,8 @@ async def run_tick(database: Database, ctx: JobContext) -> dict[str, int]:
     """Run every task once, each in its own transaction."""
     results: dict[str, int] = {}
     for name, task in TASKS.items():
-        try:
+
+        async def run_one(name: str = name, task: Task = task) -> int | None:
             async with database.sessionmaker() as db, db.begin():
                 locked = (
                     await db.execute(
@@ -64,11 +74,16 @@ async def run_tick(database: Database, ctx: JobContext) -> dict[str, int]:
                         {"id": _LOCK_ID, "name": name},
                     )
                 ).scalar_one()
-                if locked:
-                    results[name] = await task(db, ctx)
-        except Exception:
+                return await task(db, ctx) if locked else None
+
+        try:
+            count = await track_job(database, name, run_one)
+            if count is not None:
+                results[name] = count
+        except Exception as exc:
             # One failing task must not starve the others; it is retried next tick.
             log.exception("job_failed", job=name)
+            await record_error(database, exc, f"job {name}", None)
     return results
 
 

@@ -67,6 +67,18 @@ class Settings(BaseSettings):
     # Seller payouts wait for the dispute window to close after delivery.
     payout_hold_hours: int = Field(default=168, ge=0, le=24 * 60)
 
+    # AI. "none" turns it off (the default and the live demo); "ollama" uses an open model on an
+    # Ollama server; "fake" answers deterministically for tests.
+    ai_provider: Literal["none", "ollama", "fake"] = "none"
+    ai_base_url: str = "http://localhost:11434"
+    ai_chat_model: str = "qwen2.5vl:3b"
+    ai_embed_model: str = "nomic-embed-text"
+    # Prices per million tokens. Zero for a local model; a paid model also needs a daily ceiling
+    # (zero means no paid calls at all).
+    ai_price_in_per_mtok: float = Field(default=0, ge=0)
+    ai_price_out_per_mtok: float = Field(default=0, ge=0)
+    ai_daily_budget_usd: float = Field(default=0, ge=0, le=100)
+
     # Providers offered at checkout, among those with credentials configured.
     payment_providers: list[str] = ["stripe", "mercadopago"]
     # Sandbox conveniences (Mercado Pago auto-approves test Pix). Live keys are always refused.

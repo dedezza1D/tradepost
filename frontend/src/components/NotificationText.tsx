@@ -25,6 +25,7 @@ const KNOWN = new Set([
   'dispute_rejected',
   'dispute_escalated',
   'dispute_cancelled',
+  'ops_alert',
   'question_answered',
   'offer_received',
   'offer_countered',
@@ -46,6 +47,9 @@ export function NotificationText({ n }: { n: Notification }) {
     old: typeof p.old_price_cents === 'number' ? formatMoney(p.old_price_cents) : '',
     price: typeof p.price_cents === 'number' ? formatMoney(p.price_cents) : '',
     offer: typeof p.amount_cents === 'number' ? formatMoney(p.amount_cents) : '',
+    alert: typeof p.alert === 'string'
+      ? t(`ops.alert.${p.alert.split(':')[0]}`, { name: p.alert.split(':')[1] ?? '', defaultValue: p.alert })
+      : '',
   }
   const key = KNOWN.has(n.kind) ? n.kind : 'unknown'
   return <Trans i18nKey={`notifications.kind.${key}`} values={values} components={{ b: <strong /> }} />

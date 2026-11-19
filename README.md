@@ -65,6 +65,16 @@ a quiet period can take about a minute while the API wakes up. See [test payment
   (including notifications and errors), installable as an app (PWA).
 - **Live notifications** over server-sent events, with polling as a fallback.
 
+**Operations**
+
+- **Operations page for admins**: requests per minute, error rate, latency percentiles per route,
+  grouped server errors with their traceback, background jobs, payments waiting, database size,
+  AI usage and the AI on/off switch.
+- **Alerts** (error rate, failing or stalled jobs, payment notifications backing up, payments
+  stuck, database near the free limit) delivered to admins as in-app notifications, once per
+  incident.
+- A scheduled GitHub Actions check of the live demo; a failed run is the alert.
+
 ## Architecture
 
 ```
@@ -85,7 +95,7 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 ```
 
 One modular service: `identity`, `catalog`, `orders`, `payments`, `reviews`, `social`, `chat`,
-`questions`, `coupons`, `disputes`, `shipping`, `geo`, `notifications`. Each module owns its
+`questions`, `coupons`, `disputes`, `shipping`, `geo`, `notifications`, `ops`, `ai`. Each module owns its
 tables and talks to the others through plain function calls. At this size, separate services
 would add network failure modes without adding capacity; the boundaries are where a split would
 happen later.
@@ -159,6 +169,26 @@ These are the properties the tests pin down, and how they are kept:
   the version, so a seller editing a stale page gets `409` instead of resurrecting sold stock.
   Orders keep a snapshot of title, option and price.
 
+## Observability without outside services
+
+Everything lives in PostgreSQL, so the free tier needs no monitoring account:
+
+- A middleware counts requests per minute and route template (`/api/listings/{id}`), with a
+  latency histogram of fixed buckets, so percentiles can be estimated after aggregating minutes
+  (an average cannot give a p95). A job writes the counts every 30 seconds; a week is kept.
+- Unhandled errors are grouped by fingerprint (exception type, route and the deepest frame in our
+  code; never the message, which carries ids) with a count, first and last seen, the request id
+  and the traceback. The client only ever sees a stable error code.
+- Every background job records its last run, duration, items processed and consecutive failures.
+- Alert rules read those tables; when one starts firing, admins get one in-app notification.
+- Logs are JSON with the request id on every line, and never include query strings.
+
+**AI module.** Every model call goes through one client: an on/off switch admins control, a daily
+spending ceiling for paid models (a ceiling of zero allows no paid calls), a cache by hash of the
+input, and a log of tokens, latency, cost and failures per call. The live demo runs without a
+model (`TP_AI_PROVIDER=none`) and works fully without it; AI features are evaluated with an open
+model on a local Ollama server.
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -191,7 +221,7 @@ These are the properties the tests pin down, and how they are kept:
 
 ```bash
 cd backend
-uv run pytest            # 132 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 140 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -232,6 +262,28 @@ The end-to-end suite runs five scenarios on a phone and a desktop viewport:
    express delivery, then disputed and refunded.
 5. axe checks the main pages, the listing page and the conversation screen for accessibility
    violations.
+
+### Load test
+
+`backend/scripts/loadtest.py` runs concurrent visitors through the public browsing paths (feed,
+search, listing, questions) and reports throughput and latency percentiles, counting rate-limited
+answers apart from errors.
+
+On a laptop (i7-13620H), one API process with PostgreSQL in Docker and the rate limits raised:
+
+| Visitors | Requests/s | p50 | p95 | p99 | Errors |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 33 | 28 ms | 50 ms | 68 ms | 0 |
+| 5 | 63 | 75 ms | 121 ms | 188 ms | 0 |
+| 10 | 58 | 159 ms | 292 ms | 458 ms | 0 |
+| 20 | 53 | 346 ms | 628 ms | 892 ms | 0 |
+
+One Python process saturates at about 60 requests/s; past that, latency grows and throughput does
+not, which is where a second worker process or instance would come in. Against the live demo, the
+platform's own bot protection on `*.pages.dev` steps in first: a few hundred automated requests in
+a minute from one address get a browser challenge before the API's rate limits are reached. That
+protection is not configurable on the free `pages.dev` domain; a custom domain would allow tuning
+it.
 
 CI (GitHub Actions) runs lint, strict type checking, migrations up → down → up on an empty
 database, a drift check between models and migrations, the backend tests, the end-to-end suite,
@@ -286,6 +338,8 @@ uv run python scripts/stripe_listen.py
 | Webhooks | `https://<pages-domain>/api/webhooks/stripe` (and `/mercadopago`) | through the proxy, bytes unchanged |
 | Free-tier guard | `TP_MEDIA_QUOTA_BYTES`, `TP_MAX_PHOTOS_PER_USER` | uploads stop at 2 GB / 200 photos per account; photos cached at the edge |
 | Commerce settings | `TP_MAX_INSTALLMENTS`, `TP_PAYOUT_HOLD_HOURS` | defaults: 12 installments, payouts 168 hours after delivery |
+| AI | `TP_AI_PROVIDER` (`none`, `ollama`), `TP_AI_BASE_URL`, `TP_AI_CHAT_MODEL`, `TP_AI_EMBED_MODEL`, prices and `TP_AI_DAILY_BUDGET_USD` | `none` on the live demo |
+| Uptime | `.github/workflows/uptime.yml` | every 6 hours; GitHub notifies the owner when it fails |
 
 ## Decisions and trade-offs
 

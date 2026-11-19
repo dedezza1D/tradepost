@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from tradepost import jobs
+from tradepost.ai.client import AI, build_provider
 from tradepost.catalog.router import router as catalog_router
 from tradepost.chat.router import router as chat_router
 from tradepost.config import Settings, get_settings
@@ -29,6 +30,7 @@ from tradepost.middleware import (
 )
 from tradepost.notifications.router import router as notifications_router
 from tradepost.notifications.service import Broker, asyncpg_dsn
+from tradepost.ops.router import router as ops_router
 from tradepost.orders.router import router as orders_router
 from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.questions import router as questions_router
@@ -47,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.payments = await drop_live_accounts(build_registry(settings))
         app.state.jobs = jobs.JobContext(settings=settings, payments=app.state.payments)
         app.state.http = httpx.AsyncClient(headers={"User-Agent": "tradepost"})
+        app.state.ai = AI(settings, app.state.db, build_provider(settings))
         app.state.broker = Broker(asyncpg_dsn(settings.database_url))
         app.state.broker.start()
         worker: asyncio.Task[None] | None = None
@@ -88,6 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(questions_router)
     app.include_router(coupons_router)
     app.include_router(disputes_router)
+    app.include_router(ops_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:
