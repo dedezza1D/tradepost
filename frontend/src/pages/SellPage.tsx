@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
+import { DRAFT_PHOTOS, useAssistStatus, useDraftFromPhotos, useListingTips, usePriceSuggestion, type Draft } from '../api/assistant'
 import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
 import { ApiError, api, json } from '../api/client'
@@ -301,11 +302,32 @@ function ShippingFields({ d, set }: { d: Details; set: (patch: Partial<Details>)
   )
 }
 
+/** The price range of similar listings, with a button to use its middle. */
+function PriceHint({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
+  const { t } = useTranslation()
+  const suggestion = usePriceSuggestion(d.title, d.description, d.category_slug)
+  const p = suggestion.data
+  if (!p) return null
+  const values = { count: p.count, low: formatMoney(p.low_cents), high: formatMoney(p.high_cents) }
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface-2 p-3 text-sm" aria-live="polite">
+      <span className="flex items-start gap-2">
+        <Icon name="tag" size={16} className="mt-0.5 shrink-0 text-primary" />
+        {t(p.basis === 'similar' ? 'sell.priceHint.similar' : 'sell.priceHint.category', values)}
+      </span>
+      <button type="button" className="btn-secondary min-h-9 py-1.5" onClick={() => set({ price: centsToInput(p.median_cents) })}>
+        {t('sell.priceHint.use', { price: formatMoney(p.median_cents) })}
+      </button>
+    </div>
+  )
+}
+
 function PriceFields({ d, set }: { d: Details; set: (patch: Partial<Details>) => void }) {
   const { t } = useTranslation()
   const hasVariants = d.variants.length > 0
   return (
     <div className="space-y-4">
+      <PriceHint d={d} set={set} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="price">{t('sell.price')}</label>
@@ -333,6 +355,28 @@ interface LocalPhoto {
   src: string
 }
 
+/** Offers to fill the form from the photos when a model is available. */
+function DraftFromPhotos({ photos, onDraft }: { photos: LocalPhoto[]; onDraft: (draft: Draft) => void }) {
+  const { t } = useTranslation()
+  const status = useAssistStatus(photos.length > 0)
+  const draft = useDraftFromPhotos()
+  if (!status.data?.draft || photos.length === 0) return null
+  return (
+    <div className="space-y-2 rounded-2xl border border-line bg-primary-soft/40 p-4">
+      <p className="flex items-center gap-2 font-semibold">
+        <Icon name="sparkles" size={18} className="text-primary" />
+        {t('sell.assist.title')}
+      </p>
+      <p className="text-sm text-muted">{t('sell.assist.text', { count: Math.min(photos.length, DRAFT_PHOTOS) })}</p>
+      <button type="button" className="btn-secondary" disabled={draft.isPending}
+        onClick={() => draft.mutate(photos.map((p) => p.file), { onSuccess: onDraft })}>
+        {draft.isPending ? <><Spinner className="text-primary" />{t('sell.assist.working')}</> : t('sell.assist.button')}
+      </button>
+      {draft.isError && <p role="alert" className="text-sm text-danger">{errorMessage(draft.error, t)}</p>}
+    </div>
+  )
+}
+
 function NewListing() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -343,7 +387,20 @@ function NewListing() {
   const [d, setD] = useState<Details>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
+  const [drafted, setDrafted] = useState(false)
   const set = (patch: Partial<Details>) => setD((prev) => ({ ...prev, ...patch }))
+
+  function applyDraft(draft: Draft) {
+    set({
+      title: draft.title,
+      description: draft.description,
+      condition: draft.condition,
+      ...(draft.category_slug ? { category_slug: draft.category_slug } : {}),
+    })
+    setDrafted(true)
+    setError(null)
+    setStep(1)
+  }
 
   useEffect(() => {
     if (me?.city && me.state && !d.city) set({ city: { ibge_code: me.municipality_id ?? 0, name: me.city, state: me.state } })
@@ -426,7 +483,14 @@ function NewListing() {
             </div>
             <PhotoStrip tiles={photos} onAdd={addFiles} onMove={(a, b) => setPhotos((p) => move(p, a, b))}
               onRemove={(i) => setPhotos((p) => p.filter((_, j) => j !== i))} />
+            <DraftFromPhotos photos={photos} onDraft={applyDraft} />
           </>
+        )}
+        {step === 1 && drafted && (
+          <p className="flex items-start gap-2 rounded-xl bg-surface-2 p-3 text-sm" role="status">
+            <Icon name="sparkles" size={16} className="mt-0.5 shrink-0 text-primary" />
+            {t('sell.assist.review')}
+          </p>
         )}
         {step === 1 && <DetailFields d={d} set={set} />}
         {step === 2 && <PriceFields d={d} set={set} />}
@@ -469,6 +533,30 @@ function NewListing() {
 }
 
 // --- editing an existing listing ----------------------------------------------------------------
+
+/** What would make the listing do better, checked against the saved version. */
+function ListingTips({ id, revision }: { id: string; revision: string }) {
+  const { t } = useTranslation()
+  const tips = useListingTips(id, revision)
+  if (!tips.data?.length) return null
+  return (
+    <section className="card space-y-3 p-5" aria-labelledby="tips-title">
+      <h2 id="tips-title" className="font-semibold">{t('sell.tips.title')}</h2>
+      <ul className="space-y-2">
+        {tips.data.map((tip) => (
+          <li key={tip.code} className="flex items-start gap-2 text-sm">
+            <Icon name="info" size={16} className="mt-0.5 shrink-0 text-primary" />
+            {t(`sell.tips.${tip.code}`, {
+              count: tip.data.count ?? 0,
+              low: formatMoney(tip.data.low_cents ?? 0),
+              high: formatMoney(tip.data.high_cents ?? 0),
+            })}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 function EditListing({ id }: { id: string }) {
   const { t } = useTranslation()
@@ -569,6 +657,8 @@ function EditListing({ id }: { id: string }) {
         {saved && !save.isPending && <p className="text-sm text-success">{t('common.saved')}</p>}
         <button className="btn-primary w-full" disabled={save.isPending}>{save.isPending ? t('common.saving') : t('common.save')}</button>
       </form>
+
+      <ListingTips id={id} revision={`${l.version}-${l.photos.map((p) => p.id).join()}`} />
 
       <section className="card space-y-3 p-5">
         <h2 className="font-semibold">{t('sell.visibility')}</h2>

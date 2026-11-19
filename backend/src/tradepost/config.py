@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # Ollama server; "fake" answers deterministically for tests.
     ai_provider: Literal["none", "ollama", "fake"] = "none"
     ai_base_url: str = "http://localhost:11434"
-    ai_chat_model: str = "qwen2.5vl:3b"
+    ai_chat_model: str = "qwen2.5vl:7b"
     # Multilingual; beat nomic-embed-text on the Portuguese evaluation set (eval/results).
     ai_embed_model: str = "bge-m3"
     # Prices per million tokens. Zero for a local model; a paid model also needs a daily ceiling

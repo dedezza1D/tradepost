@@ -63,7 +63,40 @@ def share_preview(data: bytes) -> bytes:
     return out.getvalue()
 
 
+MODEL_MAX_SIDE = 768
+
+
+def model_input(data: bytes, *, max_bytes: int, max_pixels: int) -> bytes:
+    """An uploaded photo as a model sees it: validated like any upload, re-encoded as a JPEG of
+    at most 768 px (vision models slow down with image size; detail past that is noise)."""
+    rgb = _decode(data, max_bytes=max_bytes, max_pixels=max_pixels)
+    rgb.thumbnail((MODEL_MAX_SIDE, MODEL_MAX_SIDE), Image.Resampling.LANCZOS)
+    out = io.BytesIO()
+    rgb.save(out, format="JPEG", quality=85)
+    return out.getvalue()
+
+
+def brightness(data: bytes) -> float:
+    """Mean luminance from 0 (black) to 1 (white) of an image this app already stored."""
+    with Image.open(io.BytesIO(data)) as image:
+        small = image.convert("L")
+        small.thumbnail((64, 64))
+        histogram = small.histogram()
+    total = sum(histogram) or 1
+    return sum(level * count for level, count in enumerate(histogram)) / total / 255
+
+
 def process_image(data: bytes, *, max_bytes: int, max_pixels: int) -> ProcessedImage:
+    rgb = _decode(data, max_bytes=max_bytes, max_pixels=max_pixels)
+    return ProcessedImage(
+        full=_encode(rgb, FULL_MAX_SIDE),
+        thumb=_encode(rgb, THUMB_MAX_SIDE),
+        width=rgb.width,
+        height=rgb.height,
+    )
+
+
+def _decode(data: bytes, *, max_bytes: int, max_pixels: int) -> Image.Image:
     if len(data) > max_bytes:
         raise InvalidImage(f"Photos must be at most {max_bytes // (1024 * 1024)} MB.")
     sniffed = sniff_format(data)
@@ -86,9 +119,4 @@ def process_image(data: bytes, *, max_bytes: int, max_pixels: int) -> ProcessedI
         raise
     except (UnidentifiedImageError, OSError, SyntaxError, ValueError, Image.DecompressionBombError):
         raise InvalidImage("The photo could not be read.") from None
-    return ProcessedImage(
-        full=_encode(rgb, FULL_MAX_SIDE),
-        thumb=_encode(rgb, THUMB_MAX_SIDE),
-        width=rgb.width,
-        height=rgb.height,
-    )
+    return rgb

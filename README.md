@@ -25,6 +25,10 @@ a quiet period can take about a minute while the API wakes up. See [test payment
   while typing. With an embedding model, hybrid search also finds what people mean ("algo para
   pedalar" finds bikes); see [Search quality](#search-quality).
 - **Discovery**: similar items on every listing; saved searches that notify about new matches.
+- **Listing assistant**: a price range from similar listings and tips for the seller's own
+  listings (dark photo, vague title, price far above similar items); with a vision model, a
+  draft of title, description, category and condition from the photos. See
+  [Listing assistant](#listing-assistant).
 - **Shipping**: a fixed price set by the seller, or calculated from distance and package weight
   (standard or express), quoted on the listing and at checkout.
 - **Cart and checkout**: items from several sellers in one payment; stock is reserved for 15
@@ -216,6 +220,40 @@ silence queries such as "ração para cachorro" also drops real matches, so the 
 where no listing matched the words and the app shows them as *similar items* instead of results.
 Full report: [`backend/eval/results/search.md`](backend/eval/results/search.md).
 
+## Listing assistant
+
+Selling starts with photos. With a vision model available, the form offers to fill in title,
+description, category and condition from them; the seller reviews every field before anything
+is published. One structured call (JSON schema) returns the draft, and the server checks it:
+sentences claiming what a photo cannot show ("funcionando perfeitamente", "ótimo estado") are
+removed, because only the seller knows them. A small model sometimes loops on a photo until the
+server aborts the answer; the request is then retried with a growing repeat penalty.
+
+The price range and the tips need no model, so they also run on the live demo. The range comes
+from the asking prices of the most similar listings (by meaning with embeddings, by words
+without them), trimmed of outliers, with the count it is based on. Tips check the seller's own
+listing: few or dark photos, a vague or all-caps title, a short description, a price well above
+similar listings.
+
+`backend/eval` holds 84 freely licensed photos from Wikimedia Commons (sources and licenses in
+`listing_photos.json`; the images are fetched, not committed), 3 to 5 per product kind, curated
+by hand to show one item the way a seller would photograph it. With Qwen2.5-VL 7B on a laptop
+GPU:
+
+| Prompt | Category right | Title names the product | Raw unsupported claims |
+|---|---:|---:|---:|
+| Category slugs in English, with a guide to each category | 81% | 80% | 4% |
+| Category names in Portuguese, with the guide (in use) | **86%** | 81% | 6% |
+| Category names in Portuguese, no guide | 69% | 80% | 4% |
+
+The first version filed every camera and headphone under `phones`: the model read *fone de
+ouvido* as phones. Naming the categories in Portuguese fixed that. It was written after seeing
+those mistakes on the same photos, so 86% is optimistic. The remaining mistakes are taxonomy
+calls (an air fryer filed as a large appliance, a stroller under toys). The price range had
+its median within the expected range for 90% of the drafts. A draft takes about 7 s (1,650
+tokens in, mostly the image, 85 out). Full report:
+[`backend/eval/results/assistant.md`](backend/eval/results/assistant.md).
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -248,7 +286,7 @@ Full report: [`backend/eval/results/search.md`](backend/eval/results/search.md).
 
 ```bash
 cd backend
-uv run pytest            # 147 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 153 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -270,6 +308,9 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
   miss, the similar-items flag, similar listings with and without a model, suggestions, and
   saved-search alerts sent once, never for the user's own listings. A deterministic fake model
   stands in for the real one.
+- **Listing assistant**: drafts from photos (photos shrunk before the model, at most three,
+  unsupported claims removed, not-a-product answers refused, a looping answer retried), price
+  ranges that ignore outliers and fall back to the category, and every tip.
 - **Adapters**: webhook signatures with locally signed payloads (no network).
   `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix
@@ -350,6 +391,15 @@ cd backend
 uv run python -m scripts.seed_catalog
 TP_AI_PROVIDER=ollama uv run uvicorn tradepost.main:create_app --factory --port 8000
 uv run python -m eval.search_eval                 # rerun the evaluation (also: ollama pull nomic-embed-text)
+```
+
+The listing assistant's draft needs a vision model (about 6 GB):
+
+```bash
+ollama pull qwen2.5vl:7b
+cd backend
+uv run python -m eval.listing_photos              # fetch the evaluation photos from Wikimedia Commons
+uv run python -m eval.assistant_eval --arm labels # one prompt at a time; a cut-short run resumes
 ```
 
 Without keys the checkout has no providers; `TP_PAYMENT_PROVIDERS='["fake"]'` enables the

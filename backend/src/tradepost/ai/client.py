@@ -9,6 +9,7 @@ Providers: ``none`` (the default: AI off), ``ollama`` (an open model on a local 
 and ``fake`` (deterministic answers for tests).
 """
 
+import base64
 import hashlib
 import json
 import math
@@ -62,6 +63,7 @@ class Provider(Protocol):
         messages: list[dict[str, Any]],
         schema: dict[str, Any] | None,
         max_tokens: int,
+        repeat_penalty: float | None = None,
     ) -> ChatResult: ...
 
     async def embed(self, model: str, texts: list[str]) -> EmbedResult: ...
@@ -72,7 +74,7 @@ class OllamaProvider:
 
     name = "ollama"
 
-    def __init__(self, base_url: str, timeout: float = 120) -> None:
+    def __init__(self, base_url: str, timeout: float = 300) -> None:
         self._http = httpx.AsyncClient(base_url=base_url, timeout=timeout)
 
     async def chat(
@@ -81,6 +83,7 @@ class OllamaProvider:
         messages: list[dict[str, Any]],
         schema: dict[str, Any] | None,
         max_tokens: int,
+        repeat_penalty: float | None = None,
     ) -> ChatResult:
         body: dict[str, Any] = {
             "model": model,
@@ -88,6 +91,8 @@ class OllamaProvider:
             "stream": False,
             "options": {"num_predict": max_tokens, "temperature": 0},
         }
+        if repeat_penalty is not None:
+            body["options"]["repeat_penalty"] = repeat_penalty
         if schema is not None:
             body["format"] = schema
         response = await self._http.post("/api/chat", json=body)
@@ -126,6 +131,7 @@ class FakeProvider:
         messages: list[dict[str, Any]],
         schema: dict[str, Any] | None,
         max_tokens: int,
+        repeat_penalty: float | None = None,
     ) -> ChatResult:
         self.calls += 1
         feature = str(messages[0]["content"]).split()[0] if messages else ""
@@ -218,22 +224,29 @@ class AI:
         db: AsyncSession,
         feature: str,
         system: str,
-        user: str | list[dict[str, Any]],
+        user: str,
         schema: dict[str, Any],
         *,
+        images: list[bytes] | None = None,
         max_tokens: int = 800,
+        repeat_penalty: float | None = None,
         cache: bool = True,
     ) -> Any:
-        """Ask for a JSON answer that follows ``schema``. ``user`` is text or a list of message
-        content parts (text and images)."""
+        """Ask for a JSON answer that follows ``schema``, optionally about some images (JPEG
+        bytes, sent with the user message)."""
         provider = await self._require(db)
         model = self.settings.ai_chat_model
-        messages: list[dict[str, Any]] = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ]
+        prompt: dict[str, Any] = {"role": "user", "content": user}
+        if images:
+            prompt["images"] = [base64.b64encode(image).decode() for image in images]
+        messages: list[dict[str, Any]] = [{"role": "system", "content": system}, prompt]
+        image_hashes = [hashlib.sha256(image).hexdigest() for image in images or []]
         key = hashlib.sha256(
-            json.dumps([feature, model, messages, schema], sort_keys=True, default=str).encode()
+            json.dumps(
+                [feature, model, system, user, image_hashes, schema, repeat_penalty],
+                sort_keys=True,
+                default=str,
+            ).encode()
         ).hexdigest()
         if cache:
             hit = await db.get(AICache, key)
@@ -244,7 +257,7 @@ class AI:
                 return hit.response
         start = time.perf_counter()
         try:
-            result = await provider.chat(model, messages, schema, max_tokens)
+            result = await provider.chat(model, messages, schema, max_tokens, repeat_penalty)
             answer = json.loads(result.text)
         except Exception as exc:
             await self._record(

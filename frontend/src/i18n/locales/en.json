@@ -175,7 +175,8 @@
     "already_paid_out": "The seller was already paid for this order.",
     "forbidden": "You don't have permission to do this.",
     "ai_unavailable": "The AI assistant is not available right now.",
-    "saved_search_limit": "You can save up to 20 searches. Remove one to save another."
+    "saved_search_limit": "You can save up to 20 searches. Remove one to save another.",
+    "not_a_product": "The photos don't seem to show an item for sale. Try a photo of the item on its own."
   },
   "home": {
     "categories": "Categories",
@@ -404,6 +405,31 @@
       "width": "Width (cm)",
       "height": "Height (cm)",
       "hint": "Of one packed unit. Large, light packages are billed by volume."
+    },
+    "assist": {
+      "title": "Fill in from the photos",
+      "text_one": "AI reads your photo and suggests a title, description, category and condition. You review everything before publishing.",
+      "text_other": "AI reads your first {{count}} photos and suggests a title, description, category and condition. You review everything before publishing.",
+      "button": "Fill in with AI",
+      "working": "Reading the photos…",
+      "review": "Filled in by AI from your photos. Check every field: only you know the item's condition and details."
+    },
+    "priceHint": {
+      "similar_one": "{{count}} similar listing: {{low}} to {{high}}.",
+      "similar_other": "{{count}} similar listings: {{low}} to {{high}}.",
+      "category_one": "Not enough similar listings; in this category, prices go from {{low}} to {{high}}.",
+      "category_other": "Not enough similar listings; in this category, prices go from {{low}} to {{high}}.",
+      "use": "Use {{price}}"
+    },
+    "tips": {
+      "title": "Tips to sell faster",
+      "few_photos_one": "Only {{count}} photo. Listings with 3 or more photos (front, back, details) get more interest.",
+      "few_photos_other": "Only {{count}} photos. Listings with 3 or more photos (front, back, details) get more interest.",
+      "dark_photo": "The first photo is dark. Take it near a window or in daylight.",
+      "short_title": "The title is vague. Say what it is, the brand or model, and one key feature.",
+      "shouting_title": "The title is in capital letters. Normal case is easier to read.",
+      "short_description": "The description is short. Add condition, size, what comes with it and why you are selling.",
+      "price_above_similar": "The price is well above similar listings ({{low}} to {{high}})."
     }
   },
   "cart": {

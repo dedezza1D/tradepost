@@ -175,7 +175,8 @@
     "already_paid_out": "O vendedor já recebeu por este pedido.",
     "forbidden": "Você não tem permissão para isso.",
     "ai_unavailable": "O assistente de IA não está disponível agora.",
-    "saved_search_limit": "Você pode salvar até 20 buscas. Remova uma para salvar outra."
+    "saved_search_limit": "Você pode salvar até 20 buscas. Remova uma para salvar outra.",
+    "not_a_product": "As fotos não parecem mostrar um item à venda. Tente uma foto só do item."
   },
   "home": {
     "categories": "Categorias",
@@ -404,6 +405,31 @@
       "width": "Largura (cm)",
       "height": "Altura (cm)",
       "hint": "De uma unidade já embalada. Pacotes grandes e leves pagam pelo volume."
+    },
+    "assist": {
+      "title": "Preencher a partir das fotos",
+      "text_one": "A IA lê a sua foto e sugere título, descrição, categoria e estado. Você revisa tudo antes de publicar.",
+      "text_other": "A IA lê as suas {{count}} primeiras fotos e sugere título, descrição, categoria e estado. Você revisa tudo antes de publicar.",
+      "button": "Preencher com IA",
+      "working": "Lendo as fotos…",
+      "review": "Preenchido pela IA a partir das fotos. Confira cada campo: só você sabe o estado e os detalhes do item."
+    },
+    "priceHint": {
+      "similar_one": "{{count}} anúncio parecido: de {{low}} a {{high}}.",
+      "similar_other": "{{count}} anúncios parecidos: de {{low}} a {{high}}.",
+      "category_one": "Poucos anúncios parecidos; nesta categoria, os preços vão de {{low}} a {{high}}.",
+      "category_other": "Poucos anúncios parecidos; nesta categoria, os preços vão de {{low}} a {{high}}.",
+      "use": "Usar {{price}}"
+    },
+    "tips": {
+      "title": "Dicas para vender mais rápido",
+      "few_photos_one": "Só {{count}} foto. Anúncios com 3 fotos ou mais (frente, verso, detalhes) chamam mais atenção.",
+      "few_photos_other": "Só {{count}} fotos. Anúncios com 3 fotos ou mais (frente, verso, detalhes) chamam mais atenção.",
+      "dark_photo": "A primeira foto está escura. Fotografe perto de uma janela ou com luz do dia.",
+      "short_title": "O título está vago. Diga o que é, a marca ou o modelo e uma característica.",
+      "shouting_title": "O título está em letras maiúsculas. Em letras normais fica mais fácil de ler.",
+      "short_description": "A descrição está curta. Conte o estado, o tamanho, o que acompanha e por que está vendendo.",
+      "price_above_similar": "O preço está bem acima de anúncios parecidos (de {{low}} a {{high}})."
     }
   },
   "cart": {
