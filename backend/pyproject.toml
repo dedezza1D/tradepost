@@ -41,7 +41,7 @@ packages = ["src/tradepost"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-src = ["src", "tests"]
+src = ["src", "tests", "."]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC", "RUF", "SIM", "PT"]
@@ -50,13 +50,15 @@ ignore = ["S101", "B008", "RUF012", "SIM905"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106", "S311"]
 "migrations/**" = ["E501"]
+# Evaluation data: long literal titles and a seeded generator.
+"eval/**" = ["E501", "S311"]
 
 [tool.mypy]
 python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 mypy_path = "src"
-packages = ["tradepost"]
+packages = ["tradepost", "eval"]
 
 [[tool.mypy.overrides]]
 module = ["testcontainers.*", "stripe.*", "asyncpg.*"]

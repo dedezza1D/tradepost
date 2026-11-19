@@ -35,6 +35,7 @@ from tradepost.orders.router import router as orders_router
 from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.questions import router as questions_router
 from tradepost.reviews.service import router as reviews_router
+from tradepost.saved_searches import router as saved_searches_router
 from tradepost.social.router import router as social_router
 
 
@@ -47,9 +48,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.db = Database(settings)
         app.state.storage = build_storage(settings)
         app.state.payments = await drop_live_accounts(build_registry(settings))
-        app.state.jobs = jobs.JobContext(settings=settings, payments=app.state.payments)
         app.state.http = httpx.AsyncClient(headers={"User-Agent": "tradepost"})
         app.state.ai = AI(settings, app.state.db, build_provider(settings))
+        app.state.jobs = jobs.JobContext(
+            settings=settings, payments=app.state.payments, ai=app.state.ai
+        )
         app.state.broker = Broker(asyncpg_dsn(settings.database_url))
         app.state.broker.start()
         worker: asyncio.Task[None] | None = None
@@ -92,6 +95,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(coupons_router)
     app.include_router(disputes_router)
     app.include_router(ops_router)
+    app.include_router(saved_searches_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

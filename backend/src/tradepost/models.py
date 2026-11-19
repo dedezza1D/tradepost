@@ -2,6 +2,7 @@
 
 from tradepost.ai.models import AICache, AICall
 from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingVariant
+from tradepost.catalog.semantic import ListingEmbedding
 from tradepost.chat.models import Conversation, Message, Offer
 from tradepost.coupons import Coupon
 from tradepost.db import Base
@@ -24,6 +25,7 @@ from tradepost.orders.models import (
 )
 from tradepost.questions import Question
 from tradepost.reviews.service import Review
+from tradepost.saved_searches import SavedSearch
 from tradepost.security.ratelimit import RateLimitBucket
 from tradepost.social.models import Block, Follow, Report, Save
 
@@ -46,6 +48,7 @@ __all__ = [
     "JobRun",
     "LedgerEntry",
     "Listing",
+    "ListingEmbedding",
     "ListingPhoto",
     "ListingVariant",
     "Message",
@@ -63,6 +66,7 @@ __all__ = [
     "RequestStat",
     "Review",
     "Save",
+    "SavedSearch",
     "SellerAccount",
     "Session",
     "StockReservation",

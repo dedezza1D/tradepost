@@ -54,17 +54,51 @@ async def list_categories(db: DbSession) -> list[CategoryOut]:
     dependencies=[Depends(rate_limit("search", limit=120, window_seconds=60))],
 )
 async def search(
+    request: Request,
     params: Annotated[SearchParams, Query()],
     principal: OptionalPrincipal,
     db: DbSession,
     storage: StorageDep,
 ) -> ListingPage:
+    from tradepost.catalog.semantic import hybrid_search
     from tradepost.social.service import mark_saved
 
     viewer_id = principal.user.id if principal else None
-    page = await search_listings(db, storage, params, viewer_id)
+    page = await hybrid_search(
+        db, storage, params, viewer_id, request.app.state.ai
+    ) or await search_listings(db, storage, params, viewer_id)
     await mark_saved(db, viewer_id, page.items)
     return page
+
+
+class Suggestions(BaseModel):
+    queries: list[str]
+
+
+@router.get(
+    "/search/suggest",
+    dependencies=[Depends(rate_limit("suggest", limit=240, window_seconds=60))],
+)
+async def suggest(
+    q: Annotated[str, Query(min_length=2, max_length=100)], db: DbSession
+) -> Suggestions:
+    from tradepost.catalog.discovery import suggestions
+
+    return Suggestions(queries=await suggestions(db, q.strip()))
+
+
+@router.get("/listings/{listing_id}/similar")
+async def similar(
+    listing_id: uuid.UUID,
+    request: Request,
+    principal: OptionalPrincipal,
+    db: DbSession,
+    storage: StorageDep,
+) -> list[ListingCard]:
+    from tradepost.catalog.discovery import similar_listings
+
+    viewer_id = principal.user.id if principal else None
+    return await similar_listings(db, storage, listing_id, viewer_id, request.app.state.ai)
 
 
 @router.get("/listings/{listing_id}")

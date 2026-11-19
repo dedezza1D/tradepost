@@ -2,7 +2,7 @@
 # (see README), so code reloads instantly.
 services:
   db:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:pg18
     environment:
       POSTGRES_USER: tradepost
       POSTGRES_PASSWORD: tradepost
@@ -10,7 +10,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - db-data-18:/var/lib/postgresql
+      - db-data-pg18-vector:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tradepost"]
       interval: 3s
@@ -18,4 +18,4 @@ services:
       retries: 20
 
 volumes:
-  db-data-18:
+  db-data-pg18-vector:

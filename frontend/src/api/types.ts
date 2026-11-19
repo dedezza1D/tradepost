@@ -103,6 +103,8 @@ export interface ListingCard {
 export interface ListingPage {
   items: ListingCard[]
   next_cursor: string | null
+  /** No listing matched the words; the results are similar items found by meaning. */
+  approximate?: boolean
 }
 
 export interface ListingInput {

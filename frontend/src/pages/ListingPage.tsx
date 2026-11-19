@@ -15,6 +15,8 @@ import { ReportSheet } from '../components/ReportSheet'
 import { SaveButton } from '../components/SaveButton'
 import { useStartConversation } from '../api/chat'
 import { Questions } from '../components/Questions'
+import { ListingGrid } from '../components/ListingGrid'
+import { useSimilarListings } from '../api/discovery'
 import { ShippingQuote } from '../components/ShippingQuote'
 import { ReputationBadge } from '../components/Reputation'
 
@@ -245,6 +247,18 @@ function BuyBox({ listing, signedIn, variant }: { listing: Listing; signedIn: bo
   )
 }
 
+function SimilarListings({ listingId }: { listingId: string }) {
+  const { t } = useTranslation()
+  const similar = useSimilarListings(listingId)
+  if (!similar.data?.length) return null
+  return (
+    <section aria-labelledby="similar-title">
+      <h2 id="similar-title" className="mb-3 text-lg font-bold tracking-tight">{t('listing.similar')}</h2>
+      <ListingGrid items={similar.data} />
+    </section>
+  )
+}
+
 export function ListingPage() {
   const { t } = useTranslation()
   const { id } = useParams()
@@ -281,79 +295,83 @@ export function ListingPage() {
   const variant = item.variants.find((v) => v.id === variantId) ?? null
 
   return (
-    <article className="grid gap-6 pb-36 md:grid-cols-[1fr_380px] md:items-start md:pb-0">
-      <Gallery photos={item.photos} title={item.title} />
+    <div className="space-y-8 pb-36 md:pb-0">
+      <article className="grid gap-6 md:grid-cols-[1fr_380px] md:items-start">
+        <Gallery photos={item.photos} title={item.title} />
 
-      <aside className="space-y-4 md:sticky md:top-24">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <Badge tone={item.condition === 'new' ? 'primary' : 'neutral'}>{t(`listing.condition.${item.condition}`)}</Badge>
-            <Link to={`/search?category=${item.category_slug}`} className="hover:underline">
-              {t(`categories.${item.category_slug}`, { defaultValue: category?.name ?? item.category_slug })}
-            </Link>
+        <aside className="space-y-4 md:sticky md:top-24">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+              <Badge tone={item.condition === 'new' ? 'primary' : 'neutral'}>{t(`listing.condition.${item.condition}`)}</Badge>
+              <Link to={`/search?category=${item.category_slug}`} className="hover:underline">
+                {t(`categories.${item.category_slug}`, { defaultValue: category?.name ?? item.category_slug })}
+              </Link>
+            </div>
+            <h1 className="text-xl leading-snug font-bold tracking-tight sm:text-2xl">{item.title}</h1>
+            <p className="text-3xl font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
+            <ul className="space-y-1.5 text-sm text-muted">
+              <li className="flex items-center gap-2"><Icon name="truck" size={18} />
+                {item.shipping_mode === 'calculated'
+                  ? t('shipping.calculated')
+                  : item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}</li>
+              <li className="flex items-center gap-2"><Icon name="pin" size={18} />{item.city} - {item.state}</li>
+              <li className="flex items-center gap-2"><Icon name="shield" size={18} />{t('listing.protected')}</li>
+            </ul>
+            {item.status !== 'active' && <Badge tone="warning">{t(`listing.status.${item.status}`)}</Badge>}
           </div>
-          <h1 className="text-xl leading-snug font-bold tracking-tight sm:text-2xl">{item.title}</h1>
-          <p className="text-3xl font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
-          <ul className="space-y-1.5 text-sm text-muted">
-            <li className="flex items-center gap-2"><Icon name="truck" size={18} />
-              {item.shipping_mode === 'calculated'
-                ? t('shipping.calculated')
-                : item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}</li>
-            <li className="flex items-center gap-2"><Icon name="pin" size={18} />{item.city} - {item.state}</li>
-            <li className="flex items-center gap-2"><Icon name="shield" size={18} />{t('listing.protected')}</li>
-          </ul>
-          {item.status !== 'active' && <Badge tone="warning">{t(`listing.status.${item.status}`)}</Badge>}
-        </div>
 
-        {isOwner ? (
-          <Link to={`/sell/${item.id}`} className="btn-primary w-full">{t('listing.edit')}</Link>
-        ) : available ? (
-          <>
-            {item.variants.length > 0 && <VariantPicker variants={item.variants} value={variantId} onChange={setVariantId} />}
-            <BuyBox listing={item} signedIn={Boolean(me)} variant={variant} />
-          </>
-        ) : null}
-        {item.shipping_mode === 'calculated' && <ShippingQuote listingId={item.id} />}
-        {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} variantId={variantId} />}
+          {isOwner ? (
+            <Link to={`/sell/${item.id}`} className="btn-primary w-full">{t('listing.edit')}</Link>
+          ) : available ? (
+            <>
+              {item.variants.length > 0 && <VariantPicker variants={item.variants} value={variantId} onChange={setVariantId} />}
+              <BuyBox listing={item} signedIn={Boolean(me)} variant={variant} />
+            </>
+          ) : null}
+          {item.shipping_mode === 'calculated' && <ShippingQuote listingId={item.id} />}
+          {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} variantId={variantId} />}
 
-        <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
-          <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />
-          <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-2">
-              <span className="truncate font-semibold">{item.seller.display_name}</span>
-              <ReputationBadge level={item.seller.reputation} />
+          <Link to={`/users/${item.seller.id}`} className="card flex items-center gap-3 p-4 hover:bg-surface-2">
+            <Avatar name={item.seller.display_name} url={item.seller.avatar_url} />
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="truncate font-semibold">{item.seller.display_name}</span>
+                <ReputationBadge level={item.seller.reputation} />
+              </span>
+              <span className="flex items-center gap-1 text-xs text-muted">
+                {item.seller.rating_avg !== null ? (
+                  <><Stars value={item.seller.rating_avg} size={13} /> {item.seller.rating_avg.toFixed(1)} · {t('reviews.count', { count: item.seller.rating_count })}</>
+                ) : t('reviews.none')}
+              </span>
             </span>
-            <span className="flex items-center gap-1 text-xs text-muted">
-              {item.seller.rating_avg !== null ? (
-                <><Stars value={item.seller.rating_avg} size={13} /> {item.seller.rating_avg.toFixed(1)} · {t('reviews.count', { count: item.seller.rating_count })}</>
-              ) : t('reviews.none')}
-            </span>
-          </span>
-          <Icon name="chevronRight" className="text-muted" />
-        </Link>
-        <div className="flex flex-wrap items-center gap-1">
-          {!isOwner && <SaveButton id={item.id} saved={item.saved} title={item.title} variant="inline" />}
-          <ShareButton title={item.title} />
-          {item.save_count > 0 && (
-            <span className="ml-auto text-xs text-muted">{t('social.savedBy', { count: item.save_count })}</span>
+            <Icon name="chevronRight" className="text-muted" />
+          </Link>
+          <div className="flex flex-wrap items-center gap-1">
+            {!isOwner && <SaveButton id={item.id} saved={item.saved} title={item.title} variant="inline" />}
+            <ShareButton title={item.title} />
+            {item.save_count > 0 && (
+              <span className="ml-auto text-xs text-muted">{t('social.savedBy', { count: item.save_count })}</span>
+            )}
+          </div>
+          {me && !isOwner && (
+            <button type="button" className="flex items-center gap-1.5 text-xs text-muted hover:text-danger" onClick={() => setReporting(true)}>
+              <Icon name="flag" size={14} />
+              {t('social.report.listing')}
+            </button>
           )}
-        </div>
-        {me && !isOwner && (
-          <button type="button" className="flex items-center gap-1.5 text-xs text-muted hover:text-danger" onClick={() => setReporting(true)}>
-            <Icon name="flag" size={14} />
-            {t('social.report.listing')}
-          </button>
-        )}
-        <ReportSheet open={reporting} onClose={() => setReporting(false)} target={{ type: 'listing', id: item.id }} />
-      </aside>
+          <ReportSheet open={reporting} onClose={() => setReporting(false)} target={{ type: 'listing', id: item.id }} />
+        </aside>
 
-      <section className="card p-5 md:col-start-1">
-        <h2 className="mb-2 font-semibold">{t('listing.description')}</h2>
-        <p className="text-[15px] leading-relaxed whitespace-pre-line">{item.description}</p>
-      </section>
-      <div className="md:col-start-1">
-        <Questions listingId={item.id} isSeller={isOwner} signedIn={Boolean(me)} />
-      </div>
-    </article>
+        <section className="card p-5 md:col-start-1">
+          <h2 className="mb-2 font-semibold">{t('listing.description')}</h2>
+          <p className="text-[15px] leading-relaxed whitespace-pre-line">{item.description}</p>
+        </section>
+        <div className="md:col-start-1">
+          <Questions listingId={item.id} isSeller={isOwner} signedIn={Boolean(me)} />
+        </div>
+      </article>
+      {/* Outside the grid: the sticky buy box would slide over a full-width row. */}
+      <SimilarListings listingId={item.id} />
+    </div>
   )
 }

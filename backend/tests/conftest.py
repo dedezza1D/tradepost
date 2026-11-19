@@ -28,7 +28,7 @@ def database_url() -> Iterator[str]:
         return
     from testcontainers.postgres import PostgresContainer
 
-    with PostgresContainer("postgres:18-alpine", driver="asyncpg") as pg:
+    with PostgresContainer("pgvector/pgvector:pg18", driver="asyncpg") as pg:
         yield pg.get_connection_url()
 
 

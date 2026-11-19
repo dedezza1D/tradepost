@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { api, json } from './client'
+import { searchPath, type SavedParams } from './discovery'
 
 export interface Notification {
   id: number
@@ -81,6 +82,10 @@ export function notificationTarget(n: Notification): string {
   if (n.payload.conversation_id) return `/inbox/${String(n.payload.conversation_id)}`
   if (n.payload.dispute_id) return `/disputes/${String(n.payload.dispute_id)}`
   if (n.kind === 'ops_alert') return '/admin/ops'
+  if (n.kind === 'saved_search' && n.payload.params) {
+    // Newest first: the alert is about listings published since the last check.
+    return `${searchPath(n.payload.params as SavedParams)}&sort=newest`
+  }
   if (n.kind === 'new_follower' && n.payload.user_id) return `/users/${String(n.payload.user_id)}`
   if (n.kind === 'listing_removed') return '/me/listings'
   if (n.payload.listing_id && !n.payload.order_id) return `/listings/${String(n.payload.listing_id)}`

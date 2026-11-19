@@ -13,7 +13,9 @@ from datetime import timedelta
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tradepost.ai.client import AI
 from tradepost.ai.client import purge_cache as purge_ai_cache
+from tradepost.catalog.semantic import embed_pending as embed_listings
 from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
 from tradepost.db import Database
@@ -26,6 +28,7 @@ from tradepost.ops.metrics import record_error
 from tradepost.ops.service import notify_alerts, track_job
 from tradepost.orders import processing
 from tradepost.payments.base import PaymentRegistry
+from tradepost.saved_searches import send_alerts as send_saved_search_alerts
 from tradepost.security.ratelimit import purge_old_buckets
 
 log = get_logger(__name__)
@@ -38,6 +41,11 @@ _LOCK_ID = 7_301_001
 class JobContext:
     settings: Settings
     payments: PaymentRegistry
+    ai: AI | None = None
+
+
+async def _embed_listings(db: AsyncSession, ctx: JobContext) -> int:
+    return await embed_listings(db, ctx.ai) if ctx.ai is not None else 0
 
 
 Task = Callable[[AsyncSession, JobContext], Awaitable[int]]
@@ -58,6 +66,8 @@ TASKS: dict[str, Task] = {
     "purge_metrics": lambda db, _: purge_metrics(db),
     "purge_ai_cache": lambda db, _: purge_ai_cache(db),
     "ops_alerts": lambda db, ctx: notify_alerts(db, ctx.settings),
+    "embed_listings": lambda db, ctx: _embed_listings(db, ctx),
+    "saved_search_alerts": lambda db, _: send_saved_search_alerts(db),
 }
 
 

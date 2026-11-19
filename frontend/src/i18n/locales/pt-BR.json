@@ -73,7 +73,9 @@
       "dispute_rejected": "A disputa de <b>{{title}}</b> foi encerrada sem reembolso.",
       "dispute_escalated": "A disputa de <b>{{title}}</b> foi para a decisão do tradepost.",
       "dispute_cancelled": "O comprador encerrou a disputa de <b>{{title}}</b>.",
-      "ops_alert": "Alerta de operação: {{alert}}."
+      "ops_alert": "Alerta de operação: {{alert}}.",
+      "saved_search_one": "<b>{{count}}</b> anúncio novo para a sua busca <b>{{search}}</b>.",
+      "saved_search_other": "<b>{{count}}</b> anúncios novos para a sua busca <b>{{search}}</b>."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -172,7 +174,8 @@
     "refund_too_large": "O reembolso não pode passar do valor pago.",
     "already_paid_out": "O vendedor já recebeu por este pedido.",
     "forbidden": "Você não tem permissão para isso.",
-    "ai_unavailable": "O assistente de IA não está disponível agora."
+    "ai_unavailable": "O assistente de IA não está disponível agora.",
+    "saved_search_limit": "Você pode salvar até 20 buscas. Remova uma para salvar outra."
   },
   "home": {
     "categories": "Categorias",
@@ -207,7 +210,16 @@
     },
     "removeFilter": "Remover filtro {{name}}",
     "emptyTitle": "Nenhum anúncio encontrado",
-    "emptyText": "Tente outras palavras ou tire alguns filtros."
+    "emptyText": "Tente outras palavras ou tire alguns filtros.",
+    "similarOnly": "Nenhum anúncio tem essas palavras. Mostrando itens parecidos.",
+    "suggestions": "Sugestões",
+    "save": "Salvar busca",
+    "saved": "Busca salva",
+    "saveHint": "Receba uma notificação quando surgirem anúncios novos para esta busca.",
+    "savedHint": "Você é avisado sobre anúncios novos. Clique para parar.",
+    "savedSearches": "Buscas salvas",
+    "savedSearchesHint": "Você recebe uma notificação quando surgem anúncios novos para elas.",
+    "removeSaved": "Remover a busca salva {{name}}"
   },
   "listing": {
     "condition": {
@@ -243,7 +255,8 @@
     "description": "Descrição",
     "notFound": "Este anúncio não existe ou não está mais disponível.",
     "backToListings": "Voltar aos anúncios",
-    "chooseOption": "Escolha uma opção"
+    "chooseOption": "Escolha uma opção",
+    "similar": "Itens parecidos"
   },
   "reviews": {
     "title": "Avaliações",

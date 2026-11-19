@@ -1,11 +1,14 @@
-import { useCallback, useState, type FormEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
+import { sameSearch, savedParamsOf, useDeleteSavedSearch, useSaveSearch, useSavedSearches } from '../api/discovery'
 import { useListingSearch, useOnVisible } from '../api/listings'
 import { BR_STATES } from '../api/types'
 import { CityPicker } from '../components/CityPicker'
 import { ListingGrid, ListingGridSkeleton } from '../components/ListingGrid'
+import { SearchBox } from '../components/SearchBox'
 import { errorMessage } from '../lib/errors'
 import { formatMoney, parseMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
@@ -129,6 +132,32 @@ function ActiveChips({ params, update }: { params: Params; update: Update }) {
   )
 }
 
+/** Follow the current search: new matching listings arrive as notifications. */
+function SaveSearchButton({ params }: { params: Params }) {
+  const { t } = useTranslation()
+  const { data: me } = useMe()
+  const current = savedParamsOf(params)
+  const saved = useSavedSearches(Boolean(me && current))
+  const save = useSaveSearch()
+  const remove = useDeleteSavedSearch()
+  if (!me || !current) return null
+  const match = saved.data?.find((s) => sameSearch(s.params, current))
+  const busy = save.isPending || remove.isPending || saved.isPending
+  return (
+    <button
+      type="button"
+      className={`min-h-10 rounded-full ${match ? 'btn-primary' : 'btn-secondary'}`}
+      aria-pressed={Boolean(match)}
+      disabled={busy}
+      onClick={() => (match ? remove.mutate(match.id) : save.mutate(current))}
+      title={match ? t('search.savedHint') : t('search.saveHint')}
+    >
+      <Icon name="bell" size={18} />
+      {match ? t('search.saved') : t('search.save')}
+    </button>
+  )
+}
+
 export function SearchPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
@@ -141,6 +170,7 @@ export function SearchPage() {
   }, [results])
   const sentinel = useOnVisible(loadMore, Boolean(results.hasNextPage))
   const items = results.data?.pages.flatMap((p) => p.items) ?? []
+  const approximate = results.data?.pages[0]?.approximate ?? false
   const filterCount = ['category', 'condition', 'min_price', 'max_price', 'near', 'state'].filter((k) => params.get(k)).length
 
   const update: Update = (changes) => {
@@ -152,10 +182,6 @@ export function SearchPage() {
     if (!next.get('near') && next.get('sort') === 'nearest') next.delete('sort')
     setParams(next, { replace: true })
   }
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    update({ q: q.trim() || null })
-  }
 
   return (
     <div className="grid gap-6 md:grid-cols-[260px_1fr]">
@@ -166,18 +192,14 @@ export function SearchPage() {
       </aside>
 
       <section className="min-w-0 space-y-4" aria-live="polite">
-        <form onSubmit={submit} role="search" className="relative md:hidden">
-          <label htmlFor="search-q" className="sr-only">{t('nav.searchLabel')}</label>
-          <Icon name="search" size={18} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" />
-          <input id="search-q" className="input rounded-full pl-10" type="search" enterKeyHint="search" maxLength={100}
-            placeholder={t('nav.searchPlaceholder')} value={q} onChange={(e) => setQ(e.target.value)} />
-        </form>
+        <SearchBox id="search-q" className="md:hidden" value={q} onChange={setQ} onSearch={(query) => update({ q: query || null })} />
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-lg font-bold tracking-tight sm:text-xl">
             {params.get('q') ? t('search.resultsFor', { q: params.get('q') }) : t('search.title')}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <SaveSearchButton params={params} />
             <button className="btn-secondary min-h-10 rounded-full md:hidden" onClick={() => setSheet(true)}>
               <Icon name="filter" size={18} />
               {t('search.filters')}
@@ -199,6 +221,12 @@ export function SearchPage() {
         {results.isPending && <ListingGridSkeleton />}
         {results.isError && <ErrorState message={errorMessage(results.error, t)} onRetry={() => void results.refetch()} />}
         {results.isSuccess && items.length === 0 && <EmptyState icon="search" title={t('search.emptyTitle')} text={t('search.emptyText')} />}
+        {items.length > 0 && approximate && (
+          <p role="status" className="mb-3 flex items-start gap-2 text-sm text-muted">
+            <Icon name="search" size={16} className="mt-0.5 shrink-0" />
+            {t('search.similarOnly')}
+          </p>
+        )}
         {items.length > 0 && <ListingGrid items={items} />}
         <div ref={sentinel} className="flex justify-center py-4">
           {results.isFetchingNextPage && <Spinner className="text-primary" />}

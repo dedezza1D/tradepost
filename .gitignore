@@ -32,3 +32,6 @@ skills-lock.json
 frontend/test-results/
 frontend/playwright-report/
 frontend/blob-report/
+
+# Search evaluation: cached embeddings
+backend/eval/.cache/

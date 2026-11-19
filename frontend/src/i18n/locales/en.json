@@ -73,7 +73,9 @@
       "dispute_rejected": "The dispute about <b>{{title}}</b> was closed without a refund.",
       "dispute_escalated": "The dispute about <b>{{title}}</b> went to tradepost to decide.",
       "dispute_cancelled": "The buyer closed the dispute about <b>{{title}}</b>.",
-      "ops_alert": "Operations alert: {{alert}}."
+      "ops_alert": "Operations alert: {{alert}}.",
+      "saved_search_one": "<b>{{count}}</b> new listing for your search <b>{{search}}</b>.",
+      "saved_search_other": "<b>{{count}}</b> new listings for your search <b>{{search}}</b>."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -172,7 +174,8 @@
     "refund_too_large": "A refund cannot exceed what the buyer paid.",
     "already_paid_out": "The seller was already paid for this order.",
     "forbidden": "You don't have permission to do this.",
-    "ai_unavailable": "The AI assistant is not available right now."
+    "ai_unavailable": "The AI assistant is not available right now.",
+    "saved_search_limit": "You can save up to 20 searches. Remove one to save another."
   },
   "home": {
     "categories": "Categories",
@@ -207,7 +210,16 @@
     },
     "removeFilter": "Remove filter {{name}}",
     "emptyTitle": "No listings found",
-    "emptyText": "Try other words or remove some filters."
+    "emptyText": "Try other words or remove some filters.",
+    "similarOnly": "No listing has those exact words. Showing similar items.",
+    "suggestions": "Suggestions",
+    "save": "Save search",
+    "saved": "Search saved",
+    "saveHint": "Get a notification when new listings match this search.",
+    "savedHint": "You get notified about new matches. Click to stop.",
+    "savedSearches": "Saved searches",
+    "savedSearchesHint": "You get a notification when new listings match them.",
+    "removeSaved": "Remove saved search {{name}}"
   },
   "listing": {
     "condition": {
@@ -243,7 +255,8 @@
     "description": "Description",
     "notFound": "This listing does not exist or is no longer available.",
     "backToListings": "Back to listings",
-    "chooseOption": "Choose an option"
+    "chooseOption": "Choose an option",
+    "similar": "Similar items"
   },
   "reviews": {
     "title": "Reviews",

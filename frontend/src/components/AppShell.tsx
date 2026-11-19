@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useMe } from '../api/auth'
@@ -7,6 +7,7 @@ import { useCart } from '../api/orders'
 import { currentLanguage } from '../i18n'
 import { Icon, type IconName } from '../ui/icons'
 import { NotificationBell } from './NotificationBell'
+import { SearchBox } from './SearchBox'
 import { useEffect } from 'react'
 
 function Logo() {
@@ -19,28 +20,16 @@ function Logo() {
 }
 
 function HeaderSearch() {
-  const { t } = useTranslation()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    navigate(q.trim() ? `/search?q=${encodeURIComponent(q.trim())}` : '/search')
-  }
   return (
-    <form onSubmit={submit} role="search" className="relative hidden max-w-xl flex-1 md:block">
-      <label htmlFor="header-search" className="sr-only">
-        {t('nav.searchLabel')}
-      </label>
-      <Icon name="search" size={18} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" />
-      <input
-        id="header-search"
-        className="input rounded-full pl-10"
-        placeholder={t('nav.searchPlaceholder')}
-        maxLength={100}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-      />
-    </form>
+    <SearchBox
+      id="header-search"
+      className="hidden max-w-xl flex-1 md:block"
+      value={q}
+      onChange={setQ}
+      onSearch={(query) => navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/search')}
+    />
   )
 }
 

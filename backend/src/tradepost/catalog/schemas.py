@@ -174,6 +174,9 @@ class ListingCard(BaseModel):
 class ListingPage(BaseModel):
     items: list[ListingCard]
     next_cursor: str | None
+    # True when no listing matched the words and every result came from meaning alone
+    # (semantic search): the app presents them as similar items, not as matches.
+    approximate: bool = False
 
 
 SortOrder = Literal["relevance", "newest", "price_asc", "price_desc", "nearest"]

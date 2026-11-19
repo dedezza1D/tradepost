@@ -1,4 +1,5 @@
 import { Trans, useTranslation } from 'react-i18next'
+import { savedSearchLabel, type SavedParams } from '../api/discovery'
 import type { Notification } from '../api/notifications'
 import { formatMoney } from '../lib/format'
 
@@ -32,6 +33,7 @@ const KNOWN = new Set([
   'offer_accepted',
   'offer_declined',
   'offer_expired',
+  'saved_search',
 ])
 export function NotificationText({ n }: { n: Notification }) {
   const { t } = useTranslation()
@@ -52,5 +54,10 @@ export function NotificationText({ n }: { n: Notification }) {
       : '',
   }
   const key = KNOWN.has(n.kind) ? n.kind : 'unknown'
+  if (key === 'saved_search') {
+    const count = Number(p.count ?? 0)
+    const search = savedSearchLabel((n.payload.params ?? {}) as SavedParams, t)
+    return <Trans i18nKey="notifications.kind.saved_search" count={count} values={{ count, search }} components={{ b: <strong /> }} />
+  }
   return <Trans i18nKey={`notifications.kind.${key}`} values={values} components={{ b: <strong /> }} />
 }

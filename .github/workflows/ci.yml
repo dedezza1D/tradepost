@@ -20,7 +20,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: postgres:18-alpine
+        image: pgvector/pgvector:pg18
         env:
           POSTGRES_USER: tradepost
           POSTGRES_PASSWORD: tradepost
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18-alpine
+        image: pgvector/pgvector:pg18
         env:
           POSTGRES_USER: tradepost
           POSTGRES_PASSWORD: tradepost

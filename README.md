@@ -21,7 +21,10 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 - **Listings**: up to 8 photos (validated and re-encoded, reorderable), options such as size or
   color with their own stock, draft → active → paused / sold out.
 - **Search**: Portuguese full-text search that ignores accents, typo tolerance, filters by
-  category, condition, price, state and distance from a city, stable pagination.
+  category, condition, price, state and distance from a city, stable pagination, suggestions
+  while typing. With an embedding model, hybrid search also finds what people mean ("algo para
+  pedalar" finds bikes); see [Search quality](#search-quality).
+- **Discovery**: similar items on every listing; saved searches that notify about new matches.
 - **Shipping**: a fixed price set by the seller, or calculated from distance and package weight
   (standard or express), quoted on the listing and at checkout.
 - **Cart and checkout**: items from several sellers in one payment; stock is reserved for 15
@@ -103,7 +106,7 @@ happen later.
 | Layer | Choice |
 |---|---|
 | API | Python 3.13, FastAPI, SQLAlchemy 2 (async), Alembic, Pydantic v2 |
-| Database | PostgreSQL 18: full-text search, trigram matching, `earthdistance`, advisory locks, `LISTEN/NOTIFY`, JSONB |
+| Database | PostgreSQL 18: full-text search, trigram matching, pgvector, `earthdistance`, advisory locks, `LISTEN/NOTIFY`, JSONB |
 | Web app | React 19, TypeScript, Vite, TanStack Query, Tailwind CSS, i18next, vite-plugin-pwa |
 | Payments | Stripe PaymentIntents + Connect (Accounts v2), Mercado Pago Orders API |
 | Tests | pytest on a real PostgreSQL, Playwright + axe, Node's test runner for edge code |
@@ -189,6 +192,30 @@ input, and a log of tokens, latency, cost and failures per call. The live demo r
 model (`TP_AI_PROVIDER=none`) and works fully without it; AI features are evaluated with an open
 model on a local Ollama server.
 
+## Search quality
+
+Listings are embedded with [bge-m3](https://huggingface.co/BAAI/bge-m3) (multilingual) and stored
+in PostgreSQL with pgvector; a background job re-embeds a listing when its text changes. A search
+takes the 50 best full-text matches and the 50 nearest listings by meaning and merges them with
+reciprocal rank fusion, which needs no calibration between the two kinds of score.
+
+`backend/eval` holds a judged evaluation set: 164 generated listings in 18 product kinds and 95
+queries written the way people type (synonyms, slang, English words, typos, vague needs).
+Relevance is computed from each listing's attributes, so nothing is hand-labelled. Weights and the
+distance cutoff were tuned on half of the queries; the table reports the other half.
+
+| Search | nDCG@10 | Recall@10 | MRR | Queries with no result |
+|---|---:|---:|---:|---:|
+| Full-text only (live demo) | 0.515 | 0.558 | 0.683 | 32% |
+| Hybrid, nomic-embed-text | 0.818 | 0.832 | 0.887 | 0% |
+| Hybrid, bge-m3 | **0.893** | **0.939** | **0.978** | 0% |
+
+A query embedding takes about 46 ms on a laptop GPU, and the vector scan about 18 ms. The limit:
+distance alone cannot tell that the catalog does not sell something. A cutoff strict enough to
+silence queries such as "ração para cachorro" also drops real matches, so the API flags pages
+where no listing matched the words and the app shows them as *similar items* instead of results.
+Full report: [`backend/eval/results/search.md`](backend/eval/results/search.md).
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -221,7 +248,7 @@ model on a local Ollama server.
 
 ```bash
 cd backend
-uv run pytest            # 140 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 147 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -239,6 +266,10 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
   race on the last unit of an option, shipping quotes and checkout totals, installments, coupon
   rules and the use limit under concurrency, every dispute path, a single refund under concurrent
   requests, payout holds and the dispute window.
+- **Discovery**: embeddings kept current after edits, hybrid search finding meaning the words
+  miss, the similar-items flag, similar listings with and without a model, suggestions, and
+  saved-search alerts sent once, never for the user's own listings. A deterministic fake model
+  stands in for the real one.
 - **Adapters**: webhook signatures with locally signed payloads (no network).
   `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix
@@ -307,6 +338,18 @@ uv run uvicorn tradepost.main:create_app --factory --port 8000
 cd frontend
 npm install
 npm run dev                                       # http://localhost:5180
+```
+
+To try semantic search, install [Ollama](https://ollama.com), pull the model and start the API
+with it; `seed_catalog` loads the evaluation catalog, and the background job embeds it within a
+minute:
+
+```bash
+ollama pull bge-m3
+cd backend
+uv run python -m scripts.seed_catalog
+TP_AI_PROVIDER=ollama uv run uvicorn tradepost.main:create_app --factory --port 8000
+uv run python -m eval.search_eval                 # rerun the evaluation (also: ollama pull nomic-embed-text)
 ```
 
 Without keys the checkout has no providers; `TP_PAYMENT_PROVIDERS='["fake"]'` enables the

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api, json } from '../api/client'
+import { savedSearchLabel, searchPath, useDeleteSavedSearch, useSavedSearches } from '../api/discovery'
 import { useFollowing, useSavedListings } from '../api/social'
 import type { AdminReport, UserSummary } from '../api/types'
 import { Avatar } from '../components/Avatar'
@@ -11,12 +12,48 @@ import { formatDateTime } from '../lib/format'
 import { Icon } from '../ui/icons'
 import { Badge, EmptyState, ErrorState, PageHeader, Spinner } from '../ui/primitives'
 
+function SavedSearches() {
+  const { t } = useTranslation()
+  const searches = useSavedSearches()
+  const remove = useDeleteSavedSearch()
+  if (!searches.data?.length) return null
+  return (
+    <section className="mb-6" aria-labelledby="saved-searches">
+      <h2 id="saved-searches" className="mb-1 font-semibold">{t('search.savedSearches')}</h2>
+      <p className="mb-3 text-sm text-muted">{t('search.savedSearchesHint')}</p>
+      <ul className="flex flex-wrap gap-2">
+        {searches.data.map((s) => {
+          const label = savedSearchLabel(s.params, t)
+          return (
+            <li key={s.id} className="flex items-center rounded-full border border-line bg-surface">
+              <Link to={searchPath(s.params)} className="flex min-h-10 items-center gap-1.5 py-1.5 pr-1 pl-3.5 text-sm font-medium">
+                <Icon name="bell" size={14} className="text-muted" />
+                {label}
+              </Link>
+              <button
+                type="button"
+                className="grid h-10 w-10 place-items-center rounded-full text-muted hover:text-danger"
+                aria-label={t('search.removeSaved', { name: label })}
+                disabled={remove.isPending}
+                onClick={() => remove.mutate(s.id)}
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
 export function SavedPage() {
   const { t } = useTranslation()
   const saved = useSavedListings()
   return (
     <div>
       <PageHeader title={t('social.savedTitle')} back="/me" />
+      <SavedSearches />
       <InfiniteGrid query={saved} empty={<EmptyState icon="heart" title={t('social.savedEmpty')} text={t('social.savedEmptyText')} action={{ label: t('feed.tabs.trending'), to: '/' }} />} />
     </div>
   )

@@ -96,6 +96,23 @@ def _filters(params: SearchParams, viewer_id: uuid.UUID | None) -> list[ColumnEl
     return clauses
 
 
+def title_norm() -> ColumnElement[str]:
+    """The listing title as the trigram index stores it (lower case, no accents)."""
+    return func.immutable_unaccent(func.lower(Listing.title))
+
+
+def text_match(query: str) -> tuple[ColumnElement[bool], ColumnElement[float]]:
+    """Listings matching the words (full-text) or close to them (trigram, for typos), and a
+    rank for ordering them."""
+    tsquery = func.websearch_to_tsquery("portuguese", func.immutable_unaccent(query))
+    query_norm = func.immutable_unaccent(func.lower(literal(query)))
+    matches = or_(Listing.search_vector.op("@@")(tsquery), query_norm.op("<%")(title_norm()))
+    rank = func.ts_rank(Listing.search_vector, tsquery) + func.word_similarity(
+        query_norm, title_norm()
+    )
+    return matches, rank
+
+
 async def search_listings(
     db: AsyncSession,
     storage: Storage,
@@ -133,15 +150,8 @@ async def search_listings(
         stmt = select(Listing, thumb, distance).where(*_filters(params, viewer_id))
 
     if query:
-        tsquery = func.websearch_to_tsquery("portuguese", func.immutable_unaccent(query))
-        title_norm = func.immutable_unaccent(func.lower(Listing.title))
-        query_norm = func.immutable_unaccent(func.lower(literal(query)))
-        stmt = stmt.where(
-            or_(Listing.search_vector.op("@@")(tsquery), query_norm.op("<%")(title_norm))
-        )
-        rank = func.ts_rank(Listing.search_vector, tsquery) + func.word_similarity(
-            query_norm, title_norm
-        )
+        matches, rank = text_match(query)
+        stmt = stmt.where(matches)
     else:
         rank = literal(0.0)
 

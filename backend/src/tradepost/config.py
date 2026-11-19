@@ -72,12 +72,22 @@ class Settings(BaseSettings):
     ai_provider: Literal["none", "ollama", "fake"] = "none"
     ai_base_url: str = "http://localhost:11434"
     ai_chat_model: str = "qwen2.5vl:3b"
-    ai_embed_model: str = "nomic-embed-text"
+    # Multilingual; beat nomic-embed-text on the Portuguese evaluation set (eval/results).
+    ai_embed_model: str = "bge-m3"
     # Prices per million tokens. Zero for a local model; a paid model also needs a daily ceiling
     # (zero means no paid calls at all).
     ai_price_in_per_mtok: float = Field(default=0, ge=0)
     ai_price_out_per_mtok: float = Field(default=0, ge=0)
     ai_daily_budget_usd: float = Field(default=0, ge=0, le=100)
+
+    # Hybrid search (used only when an embedding model is available): reciprocal rank fusion of
+    # the full-text and vector rankings. Tuned on the dev half of eval/search_dataset.py.
+    search_text_weight: float = Field(default=0.25, ge=0, le=10)
+    search_vector_weight: float = Field(default=1.0, ge=0, le=10)
+    search_rrf_k: int = Field(default=10, ge=1, le=500)
+    # Cosine distance past which a vector match is dropped: every listing has *some* nearest
+    # neighbour, and without a cutoff a query with no real match would still return the catalog.
+    search_max_distance: float = Field(default=0.6, ge=0, le=2)
 
     # Providers offered at checkout, among those with credentials configured.
     payment_providers: list[str] = ["stripe", "mercadopago"]
