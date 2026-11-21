@@ -43,24 +43,24 @@ export function NotificationBell() {
   }, [open])
 
   const badge = unread > 0 && (
-    <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-danger px-1 text-center text-[11px] leading-5 font-bold text-white">
+    <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-white px-1 text-center text-[11px] leading-5 font-bold text-[#c8102e]">
       {unread > 99 ? '99+' : unread}
     </span>
   )
 
   return (
     <div className="relative" ref={panel}>
-      <Link to="/notifications" className="relative block rounded-full p-2 text-fg hover:bg-surface-2 md:hidden" aria-label={label}>
+      <Link to="/notifications" className="relative block rounded-full p-2 hover:bg-white/15 md:hidden" aria-label={label}>
         <Icon name="bell" />
         {badge}
       </Link>
-      <button type="button" className="relative hidden rounded-full p-2 text-fg hover:bg-surface-2 md:block"
+      <button type="button" className="relative hidden rounded-full p-2 hover:bg-white/15 md:block"
         aria-label={label} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <Icon name="bell" />
         {badge}
       </button>
       {open && (
-        <div role="dialog" aria-label={t('notifications.title')} className="card absolute right-0 z-30 mt-2 w-96 overflow-hidden shadow-lg">
+        <div role="dialog" aria-label={t('notifications.title')} className="card absolute right-0 z-30 mt-2 w-96 overflow-hidden text-fg shadow-[var(--shadow-lift)]">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <h2 className="font-semibold">{t('notifications.title')}</h2>
             {unread > 0 && (

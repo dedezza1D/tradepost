@@ -8,8 +8,12 @@
  * palette colors, so light and dark themes are a matter of swapping the variables below.
  */
 @theme inline {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
+  /* The brand band: header and hero. */
+  --color-band: var(--tp-band);
+  --color-band-2: var(--tp-band-2);
+  --color-band-fg: var(--tp-band-fg);
   --color-bg: var(--tp-bg);
   --color-surface: var(--tp-surface);
   --color-surface-2: var(--tp-surface-2);
@@ -33,22 +37,31 @@
   --color-warning-fg: var(--tp-warning-fg);
 
   --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(60 20 10 / 0.06), 0 4px 16px -6px rgb(60 20 10 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(60 20 10 / 0.08), 0 14px 32px -10px rgb(60 20 10 / 0.22);
 }
 
+/*
+ * Warm red identity. Contrast (WCAG): white on band 4.7, on primary 5.9; primary on surface 5.9,
+ * on its soft tint 5.0; muted on surface 6.9. Dark: primary on surface 6.4, muted 8.2.
+ */
 :root {
   color-scheme: light;
-  --tp-bg: #f5f6f3;
+  --tp-band: #e1252f;
+  --tp-band-2: #c3102b;
+  --tp-band-fg: #ffffff;
+  --tp-bg: #fbf6f2;
   --tp-surface: #ffffff;
-  --tp-surface-2: #eef1ed;
-  --tp-fg: #13201c;
-  --tp-muted: #56645f;
-  --tp-line: #dde3df;
-  --tp-primary: #0b6b62;
-  --tp-primary-hover: #0a5751;
+  --tp-surface-2: #f6eee8;
+  --tp-fg: #24130f;
+  --tp-muted: #6b554d;
+  --tp-line: #ecdfd6;
+  --tp-primary: #c8102e;
+  --tp-primary-hover: #a40d25;
   --tp-primary-fg: #ffffff;
-  --tp-primary-soft: #e3f2ef;
-  --tp-accent: #c2410c;
-  --tp-accent-soft: #fff1e6;
+  --tp-primary-soft: #fde8e8;
+  --tp-accent: #b4540a;
+  --tp-accent-soft: #fff1e2;
   --tp-danger: #b42318;
   --tp-danger-soft: #fdecea;
   --tp-chart-ok: #0a9283;
@@ -61,18 +74,21 @@
 
 .dark {
   color-scheme: dark;
-  --tp-bg: #0c1311;
-  --tp-surface: #131d1a;
-  --tp-surface-2: #1a2723;
-  --tp-fg: #e6eeeb;
-  --tp-muted: #9cadA7;
-  --tp-line: #263530;
-  --tp-primary: #3cc9b6;
-  --tp-primary-hover: #66dccb;
-  --tp-primary-fg: #04201c;
-  --tp-primary-soft: #133430;
-  --tp-accent: #fb923c;
-  --tp-accent-soft: #3a2314;
+  --tp-band: #7a1420;
+  --tp-band-2: #520c16;
+  --tp-band-fg: #ffffff;
+  --tp-bg: #150d0c;
+  --tp-surface: #1f1513;
+  --tp-surface-2: #2b1d1a;
+  --tp-fg: #f7ede9;
+  --tp-muted: #c2aba3;
+  --tp-line: #3a2824;
+  --tp-primary: #ff6b6b;
+  --tp-primary-hover: #ff8f8f;
+  --tp-primary-fg: #1a0606;
+  --tp-primary-soft: #3d1a1a;
+  --tp-accent: #fbbf24;
+  --tp-accent-soft: #3a2a10;
   --tp-danger: #f87171;
   --tp-danger-soft: #3b1b1b;
   --tp-chart-ok: #26a593;
@@ -116,7 +132,12 @@
 
 /* Shared building blocks (kept as utilities so pages can compose them with Tailwind). */
 @utility card {
-  @apply rounded-[var(--radius-card)] border border-line bg-surface;
+  @apply rounded-[var(--radius-card)] border border-line/70 bg-surface shadow-[var(--shadow-card)];
+}
+/* The red band behind the header and the top of the home page. */
+@utility band {
+  background: linear-gradient(180deg, var(--tp-band) 0%, var(--tp-band-2) 100%);
+  color: var(--tp-band-fg);
 }
 @utility input {
   @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-fg placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none disabled:opacity-60;

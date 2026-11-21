@@ -33,7 +33,10 @@
     "cartCount_one": "Cart, {{count}} item",
     "cartCount_other": "Cart, {{count}} items",
     "saved": "Saved",
-    "messages": "Messages"
+    "messages": "Messages",
+    "shipTo": "Ship to",
+    "chooseCity": "Choose your city",
+    "tabs": "Tabs"
   },
   "notifications": {
     "title": "Notifications",
@@ -181,10 +184,58 @@
   "home": {
     "categories": "Categories",
     "nearYou": "Near you in {{city}}",
-    "latest": "Recently listed",
+    "latest": "Just listed",
     "seeAll": "See all",
     "emptyTitle": "No listings yet",
-    "emptyText": "Be the first to list something."
+    "emptyText": "Be the first to list something.",
+    "discover": "Discover",
+    "hero": {
+      "label": "Highlights",
+      "position": "{{n}} of {{total}}",
+      "goTo": "Show highlight {{n}}",
+      "previous": "Previous highlight",
+      "next": "Next highlight",
+      "sell": {
+        "kicker": "Sell",
+        "title": "List for free in minutes",
+        "text": "Add photos and get a price range and tips to sell faster.",
+        "cta": "Start selling"
+      },
+      "protect": {
+        "kicker": "Protected purchase",
+        "title": "The seller is paid after delivery",
+        "text": "Your money waits until you confirm the item arrived as described.",
+        "cta": "Explore listings"
+      },
+      "pay": {
+        "kicker": "Payment",
+        "title": "Card in up to 12 instalments or Pix",
+        "text": "Pay safely in the checkout. Demo mode: no real money moves.",
+        "cta": "Find something"
+      }
+    },
+    "shortcuts": {
+      "nearby": {
+        "title": "Near you",
+        "text": "Pick up today, no shipping"
+      },
+      "saved": {
+        "title": "Saved",
+        "text": "Price drops and alerts"
+      },
+      "following": {
+        "title": "Following",
+        "text": "New from sellers you follow"
+      },
+      "sell": {
+        "title": "Sell",
+        "text": "Turn what you don't use into money"
+      }
+    },
+    "rail": {
+      "previous": "Scroll back",
+      "next": "Scroll forward"
+    }
   },
   "search": {
     "title": "All listings",
@@ -257,7 +308,10 @@
     "notFound": "This listing does not exist or is no longer available.",
     "backToListings": "Back to listings",
     "chooseOption": "Choose an option",
-    "similar": "Similar items"
+    "similar": "Similar items",
+    "breadcrumb": "You are here",
+    "savedBy_one": "Saved by {{count}} person",
+    "savedBy_other": "Saved by {{count}} people"
   },
   "reviews": {
     "title": "Reviews",
@@ -906,5 +960,17 @@
     "noErrors": "No errors recorded.",
     "times_one": "{{count}} time",
     "times_other": "{{count}} times"
+  },
+  "footer": {
+    "buy": "Buy",
+    "sell": "Sell",
+    "listItem": "List an item",
+    "reputation": "How reputation works",
+    "pitch": "A marketplace to buy and sell between people, with protected payments and shipping calculated for you.",
+    "promise": {
+      "0": "Seller paid only after delivery",
+      "1": "Shipping quoted on every listing",
+      "2": "Chat and offers with the seller"
+    }
   }
 }

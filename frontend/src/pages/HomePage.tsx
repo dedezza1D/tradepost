@@ -1,12 +1,16 @@
 import { useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
+import { useListingSearch } from '../api/listings'
 import { useFeed } from '../api/social'
 import type { FeedTab, Me } from '../api/types'
 import { CityPicker, type City } from '../components/CityPicker'
+import { HeroCarousel } from '../components/HeroCarousel'
 import { InfiniteGrid } from '../components/InfiniteGrid'
+import { ListingRail } from '../components/ListingGrid'
+import { CategoryIcon } from '../ui/categoryIcons'
 import { Icon, type IconName } from '../ui/icons'
 import { EmptyState } from '../ui/primitives'
 
@@ -83,11 +87,96 @@ function Following({ me }: { me: Me | null | undefined }) {
   )
 }
 
+function SectionTitle({ id, title, to }: { id: string; title: string; to?: string }) {
+  const { t } = useTranslation()
+  return (
+    <div className="mb-3 flex items-end justify-between gap-3">
+      <h2 id={id} className="text-lg font-extrabold tracking-tight sm:text-xl">{title}</h2>
+      {to && (
+        <Link to={to} className="flex items-center gap-0.5 text-sm font-semibold text-primary hover:underline">
+          {t('home.seeAll')}
+          <Icon name="chevronRight" size={16} />
+        </Link>
+      )}
+    </div>
+  )
+}
+
+/** Shortcut cards under the banner, in the manner of a shop window. */
+function Shortcuts() {
+  const { t } = useTranslation()
+  const { data: me } = useMe()
+  const cards: { id: string; icon: IconName; to: string }[] = [
+    { id: 'nearby', icon: 'pin', to: '/?tab=nearby' },
+    { id: 'saved', icon: 'heart', to: me ? '/me/saved' : '/login' },
+    { id: 'following', icon: 'users', to: '/?tab=following' },
+    { id: 'sell', icon: 'tag', to: me ? '/sell' : '/login' },
+  ]
+  return (
+    <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {cards.map((c) => (
+        <li key={c.id}>
+          <Link
+            to={c.to}
+            className="group flex h-full items-center gap-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)] ring-1 ring-line/60 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] sm:gap-4 sm:p-5"
+          >
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary transition group-hover:bg-primary group-hover:text-primary-fg sm:h-14 sm:w-14">
+              <Icon name={c.icon} size={26} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold sm:text-base">{t(`home.shortcuts.${c.id}.title`)}</span>
+              <span className="mt-0.5 hidden text-xs text-muted sm:block">{t(`home.shortcuts.${c.id}.text`)}</span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function CategoryTiles() {
+  const { t } = useTranslation()
+  const { data: categories } = useCategories()
+  if (!categories?.length) return null
+  return (
+    <section aria-labelledby="categories-title">
+      <SectionTitle id="categories-title" title={t('home.categories')} />
+      <ul className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0 lg:grid-cols-8">
+        {categories.slice(0, 16).map((c) => (
+          <li key={c.slug} className="w-24 shrink-0 sm:w-auto">
+            <Link
+              to={`/search?category=${c.slug}`}
+              className="group flex h-full flex-col items-center gap-2 rounded-2xl bg-surface px-2 py-4 text-center shadow-[var(--shadow-card)] ring-1 ring-line/60 transition hover:-translate-y-0.5 hover:ring-primary/40"
+            >
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary transition group-hover:scale-110">
+                <CategoryIcon slug={c.slug} size={24} />
+              </span>
+              <span className="text-xs leading-tight font-semibold">{t(`categories.${c.slug}`, { defaultValue: c.name })}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function Newest() {
+  const { t } = useTranslation()
+  const newest = useListingSearch({ sort: 'newest', limit: '16' })
+  const items = newest.data?.pages[0]?.items ?? []
+  if (newest.isPending) return <div className="skeleton h-72" />
+  if (!items.length) return null
+  return (
+    <section aria-labelledby="newest-title">
+      <SectionTitle id="newest-title" title={t('home.latest')} to="/search?sort=newest" />
+      <ListingRail items={items} label={t('home.latest')} />
+    </section>
+  )
+}
+
 export function HomePage() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const { data: me } = useMe()
-  const { data: categories } = useCategories()
   const [params, setParams] = useSearchParams()
   const tab = TABS.find((x) => x.id === params.get('tab'))?.id ?? 'trending'
 
@@ -106,33 +195,18 @@ export function HomePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <button
-        type="button"
-        onClick={() => navigate('/search')}
-        className="input flex items-center gap-2 rounded-full text-left text-muted md:hidden"
-      >
-        <Icon name="search" size={18} />
-        {t('nav.searchPlaceholder')}
-      </button>
+    <div className="space-y-8 sm:space-y-10">
+      <div className="space-y-4 sm:space-y-5">
+        <HeroCarousel />
+        <Shortcuts />
+      </div>
 
-      <nav aria-label={t('home.categories')} className="-mx-4 overflow-x-auto px-4 no-scrollbar">
-        <ul className="flex gap-2">
-          {categories?.map((c) => (
-            <li key={c.slug} className="shrink-0">
-              <Link
-                to={`/search?category=${c.slug}`}
-                className="inline-flex min-h-10 items-center rounded-full border border-line bg-surface px-4 text-sm font-medium hover:border-primary hover:text-primary"
-              >
-                {t(`categories.${c.slug}`, { defaultValue: c.name })}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <CategoryTiles />
+      <Newest />
 
-      <div className="space-y-4">
-        <div role="tablist" aria-label={t('feed.label')} className="flex gap-1 border-b border-line" onKeyDown={onKey}>
+      <section aria-labelledby="discover-title" className="space-y-4">
+        <h2 id="discover-title" className="text-lg font-extrabold tracking-tight sm:text-xl">{t('home.discover')}</h2>
+        <div role="tablist" aria-label={t('feed.label')} className="no-scrollbar flex gap-1 overflow-x-auto border-b border-line" onKeyDown={onKey}>
           {TABS.map((x) => (
             <button
               key={x.id}
@@ -143,7 +217,7 @@ export function HomePage() {
               aria-controls="feed-panel"
               tabIndex={tab === x.id ? 0 : -1}
               onClick={() => select(x.id)}
-              className={`-mb-px flex min-h-11 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold transition ${
+              className={`-mb-px flex min-h-11 shrink-0 items-center gap-1.5 border-b-2 px-3 text-sm font-semibold whitespace-nowrap transition ${
                 tab === x.id ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-fg'
               }`}
             >
@@ -157,7 +231,7 @@ export function HomePage() {
           {tab === 'nearby' && <Nearby me={me} />}
           {tab === 'following' && <Following me={me} />}
         </div>
-      </div>
+      </section>
     </div>
   )
 }

@@ -252,7 +252,7 @@ function SimilarListings({ listingId }: { listingId: string }) {
   const similar = useSimilarListings(listingId)
   if (!similar.data?.length) return null
   return (
-    <section aria-labelledby="similar-title">
+    <section aria-labelledby="similar-title" className="pt-6">
       <h2 id="similar-title" className="mb-3 text-lg font-bold tracking-tight">{t('listing.similar')}</h2>
       <ListingGrid items={similar.data} />
     </section>
@@ -295,30 +295,42 @@ export function ListingPage() {
   const variant = item.variants.find((v) => v.id === variantId) ?? null
 
   return (
-    <div className="space-y-8 pb-36 md:pb-0">
+    <div className="space-y-4 pb-36 md:pb-0">
+      <nav aria-label={t('listing.breadcrumb')} className="text-sm text-muted">
+        <ol className="flex flex-wrap items-center gap-1">
+          <li><Link to="/" className="hover:text-primary">{t('nav.home')}</Link></li>
+          <li aria-hidden><Icon name="chevronRight" size={14} /></li>
+          <li>
+            <Link to={`/search?category=${item.category_slug}`} className="hover:text-primary">
+              {t(`categories.${item.category_slug}`, { defaultValue: category?.name ?? item.category_slug })}
+            </Link>
+          </li>
+        </ol>
+      </nav>
       <article className="grid gap-6 md:grid-cols-[1fr_380px] md:items-start">
         <Gallery photos={item.photos} title={item.title} />
 
-        <aside className="space-y-4 md:sticky md:top-24">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-              <Badge tone={item.condition === 'new' ? 'primary' : 'neutral'}>{t(`listing.condition.${item.condition}`)}</Badge>
-              <Link to={`/search?category=${item.category_slug}`} className="hover:underline">
-                {t(`categories.${item.category_slug}`, { defaultValue: category?.name ?? item.category_slug })}
-              </Link>
+        <aside className="space-y-4 md:sticky md:top-32">
+          <div className="card space-y-4 p-5">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                <Badge tone={item.condition === 'new' ? 'primary' : 'neutral'}>{t(`listing.condition.${item.condition}`)}</Badge>
+                {item.save_count > 0 && <span>{t('listing.savedBy', { count: item.save_count })}</span>}
+              </div>
+              <h1 className="text-xl leading-snug font-bold tracking-tight sm:text-2xl">{item.title}</h1>
+              <p className="text-[2rem] leading-none font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
             </div>
-            <h1 className="text-xl leading-snug font-bold tracking-tight sm:text-2xl">{item.title}</h1>
-            <p className="text-3xl font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
-            <ul className="space-y-1.5 text-sm text-muted">
-              <li className="flex items-center gap-2"><Icon name="truck" size={18} />
+            <ul className="space-y-2 text-sm">
+              <li className={`flex items-center gap-2 ${item.shipping_mode !== 'calculated' && !item.shipping_cents ? 'font-semibold text-success' : 'text-muted'}`}>
+                <Icon name="truck" size={18} />
                 {item.shipping_mode === 'calculated'
                   ? t('shipping.calculated')
-                  : item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}</li>
-              <li className="flex items-center gap-2"><Icon name="pin" size={18} />{item.city} - {item.state}</li>
-              <li className="flex items-center gap-2"><Icon name="shield" size={18} />{t('listing.protected')}</li>
+                  : item.shipping_cents > 0 ? t('listing.shipping', { price: formatMoney(item.shipping_cents) }) : t('listing.freeShipping')}
+              </li>
+              <li className="flex items-center gap-2 text-muted"><Icon name="pin" size={18} />{item.city} - {item.state}</li>
+              <li className="flex items-start gap-2 text-muted"><Icon name="shield" size={18} className="mt-0.5 shrink-0 text-primary" />{t('listing.protected')}</li>
             </ul>
             {item.status !== 'active' && <Badge tone="warning">{t(`listing.status.${item.status}`)}</Badge>}
-          </div>
 
           {isOwner ? (
             <Link to={`/sell/${item.id}`} className="btn-primary w-full">{t('listing.edit')}</Link>
@@ -328,6 +340,7 @@ export function ListingPage() {
               <BuyBox listing={item} signedIn={Boolean(me)} variant={variant} />
             </>
           ) : null}
+          </div>
           {item.shipping_mode === 'calculated' && <ShippingQuote listingId={item.id} />}
           {!isOwner && <ContactSeller listing={item} signedIn={Boolean(me)} variantId={variantId} />}
 

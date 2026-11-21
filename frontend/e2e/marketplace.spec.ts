@@ -102,7 +102,8 @@ test('a seller lists an item and a buyer buys, receives and reviews it', async (
   await buyer.page.getByRole('button', { name: 'Follow', exact: true }).click()
   await expect(buyer.page.getByRole('button', { name: 'Following', exact: true })).toBeVisible()
   await buyer.page.goto('/?tab=following')
-  await expect(buyer.page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
+  // The home also shows the newest listings in a rail; the Following feed is its own panel.
+  await expect(buyer.page.locator('#feed-panel').getByRole('link', { name: new RegExp(title) })).toBeVisible()
   await buyer.page.goto('/me/saved')
   await expect(buyer.page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
   await buyer.page.goto(listingUrl)
@@ -297,7 +298,7 @@ test('an item with options and shipping is bought with a coupon in installments,
   await b.getByLabel('Tell what happened').fill('The shirt came torn.')
   await b.getByRole('button', { name: 'Open dispute', exact: true }).click()
   await expect(b.getByRole('heading', { name: 'Dispute' })).toBeVisible()
-  await expect(b.getByText('With the seller')).toBeVisible()
+  await expect(b.getByText('With the seller', { exact: true })).toBeVisible()
 
   await s.goto('/seller')
   await s.getByRole('link', { name: /Ver disputa/ }).click()

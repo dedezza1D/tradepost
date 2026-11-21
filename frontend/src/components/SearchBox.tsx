@@ -56,10 +56,10 @@ export function SearchBox({
       <label htmlFor={id} className="sr-only">
         {t('nav.searchLabel')}
       </label>
-      <Icon name="search" size={18} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted" />
+      <Icon name="search" size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" />
       <input
         id={id}
-        className="input rounded-full pl-10"
+        className="input h-11 rounded-full border-transparent pl-11 shadow-[var(--shadow-card)] focus:border-primary"
         type="search"
         enterKeyHint="search"
         maxLength={100}

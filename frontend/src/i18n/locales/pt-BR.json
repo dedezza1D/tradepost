@@ -33,7 +33,10 @@
     "cartCount_one": "Carrinho, {{count}} item",
     "cartCount_other": "Carrinho, {{count}} itens",
     "saved": "Salvos",
-    "messages": "Mensagens"
+    "messages": "Mensagens",
+    "shipTo": "Enviar para",
+    "chooseCity": "Informe sua cidade",
+    "tabs": "Abas"
   },
   "notifications": {
     "title": "Notificações",
@@ -181,10 +184,58 @@
   "home": {
     "categories": "Categorias",
     "nearYou": "Perto de você em {{city}}",
-    "latest": "Anunciados recentemente",
+    "latest": "Acabaram de chegar",
     "seeAll": "Ver tudo",
     "emptyTitle": "Ainda não há anúncios",
-    "emptyText": "Seja a primeira pessoa a anunciar algo."
+    "emptyText": "Seja a primeira pessoa a anunciar algo.",
+    "discover": "Descubra",
+    "hero": {
+      "label": "Destaques",
+      "position": "{{n}} de {{total}}",
+      "goTo": "Mostrar o destaque {{n}}",
+      "previous": "Destaque anterior",
+      "next": "Próximo destaque",
+      "sell": {
+        "kicker": "Venda",
+        "title": "Anuncie grátis em minutos",
+        "text": "Envie as fotos e receba uma faixa de preço e dicas para vender mais rápido.",
+        "cta": "Começar a vender"
+      },
+      "protect": {
+        "kicker": "Compra protegida",
+        "title": "O vendedor só recebe depois da entrega",
+        "text": "Seu dinheiro espera até você confirmar que o item chegou como anunciado.",
+        "cta": "Ver anúncios"
+      },
+      "pay": {
+        "kicker": "Pagamento",
+        "title": "Cartão em até 12x ou Pix",
+        "text": "Pague com segurança no checkout. Modo de demonstração: nenhum dinheiro de verdade.",
+        "cta": "Encontrar algo"
+      }
+    },
+    "shortcuts": {
+      "nearby": {
+        "title": "Perto de você",
+        "text": "Retire hoje, sem frete"
+      },
+      "saved": {
+        "title": "Salvos",
+        "text": "Quedas de preço e alertas"
+      },
+      "following": {
+        "title": "Seguindo",
+        "text": "Novidades de quem você segue"
+      },
+      "sell": {
+        "title": "Vender",
+        "text": "Transforme o que não usa em dinheiro"
+      }
+    },
+    "rail": {
+      "previous": "Voltar",
+      "next": "Avançar"
+    }
   },
   "search": {
     "title": "Todos os anúncios",
@@ -257,7 +308,10 @@
     "notFound": "Este anúncio não existe ou não está mais disponível.",
     "backToListings": "Voltar aos anúncios",
     "chooseOption": "Escolha uma opção",
-    "similar": "Itens parecidos"
+    "similar": "Itens parecidos",
+    "breadcrumb": "Você está em",
+    "savedBy_one": "Salvo por {{count}} pessoa",
+    "savedBy_other": "Salvo por {{count}} pessoas"
   },
   "reviews": {
     "title": "Avaliações",
@@ -906,5 +960,17 @@
     "noErrors": "Nenhum erro registrado.",
     "times_one": "{{count}} vez",
     "times_other": "{{count}} vezes"
+  },
+  "footer": {
+    "buy": "Comprar",
+    "sell": "Vender",
+    "listItem": "Anunciar um item",
+    "reputation": "Como funciona a reputação",
+    "pitch": "Um marketplace para comprar e vender entre pessoas, com pagamento protegido e frete calculado para você.",
+    "promise": {
+      "0": "Vendedor recebe só depois da entrega",
+      "1": "Frete calculado em todo anúncio",
+      "2": "Chat e ofertas com quem vende"
+    }
   }
 }
