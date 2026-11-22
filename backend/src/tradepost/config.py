@@ -104,6 +104,21 @@ class Settings(BaseSettings):
     # New passwords are checked against the Pwned Passwords corpus (see password_policy.py).
     breached_password_check: bool = True
 
+    # Notifications outside the app. Web Push needs only a VAPID key pair (no account): the
+    # private key, base64url; the public key is derived from it. Without one, push is not
+    # offered. The subject tells push services who sends (a URL or mailto:); it defaults to the
+    # public origin.
+    vapid_private_key: SecretStr | None = None
+    vapid_subject: str | None = None
+    # E-mail: "none" sends nothing, "log" writes e-mails to the log (development), "smtp" sends
+    # through any SMTP service.
+    email_provider: Literal["none", "log", "smtp"] = "none"
+    email_from: str = "noreply@example.com"
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: SecretStr | None = None
+
     # Multiplies every rate limit. Only end-to-end tests raise it (many sign-ups from one IP).
     rate_limit_scale: float = Field(default=1.0, ge=1.0, le=1000.0)
 

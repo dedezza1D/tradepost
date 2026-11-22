@@ -25,7 +25,11 @@ from tradepost.fx import refresh as refresh_fx
 from tradepost.identity.sessions import purge_sessions
 from tradepost.logs import get_logger
 from tradepost.moderation_queue import screen_messages, triage_reports
+from tradepost.notifications.delivery import purge as purge_deliveries
+from tradepost.notifications.delivery import send_due as send_notifications
+from tradepost.notifications.email import EmailSender
 from tradepost.notifications.service import prune as prune_notifications
+from tradepost.notifications.webpush import WebPush
 from tradepost.ops.metrics import flush as flush_metrics
 from tradepost.ops.metrics import purge as purge_metrics
 from tradepost.ops.metrics import record_error
@@ -46,6 +50,8 @@ class JobContext:
     settings: Settings
     payments: PaymentRegistry
     ai: AI | None = None
+    push: WebPush | None = None
+    email: EmailSender | None = None
 
 
 async def _embed_listings(db: AsyncSession, ctx: JobContext) -> int:
@@ -77,6 +83,10 @@ TASKS: dict[str, Task] = {
     "refresh_fx": lambda db, _: refresh_fx(db),
     "flush_views": lambda db, _: flush_views(db),
     "purge_views": lambda db, _: purge_views(db),
+    "send_notifications": lambda db, ctx: send_notifications(
+        db, ctx.push, ctx.email, ctx.settings.public_origin
+    ),
+    "purge_deliveries": lambda db, _: purge_deliveries(db),
     "triage_reports": lambda db, ctx: triage_reports(db, ctx.ai),
     "screen_messages": lambda db, ctx: screen_messages(db, ctx.ai),
 }

@@ -85,6 +85,46 @@
     "moreItems_other": " and {{count}} more items",
     "seeAll": "See all"
   },
+  "push": {
+    "title": "Notifications outside the app",
+    "hint": "Choose what reaches you when tradepost is closed: on this device's screen (push) or by e-mail.",
+    "thisDevice": "On this device",
+    "on": "on",
+    "off": "off",
+    "enable": "Turn on",
+    "disable": "Turn off",
+    "test": "Send a test",
+    "testSent": "Test sent. It should appear in a few seconds.",
+    "testNone": "No device of yours is receiving push notifications right now.",
+    "denied": "Notifications are blocked for this site in the browser settings.",
+    "noWorker": "This page has not finished installing. Reload it and try again.",
+    "unsupported": "This browser does not support push notifications.",
+    "needsInstall": "On iPhone and iPad, add tradepost to the home screen first (Share, then Add to Home Screen) and turn notifications on from there.",
+    "serverOff": "Push notifications are not set up on this server.",
+    "tableCaption": "Which notices you get, by push and by e-mail",
+    "kind": "Notices",
+    "push": "Push",
+    "email": "E-mail",
+    "pushFor": "Push for {{category}}",
+    "emailFor": "E-mail for {{category}}",
+    "noEmail": "No e-mails for this kind of notice",
+    "emailNote": "E-mails go to your account's address and cover sales, payments, shipments and disputes only.",
+    "emailOff": "E-mails are not set up on this server yet; your choice applies once they are.",
+    "category": {
+      "messages": "Messages and questions",
+      "offers": "Offers",
+      "orders": "Orders and disputes",
+      "saved": "Searches and saved items",
+      "activity": "Activity"
+    },
+    "categoryHint": {
+      "messages": "Chat, questions on your listings and answers to yours.",
+      "offers": "Offers received, counteroffers and replies.",
+      "orders": "Sales, payments, shipments, payouts and disputes.",
+      "saved": "New listings for your searches, price drops and last units.",
+      "activity": "Followers, saves by other people, reviews and moderation."
+    }
+  },
   "city": {
     "label": "City",
     "placeholder": "Type the city",

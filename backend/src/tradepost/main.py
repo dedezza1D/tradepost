@@ -33,8 +33,11 @@ from tradepost.middleware import (
     RequestContextMiddleware,
 )
 from tradepost.moderation_queue import router as moderation_router
+from tradepost.notifications.delivery import router as delivery_router
+from tradepost.notifications.email import build_email_sender
 from tradepost.notifications.router import router as notifications_router
 from tradepost.notifications.service import Broker, asyncpg_dsn
+from tradepost.notifications.webpush import WebPush
 from tradepost.ops.router import router as ops_router
 from tradepost.orders.router import router as orders_router
 from tradepost.payments.registry import build_registry, drop_live_accounts
@@ -43,6 +46,19 @@ from tradepost.reviews.service import router as reviews_router
 from tradepost.saved_searches import router as saved_searches_router
 from tradepost.security.ratelimit import rate_limit
 from tradepost.social.router import router as social_router
+
+
+def build_push(settings: Settings) -> WebPush | None:
+    """Web Push when a VAPID key is configured. Push services want a contact: a URL or mailto."""
+    key = settings.vapid_private_key.get_secret_value() if settings.vapid_private_key else ""
+    if not key:
+        return None
+    subject = settings.vapid_subject or (
+        settings.public_origin
+        if settings.public_origin.startswith("https://")
+        else f"mailto:{settings.email_from}"
+    )
+    return WebPush(key, subject)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -57,7 +73,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.http = httpx.AsyncClient(headers={"User-Agent": "tradepost"})
         app.state.ai = AI(settings, app.state.db, build_provider(settings))
         app.state.jobs = jobs.JobContext(
-            settings=settings, payments=app.state.payments, ai=app.state.ai
+            settings=settings,
+            payments=app.state.payments,
+            ai=app.state.ai,
+            push=build_push(settings),
+            email=build_email_sender(settings),
         )
         app.state.broker = Broker(asyncpg_dsn(settings.database_url))
         app.state.broker.start()
@@ -109,6 +129,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(fx_router)
     app.include_router(moderation_router)
     app.include_router(analytics_router)
+    app.include_router(delivery_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

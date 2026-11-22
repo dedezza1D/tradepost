@@ -11,6 +11,11 @@ from tradepost.disputes import Dispute, DisputeMessage
 from tradepost.fx import FxRate
 from tradepost.geo.models import Municipality
 from tradepost.identity.models import Session, User
+from tradepost.notifications.delivery import (
+    NotificationDelivery,
+    NotificationPreference,
+    PushSubscriptionRow,
+)
 from tradepost.notifications.models import Notification
 from tradepost.ops.models import AlertState, ErrorEvent, FeatureFlag, JobRun, RequestStat
 from tradepost.orders.models import (
@@ -58,12 +63,15 @@ __all__ = [
     "Message",
     "Municipality",
     "Notification",
+    "NotificationDelivery",
+    "NotificationPreference",
     "Offer",
     "Order",
     "OrderEvent",
     "OrderItem",
     "PaymentAttempt",
     "PaymentEvent",
+    "PushSubscriptionRow",
     "Question",
     "RateLimitBucket",
     "Report",

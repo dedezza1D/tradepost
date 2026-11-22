@@ -325,6 +325,25 @@ test('an item with options and shipping is bought with a coupon in installments,
   await expect(b.locator('input[name=variant]').nth(0)).toBeEnabled()
 })
 
+test('notification preferences are kept per kind of notice', async ({ browser }, info) => {
+  const user = await newUser(browser, 'en', info.project.name)
+  await register(user.page, 'Prefs E2E', user.email, 'Recife', /Create your account/)
+  await user.page.goto('/me#notifications')
+  const section = user.page.getByRole('region', { name: 'Notifications outside the app' })
+  // The test server has no VAPID key and no e-mail service: choices are still saved.
+  await expect(section.getByText('Push notifications are not set up on this server.')).toBeVisible()
+  await expect(section.getByRole('checkbox', { name: 'E-mail for Orders and disputes' })).toBeChecked()
+  const offers = section.getByRole('checkbox', { name: 'Push for Offers' })
+  await expect(offers).toBeChecked()
+  await offers.uncheck()
+  await expect(offers).not.toBeChecked()
+  await user.page.reload()
+  await expect(section.getByRole('checkbox', { name: 'Push for Offers' })).not.toBeChecked()
+  const axe = await new AxeBuilder({ page: user.page }).include('#notifications')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([])
+})
+
 test('main pages have no serious accessibility violations', async ({ page }) => {
   for (const path of ['/', '/search', '/login', '/register']) {
     await page.goto(path)

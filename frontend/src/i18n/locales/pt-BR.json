@@ -85,6 +85,46 @@
     "moreItems_other": " e mais {{count}} itens",
     "seeAll": "Ver todas"
   },
+  "push": {
+    "title": "Avisos fora do app",
+    "hint": "Escolha o que chega até você com o tradepost fechado: na tela deste aparelho (push) ou por e-mail.",
+    "thisDevice": "Neste aparelho",
+    "on": "ativados",
+    "off": "desativados",
+    "enable": "Ativar",
+    "disable": "Desativar",
+    "test": "Enviar teste",
+    "testSent": "Teste enviado. Deve aparecer em alguns segundos.",
+    "testNone": "Nenhum aparelho seu está recebendo avisos agora.",
+    "denied": "Os avisos deste site estão bloqueados nas configurações do navegador.",
+    "noWorker": "A página ainda não terminou de instalar. Recarregue e tente de novo.",
+    "unsupported": "Este navegador não aceita avisos push.",
+    "needsInstall": "No iPhone e no iPad, adicione o tradepost à tela de início primeiro (Compartilhar e depois Adicionar à Tela de Início) e ative os avisos por lá.",
+    "serverOff": "Os avisos push não estão configurados neste servidor.",
+    "tableCaption": "Quais avisos você recebe, por push e por e-mail",
+    "kind": "Avisos",
+    "push": "Push",
+    "email": "E-mail",
+    "pushFor": "Push para {{category}}",
+    "emailFor": "E-mail para {{category}}",
+    "noEmail": "Sem e-mail para este tipo de aviso",
+    "emailNote": "Os e-mails vão para o endereço da sua conta e tratam só de vendas, pagamentos, envios e disputas.",
+    "emailOff": "Os e-mails ainda não estão configurados neste servidor; sua escolha vale assim que estiverem.",
+    "category": {
+      "messages": "Mensagens e perguntas",
+      "offers": "Propostas",
+      "orders": "Pedidos e disputas",
+      "saved": "Buscas e itens salvos",
+      "activity": "Atividade"
+    },
+    "categoryHint": {
+      "messages": "Chat, perguntas nos seus anúncios e respostas às suas.",
+      "offers": "Ofertas recebidas, contrapropostas e respostas.",
+      "orders": "Vendas, pagamentos, envios, repasses e disputas.",
+      "saved": "Anúncios novos nas suas buscas, quedas de preço e últimas unidades.",
+      "activity": "Seguidores, itens salvos por outras pessoas, avaliações e moderação."
+    }
+  },
   "city": {
     "label": "Cidade",
     "placeholder": "Digite a cidade",

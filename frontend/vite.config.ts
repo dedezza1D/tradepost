@@ -34,6 +34,8 @@ export default defineConfig({
         // Only the app shell is cached. API responses (orders, payments, sessions) never are.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
+        // Push notifications: shown and opened by public/push-sw.js.
+        importScripts: ['push-sw.js'],
         navigateFallbackDenylist: [/^\/api\//, /^\/media\//],
         runtimeCaching: [
           {
