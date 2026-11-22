@@ -73,12 +73,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await app.state.http.aclose()
             await app.state.db.dispose()
 
+    # The interactive docs and the schema map every route; they stay off where the public is.
+    show_docs = settings.env != "production"
     app = FastAPI(
         title="tradepost",
         version="0.1.0",
         lifespan=lifespan,
-        docs_url="/api/docs",
-        openapi_url="/api/openapi.json",
+        docs_url="/api/docs" if show_docs else None,
+        openapi_url="/api/openapi.json" if show_docs else None,
         redoc_url=None,
     )
     install_error_handlers(app)
