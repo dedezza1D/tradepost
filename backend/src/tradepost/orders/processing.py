@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.identity.models import User
-from tradepost.logs import get_logger
+from tradepost.logs import error_summary, get_logger
 from tradepost.notifications.service import notify
 from tradepost.orders import service
 from tradepost.orders.models import (
@@ -91,7 +91,7 @@ async def process_inbox(db: AsyncSession, registry: PaymentRegistry) -> int:
                 await process_event(db, registry, event)
             done += 1
         except Exception as exc:  # retried on a later tick
-            event.last_error = f"{type(exc).__name__}: {exc}"[:500]
+            event.last_error = error_summary(exc)[:500]
             log.warning("webhook_event_failed", event=event.event_id, error=event.last_error)
     return done
 

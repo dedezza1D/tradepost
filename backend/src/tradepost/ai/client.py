@@ -28,7 +28,7 @@ from tradepost.ai.models import AICache, AICall
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.errors import AppError
-from tradepost.logs import get_logger
+from tradepost.logs import error_summary, get_logger
 
 log = get_logger(__name__)
 
@@ -266,7 +266,7 @@ class AI:
                 model=model,
                 latency_ms=(time.perf_counter() - start) * 1000,
                 ok=False,
-                error=f"{type(exc).__name__}: {exc}"[:300],
+                error=error_summary(exc)[:300],
             )
             raise AIUnavailable("The AI assistant did not answer. Try again.") from exc
         await self._record(
@@ -299,7 +299,7 @@ class AI:
                 provider=provider.name,
                 model=model,
                 ok=False,
-                error=f"{type(exc).__name__}: {exc}"[:300],
+                error=error_summary(exc)[:300],
             )
             raise AIUnavailable("The embedding model did not answer.") from exc
         await self._record(

@@ -42,6 +42,8 @@ class Database:
             settings.database_url,
             pool_size=settings.db_pool_size,
             pool_pre_ping=True,
+            # Statement errors would otherwise repeat the bound values (personal data).
+            hide_parameters=True,
         )
         self.sessionmaker = async_sessionmaker(self.engine, expire_on_commit=False)
 

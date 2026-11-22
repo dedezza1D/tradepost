@@ -20,7 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from tradepost.db import Base
 from tradepost.deps import DbSession
-from tradepost.logs import get_logger
+from tradepost.logs import error_summary, get_logger
 
 log = get_logger(__name__)
 
@@ -84,7 +84,7 @@ async def refresh(db: AsyncSession, transport: httpx.AsyncBaseTransport | None =
     try:
         quotes = await fetch_usd_quotes(now.date(), transport)
     except (httpx.HTTPError, ValueError, KeyError) as exc:
-        log.warning("fx_fetch_failed", error=f"{type(exc).__name__}: {exc}"[:200])
+        log.warning("fx_fetch_failed", error=error_summary(exc)[:200])
         return 0
     for quoted_on, rate in quotes:
         stmt = insert(FxRate).values(currency="USD", quoted_on=quoted_on, brl_per_unit=rate)
