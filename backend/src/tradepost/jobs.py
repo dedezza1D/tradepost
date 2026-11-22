@@ -22,6 +22,7 @@ from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.disputes import escalate_overdue as escalate_disputes
 from tradepost.fx import refresh as refresh_fx
+from tradepost.identity.sessions import purge_sessions
 from tradepost.logs import get_logger
 from tradepost.moderation_queue import screen_messages, triage_reports
 from tradepost.notifications.service import prune as prune_notifications
@@ -56,6 +57,8 @@ Task = Callable[[AsyncSession, JobContext], Awaitable[int]]
 TASKS: dict[str, Task] = {
     "purge_rate_limits": lambda db, _: purge_old_buckets(db),
     "payment_inbox": lambda db, ctx: processing.process_inbox(db, ctx.payments),
+    "purge_payment_events": lambda db, _: processing.purge_events(db),
+    "purge_sessions": lambda db, _: purge_sessions(db),
     "reconcile_payments": lambda db, ctx: processing.reconcile_pending(db, ctx.payments),
     "expire_checkouts": lambda db, ctx: processing.expire_due(db, ctx.payments),
     "auto_deliver": lambda db, _: processing.auto_deliver(db),

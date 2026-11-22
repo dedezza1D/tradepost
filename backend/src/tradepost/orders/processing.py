@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import and_, exists, func, select
+from sqlalchemy import and_, delete, exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,6 +72,18 @@ async def process_event(db: AsyncSession, registry: PaymentRegistry, event: Paym
             await service.apply_status(db, registry, attempt, status)
     event.processed_at = _now()
     event.last_error = None
+
+
+# Processed webhook events are only needed to recognise redeliveries, which providers stop
+# within days. Payment state lives in attempts, orders and the ledger, which are kept.
+EVENT_RETENTION = timedelta(days=90)
+
+
+async def purge_events(db: AsyncSession, *, retention: timedelta = EVENT_RETENTION) -> int:
+    result = await db.execute(
+        delete(PaymentEvent).where(PaymentEvent.processed_at < _now() - retention)
+    )
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]
 
 
 async def process_inbox(db: AsyncSession, registry: PaymentRegistry) -> int:

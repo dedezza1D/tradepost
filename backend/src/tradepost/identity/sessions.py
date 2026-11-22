@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import Depends, Request, Response
-from sqlalchemy import select, update
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.config import Settings, get_settings
@@ -93,6 +93,19 @@ async def revoke_all_sessions(
     if except_id is not None:
         stmt = stmt.where(Session.id != except_id)
     await db.execute(stmt.values(revoked_at=datetime.now(UTC)))
+
+
+# Sessions that ended (expired or signed out) are kept this long, then deleted: they hold a
+# device description and dates of use, and no longer serve any purpose.
+SESSION_RETENTION = timedelta(days=30)
+
+
+async def purge_sessions(db: AsyncSession, *, retention: timedelta = SESSION_RETENTION) -> int:
+    cutoff = datetime.now(UTC) - retention
+    result = await db.execute(
+        delete(Session).where(or_(Session.expires_at < cutoff, Session.revoked_at < cutoff))
+    )
+    return int(result.rowcount or 0)  # type: ignore[attr-defined]
 
 
 async def load_principal(request: Request, db: AsyncSession) -> Principal | None:

@@ -147,3 +147,40 @@ async def test_writes_are_committed_before_the_response_is_sent(client: Any, app
     async with app.state.db.sessionmaker() as db:
         names = (await db.execute(text("SELECT display_name FROM users"))).scalars().all()
     assert "Committed Name" in names
+
+
+async def test_ended_sessions_are_purged_after_a_month(client: Any, app: Any) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import text
+
+    from tests.test_checkout import sql
+    from tradepost.identity.sessions import purge_sessions
+
+    await register(client)
+    [(user_id, in_use)] = await sql(app, "SELECT user_id, id FROM sessions")
+    now = datetime.now(UTC)
+    day = timedelta(days=1)
+    rows = {
+        "expired long ago": (now - 31 * day, None),
+        "signed out long ago": (now + day, now - 31 * day),
+        "expired recently": (now - day, None),
+        "signed out recently": (now + day, now - day),
+    }
+    async with app.state.db.sessionmaker() as db, db.begin():
+        for agent, (expires, revoked) in rows.items():
+            await db.execute(
+                text(
+                    "INSERT INTO sessions (id, user_id, token_hash, csrf_token, expires_at,"
+                    " revoked_at, user_agent) VALUES (gen_random_uuid(), :user,"
+                    " decode(md5(random()::text) || md5(random()::text), 'hex'), 'x',"
+                    " :expires, :revoked, :agent)"
+                ),
+                {"user": user_id, "expires": expires, "revoked": revoked, "agent": agent},
+            )
+    async with app.state.db.sessionmaker() as db, db.begin():
+        assert await purge_sessions(db) == 2
+    left = await sql(app, "SELECT user_agent FROM sessions WHERE id <> :id", id=in_use)
+    assert {agent for (agent,) in left} == {"expired recently", "signed out recently"}
+    # The session in use is untouched.
+    assert (await client.get("/api/auth/me")).status_code == 200
