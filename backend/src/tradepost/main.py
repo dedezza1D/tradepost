@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
@@ -27,6 +27,7 @@ from tradepost.identity.router import router as identity_router
 from tradepost.logs import configure_logging
 from tradepost.media.storage import build_storage
 from tradepost.middleware import (
+    BodySizeLimitMiddleware,
     OriginCheckMiddleware,
     ProxyGuardMiddleware,
     RequestContextMiddleware,
@@ -40,6 +41,7 @@ from tradepost.payments.registry import build_registry, drop_live_accounts
 from tradepost.questions import router as questions_router
 from tradepost.reviews.service import router as reviews_router
 from tradepost.saved_searches import router as saved_searches_router
+from tradepost.security.ratelimit import rate_limit
 from tradepost.social.router import router as social_router
 
 
@@ -85,6 +87,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     install_error_handlers(app)
     # Starlette runs the last-added middleware first.
+    app.add_middleware(BodySizeLimitMiddleware, settings=settings)
     app.add_middleware(OriginCheckMiddleware, settings=settings)
     app.add_middleware(ProxyGuardMiddleware, settings=settings)
     app.add_middleware(RequestContextMiddleware)
@@ -112,7 +115,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Liveness: the process is up."""
         return {"status": "ok"}
 
-    @app.get("/api/readyz", tags=["ops"])
+    @app.get(
+        "/api/readyz",
+        tags=["ops"],
+        # Public and it queries the database: limited like any other route.
+        dependencies=[Depends(rate_limit("readyz", limit=30, window_seconds=60))],
+    )
     async def readyz(db: DbSession) -> dict[str, str]:
         """Readiness: the database answers."""
         await db.execute(text("SELECT 1"))

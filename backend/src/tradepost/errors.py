@@ -79,8 +79,9 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+        code = "payload_too_large" if exc.status_code == 413 else "http_error"
         return JSONResponse(
-            _body("http_error", str(exc.detail)), status_code=exc.status_code, headers=exc.headers
+            _body(code, str(exc.detail)), status_code=exc.status_code, headers=exc.headers
         )
 
     @app.exception_handler(Exception)

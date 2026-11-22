@@ -131,6 +131,7 @@
     "photo_limit_reached": "Você atingiu o limite de fotos da conta.",
     "storage_full": "O armazenamento de fotos da demonstração está cheio.",
     "invalid_image": "Arquivo de imagem inválido. Use JPEG, PNG ou WebP até 5 MB.",
+    "payload_too_large": "O arquivo ou os dados enviados são grandes demais.",
     "out_of_stock": "Um dos itens não está mais disponível nessa quantidade.",
     "own_listing": "Você não pode comprar o próprio anúncio.",
     "checkout_closed": "Este checkout não está mais aberto para pagamento.",
