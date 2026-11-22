@@ -100,7 +100,7 @@ export function RegisterPage() {
         </div>
         <div>
           <label className="label" htmlFor="password">{t('auth.password')}</label>
-          <input id="password" type="password" autoComplete="new-password" required minLength={10} maxLength={128} className="input"
+          <input id="password" type="password" autoComplete="new-password" required minLength={15} maxLength={128} className="input"
             aria-describedby="password-hint" value={password} onChange={(e) => setPassword(e.target.value)} />
           <p id="password-hint" className="mt-1 text-xs text-muted">{t('auth.passwordHint')}</p>
           {error?.fieldMessage('password') && <p className="mt-1 text-xs text-danger">{t('auth.passwordTooShort')}</p>}

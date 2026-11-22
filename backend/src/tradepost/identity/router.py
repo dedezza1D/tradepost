@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from tradepost.config import get_settings
 from tradepost.deps import DbSession
-from tradepost.errors import AppError, Conflict, Unauthorized
+from tradepost.errors import Conflict, Unauthorized
 from tradepost.geo.service import resolve_city
 from tradepost.identity.devices import issue_device_cookie, trusted_device
 from tradepost.identity.models import User
@@ -26,6 +27,7 @@ from tradepost.identity.sessions import (
     revoke_session,
 )
 from tradepost.security import ratelimit
+from tradepost.security.password_policy import check_new_password
 from tradepost.security.passwords import hash_password, needs_rehash, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -48,8 +50,12 @@ def me_out(request: Request, user: User) -> MeOut:
 )
 async def register(body: RegisterIn, request: Request, response: Response, db: DbSession) -> MeOut:
     email = body.email.lower()
-    if body.password.lower() == email:
-        raise AppError("Password must not be your email.", code="weak_password")
+    await check_new_password(
+        request.app.state.http,
+        body.password,
+        email,
+        check_breaches=get_settings().breached_password_check,
+    )
     user = User(
         email=email,
         password_hash=hash_password(body.password),
@@ -147,11 +153,17 @@ async def _set_city(db: DbSession, user: User, city: str, state: str) -> None:
     dependencies=[Depends(ratelimit.rate_limit("password", limit=10, window_seconds=900))],
 )
 async def change_password(
-    body: ChangePasswordIn, principal: CurrentPrincipal, db: DbSession
+    body: ChangePasswordIn, request: Request, principal: CurrentPrincipal, db: DbSession
 ) -> None:
     user = principal.user
     if not verify_password(user.password_hash, body.current_password):
         raise Unauthorized("Current password is incorrect.", code="invalid_credentials")
+    await check_new_password(
+        request.app.state.http,
+        body.new_password,
+        user.email,
+        check_breaches=get_settings().breached_password_check,
+    )
     user.password_hash = hash_password(body.new_password)
     user.password_changed_at = datetime.now(UTC)
     # Every other device is signed out; this one stays signed in.

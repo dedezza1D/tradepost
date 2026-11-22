@@ -37,6 +37,7 @@ export default defineConfig({
         TP_MEDIA_LOCAL_DIR: './var/e2e-media',
         TP_RATE_LIMIT_SCALE: '100',
         TP_LOG_JSON: 'false',
+        TP_BREACHED_PASSWORD_CHECK: 'false',
       },
     },
     {
