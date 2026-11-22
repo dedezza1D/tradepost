@@ -15,7 +15,7 @@ listings whose title ends in "(anúncio de demonstração)".
 import argparse
 import asyncio
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import func, select, update
@@ -66,7 +66,7 @@ async def main(retire: bool) -> None:
         existing = set(
             await db.scalars(select(Listing.title).where(Listing.seller_id == seller.id))
         )
-        for entry in entries:
+        for index, entry in enumerate(entries):
             title = str(entry["title"])
             if title in existing:
                 continue
@@ -88,7 +88,8 @@ async def main(retire: bool) -> None:
                 state=str(entry["state"]),
                 municipality_id=town.ibge_code if town else None,
                 status=ListingStatus.ACTIVE,
-                published_at=datetime.now(UTC),
+                # Spread over the last ten days, so "newest" mixes kinds instead of the last loaded.
+                published_at=datetime.now(UTC) - timedelta(hours=(index * 97) % 240),
             )
             db.add(listing)
             await db.flush()
