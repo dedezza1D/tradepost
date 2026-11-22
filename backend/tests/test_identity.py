@@ -224,3 +224,67 @@ async def test_ended_sessions_are_purged_after_a_month(client: Any, app: Any) ->
     assert {agent for (agent,) in left} == {"expired recently", "signed out recently"}
     # The session in use is untouched.
     assert (await client.get("/api/auth/me")).status_code == 200
+
+
+async def fail_logins(app: Any, email: str, times: int) -> list[int]:
+    async with make_client(app) as attacker:
+        return [
+            (
+                await attacker.post(
+                    "/api/auth/login", json={"email": email, "password": f"wrong-{i}-guess"}
+                )
+            ).status_code
+            for i in range(times)
+        ]
+
+
+async def test_the_owner_keeps_access_from_a_known_device_during_an_attack(
+    client: Any, app: Any
+) -> None:
+    user = await register(client)
+    device = client.cookies.get("tp_device", path="/api/auth")
+    assert device
+    await client.post("/api/auth/logout")
+    credentials = {"email": user["email"], "password": user["password"]}
+
+    assert (await fail_logins(app, user["email"], 11))[-1] == 429
+    # The browser that signed in before is not locked out by the attack.
+    assert (await client.post("/api/auth/login", json=credentials)).status_code == 200
+    # A device the account has never used stays under the account-wide limit.
+    async with make_client(app) as new_device:
+        assert (await new_device.post("/api/auth/login", json=credentials)).status_code == 429
+        # A tampered cookie is no better than none.
+        new_device.cookies.set("tp_device", device[:-4] + "0000", path="/api/auth")
+        assert (await new_device.post("/api/auth/login", json=credentials)).status_code == 429
+
+
+async def test_a_known_device_has_its_own_failure_limit(client: Any) -> None:
+    user = await register(client)
+    await client.post("/api/auth/logout")
+    statuses = [
+        (
+            await client.post(
+                "/api/auth/login", json={"email": user["email"], "password": f"typo-{i}-pass"}
+            )
+        ).status_code
+        for i in range(10)
+    ]
+    assert statuses == [401] * 10
+    right = await client.post(
+        "/api/auth/login", json={"email": user["email"], "password": user["password"]}
+    )
+    assert right.status_code == 429
+
+
+async def test_the_device_cookie_is_http_only_and_scoped_to_sign_in(client: Any) -> None:
+    response = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "device-cookie@example.com",
+            "password": "correct horse battery",
+            "display_name": "Device",
+        },
+    )
+    cookie = next(c for c in response.headers.get_list("set-cookie") if c.startswith("tp_device="))
+    assert "HttpOnly" in cookie
+    assert "Path=/api/auth" in cookie
