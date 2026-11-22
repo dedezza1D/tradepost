@@ -166,7 +166,7 @@ test('buyer and seller chat in real time and settle on an offer', async ({ brows
   await seller.page.goto('/inbox')
   await seller.page.getByRole('link', { name: /Buyer Chat/ }).click()
   await seller.page.getByLabel('Mensagem').fill('Sim, está disponível!')
-  await seller.page.getByRole('button', { name: 'Enviar' }).click()
+  await seller.page.getByRole('button', { name: 'Enviar', exact: true }).click()
   // Delivered to the buyer's open screen by the stream, well before the 30 s fallback poll.
   await expect(buyer.page.getByText('Sim, está disponível!')).toBeVisible({ timeout: 15_000 })
 
