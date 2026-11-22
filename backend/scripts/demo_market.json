@@ -1,0 +1,832 @@
+{
+  "cities": [
+    ["São Paulo", "SP", 12],
+    ["Rio de Janeiro", "RJ", 9],
+    ["Belo Horizonte", "MG", 7],
+    ["Curitiba", "PR", 6],
+    ["Porto Alegre", "RS", 6],
+    ["Salvador", "BA", 6],
+    ["Recife", "PE", 6],
+    ["Fortaleza", "CE", 6],
+    ["Brasília", "DF", 5],
+    ["Goiânia", "GO", 4],
+    ["Florianópolis", "SC", 4],
+    ["Campinas", "SP", 4],
+    ["Santos", "SP", 3],
+    ["Niterói", "RJ", 3],
+    ["Uberlândia", "MG", 3],
+    ["Londrina", "PR", 3],
+    ["Joinville", "SC", 3],
+    ["Natal", "RN", 3],
+    ["João Pessoa", "PB", 3],
+    ["Belém", "PA", 3],
+    ["Manaus", "AM", 3],
+    ["Vitória", "ES", 3],
+    ["Ribeirão Preto", "SP", 3],
+    ["São José dos Campos", "SP", 2],
+    ["Caxias do Sul", "RS", 2],
+    ["Juiz de Fora", "MG", 2],
+    ["Maceió", "AL", 2],
+    ["Aracaju", "SE", 2],
+    ["Campo Grande", "MS", 2],
+    ["Cuiabá", "MT", 2],
+    ["São Luís", "MA", 3],
+    ["Teresina", "PI", 3],
+    ["Porto Velho", "RO", 2],
+    ["Rio Branco", "AC", 2],
+    ["Macapá", "AP", 2],
+    ["Boa Vista", "RR", 2],
+    ["Palmas", "TO", 2],
+    ["Feira de Santana", "BA", 2],
+    ["Sorocaba", "SP", 2],
+    ["Guarulhos", "SP", 2],
+    ["Santo André", "SP", 2],
+    ["Osasco", "SP", 2],
+    ["Maringá", "PR", 2],
+    ["Blumenau", "SC", 2],
+    ["Pelotas", "RS", 2],
+    ["Petrópolis", "RJ", 2],
+    ["Campina Grande", "PB", 2],
+    ["Olinda", "PE", 2],
+    ["Vila Velha", "ES", 2],
+    ["Contagem", "MG", 2],
+    ["Caruaru", "PE", 1],
+    ["Montes Claros", "MG", 1],
+    ["Anápolis", "GO", 1],
+    ["Dourados", "MS", 1],
+    ["Santarém", "PA", 1],
+    ["Mossoró", "RN", 1],
+    ["Imperatriz", "MA", 1],
+    ["Parnaíba", "PI", 1],
+    ["Chapecó", "SC", 1],
+    ["Cascavel", "PR", 1],
+    ["Bauru", "SP", 1],
+    ["Piracicaba", "SP", 1],
+    ["Vitória da Conquista", "BA", 1],
+    ["Ilhéus", "BA", 1],
+    ["Rondonópolis", "MT", 1],
+    ["Arapiraca", "AL", 1],
+    ["Juazeiro do Norte", "CE", 1],
+    ["Volta Redonda", "RJ", 1]
+  ],
+  "first_names": [
+    "Ana", "Bruno", "Camila", "Diego", "Eduarda", "Felipe", "Gabriela", "Henrique", "Isabela",
+    "João", "Karina", "Lucas", "Mariana", "Nathan", "Olívia", "Paulo", "Rafaela", "Samuel",
+    "Tatiane", "Vinícius", "Aline", "Bernardo", "Carolina", "Daniel", "Elaine", "Fábio",
+    "Giovana", "Heitor", "Ingrid", "Júlio", "Larissa", "Marcelo", "Natália", "Otávio",
+    "Priscila", "Renato", "Sabrina", "Thiago", "Vanessa", "Wagner", "Yasmin", "Alice", "Caio",
+    "Débora", "Emanuel", "Fernanda", "Gustavo", "Helena", "Igor", "Juliana", "Leandro",
+    "Mônica", "Nicolas", "Patrícia", "Rodrigo", "Simone", "Túlio", "Valéria", "William",
+    "Bianca", "César", "Denise", "Érica", "Flávio", "Hugo", "Íris", "Jorge", "Kelly", "Luana",
+    "Mateus", "Noemi", "Pedro", "Ricardo", "Sueli", "Tereza", "Vitória", "Lívia", "Murilo",
+    "Rosana", "Davi"
+  ],
+  "initials": "ABCDFGLMNOPRSTV",
+  "shops": [
+    {
+      "name": "Garagem do Som",
+      "bio": "Instrumentos usados revisados por quem toca. Violões e guitarras regulados antes do envio, com capa sempre que possível.",
+      "city": ["Curitiba", "PR"],
+      "kinds": ["violao", "guitarra"],
+      "listings": 6,
+      "tier": "top",
+      "sold": ["music", "tech"]
+    },
+    {
+      "name": "Achados de Casa",
+      "bio": "Móveis com história para a sua casa. Garimpamos, limpamos e entregamos na região metropolitana.",
+      "city": ["Belo Horizonte", "MG"],
+      "kinds": ["sofa", "mesa", "cadeira"],
+      "listings": 6,
+      "tier": "top",
+      "sold": ["furniture", "home"]
+    },
+    {
+      "name": "Tech de Segunda",
+      "bio": "Celulares e notebooks seminovos, testados e restaurados de fábrica. Respondemos rápido no chat.",
+      "city": ["São Paulo", "SP"],
+      "kinds": ["celular", "notebook"],
+      "listings": 6,
+      "tier": "top",
+      "sold": ["tech", "games"]
+    },
+    {
+      "name": "Fliperama do Bairro",
+      "bio": "Consoles e jogos de todas as gerações. Tudo testado por quem ainda sopra cartucho.",
+      "city": ["Rio de Janeiro", "RJ"],
+      "kinds": ["console"],
+      "listings": 4,
+      "tier": "good",
+      "sold": ["games", "tech"]
+    },
+    {
+      "name": "Cozinha em Dia",
+      "bio": "Eletroportáteis revisados para a cozinha do dia a dia. Envio em até dois dias úteis.",
+      "city": ["Recife", "PE"],
+      "kinds": ["air_fryer", "liquidificador"],
+      "listings": 5,
+      "tier": "top",
+      "sold": ["home", "appliances"]
+    },
+    {
+      "name": "Clique & Som Usados",
+      "bio": "Câmeras e fones de segunda mão para quem gosta de foto e de música. Tudo testado com calma.",
+      "city": ["Porto Alegre", "RS"],
+      "kinds": ["camera", "fone"],
+      "listings": 5,
+      "tier": "good",
+      "sold": ["tech", "music"]
+    },
+    {
+      "name": "Pedal da Serra",
+      "bio": "Bicicletas clássicas e acessórios. Revisão básica feita em todas as bikes antes da venda.",
+      "city": ["Florianópolis", "SC"],
+      "kinds": ["bicicleta"],
+      "listings": 3,
+      "tier": "top",
+      "sold": ["sports", "kids"]
+    },
+    {
+      "name": "Sebo Estante Aberta",
+      "bio": "Livros usados escolhidos a dedo. Embalo com papelão para chegar inteiro na sua estante.",
+      "city": ["Salvador", "BA"],
+      "kinds": ["livro"],
+      "listings": 3,
+      "tier": "good",
+      "sold": ["books", "misc"]
+    },
+    {
+      "name": "Brechó Passo Certo",
+      "bio": "Tênis e peças de brechó higienizados, em vários tamanhos. Dúvida de numeração? É só perguntar.",
+      "city": ["Fortaleza", "CE"],
+      "kinds": ["tenis"],
+      "listings": 4,
+      "tier": "top",
+      "sold": ["fashion", "kids"]
+    },
+    {
+      "name": "Lar & Eletro Seminovos",
+      "bio": "Geladeiras e TVs revisadas, com teste na retirada. Entrega combinada para a região.",
+      "city": ["Goiânia", "GO"],
+      "kinds": ["geladeira", "tv"],
+      "listings": 5,
+      "tier": "good",
+      "sold": ["appliances", "furniture"]
+    }
+  ],
+  "seller_bios": [
+    "Desapegando do que está parado em casa. Envio rápido e bem embalado.",
+    "Mudando de cidade: tudo aqui precisa de um novo lar.",
+    "Vendo só o que eu mesmo usaria. Pode perguntar à vontade.",
+    "Apaixonada por garimpar coisas boas e passar adiante.",
+    "Pai de dois, vendendo o que as crianças já não usam.",
+    "Compro e vendo eletrônicos usados há alguns anos. Tudo testado antes do envio.",
+    "Reformando a casa aos poucos e liberando espaço.",
+    "Músico nas horas vagas. Meus instrumentos são sempre bem cuidados.",
+    "Organizando o guarda-roupa e a garagem. Preço justo e sem enrolação.",
+    "Tudo com descrição honesta: se tem detalhe, eu aviso.",
+    "Colecionador se desfazendo de algumas peças.",
+    "Casa menor, menos coisas. Aproveite!",
+    "Respondo rápido e envio no dia seguinte ao pagamento.",
+    "Vendas de garagem, só que pela internet.",
+    "Itens de casa sem animais e sem fumantes.",
+    "Primeira vez vendendo por aqui, prometo capricho na embalagem."
+  ],
+  "buyer_bios": [
+    "Sempre de olho em uma boa oferta.",
+    "Garimpando móveis para o primeiro apê.",
+    "Fã de coisas usadas com história.",
+    "Montando um home office sem gastar muito.",
+    "Colecionando consoles antigos.",
+    "Procurando instrumentos para voltar a tocar.",
+    "Consumo consciente: usado em bom estado vale ouro.",
+    "Mãe de primeira viagem atrás de bons achados.",
+    "Estudante, comprando o que cabe no bolso.",
+    "Leitor compulsivo com estante lotada.",
+    "Ciclista de fim de semana.",
+    "Decorando a casa nova aos poucos.",
+    "Prefiro consertar a jogar fora.",
+    "Cozinheiro amador em busca de utensílios."
+  ],
+  "kinds": {
+    "bicicleta": {
+      "group": "sports",
+      "shipping_cents": 12000,
+      "extras": [
+        "Revisada há pouco tempo: freios regulados e corrente lubrificada.",
+        "Peça de coleção, sempre guardada em local coberto.",
+        "Pneus em bom estado e pintura bem conservada para a idade."
+      ],
+      "questions": [
+        ["Qual é o tamanho do quadro?", "É um quadro médio, serve bem para adultos de estatura mediana."],
+        ["Os pneus precisam ser trocados?", "Não, os pneus ainda têm bastante vida útil."],
+        ["Dá para usar no dia a dia ou é só para coleção?", "Dá para usar sim, está rodando macio. Só recomendo uma revisão de rotina."]
+      ]
+    },
+    "celular": {
+      "group": "tech",
+      "shipping_cents": 2500,
+      "extras": [
+        "Bateria segurando bem a carga e tela sem trincos.",
+        "Sempre usado com capa e película.",
+        "Restaurado para as configurações de fábrica, pronto para o novo dono."
+      ],
+      "questions": [
+        ["Como está a saúde da bateria?", "Está boa, dura o dia inteiro com uso moderado."],
+        ["Está desbloqueado para qualquer operadora?", "Sim, funciona com chip de qualquer operadora."],
+        ["Acompanha carregador e cabo?", "Acompanha os dois, além de uma capinha de brinde."]
+      ]
+    },
+    "notebook": {
+      "group": "tech",
+      "shipping_cents": 4500,
+      "extras": [
+        "Formatado e com o sistema atualizado.",
+        "Teclado e tela sem marcas, bateria com boa autonomia.",
+        "Usado apenas para trabalho de escritório."
+      ],
+      "questions": [
+        ["Quanto de memória e armazenamento ele tem?", "Tem 8 GB de memória e SSD, bem ágil para o dia a dia."],
+        ["A bateria ainda segura fora da tomada?", "Segura em torno de quatro horas com uso leve."],
+        ["Roda bem programas de edição?", "Para edição leve vai bem; para projetos pesados eu recomendaria algo mais novo."]
+      ]
+    },
+    "geladeira": {
+      "group": "appliances",
+      "shipping_cents": 18000,
+      "extras": [
+        "Gelando muito bem, borrachas das portas em bom estado.",
+        "Higienizada e pronta para uso.",
+        "Motivo da venda: mudança para um apartamento menor."
+      ],
+      "questions": [
+        ["Quais são as medidas?", "Tem cerca de 1,80 m de altura por 70 cm de largura."],
+        ["É frost free?", "É sim, não precisa descongelar."],
+        ["Você ajuda a descer na retirada?", "Ajudo a levar até a portaria, e o prédio tem elevador."]
+      ]
+    },
+    "sofa": {
+      "group": "furniture",
+      "shipping_cents": 15000,
+      "extras": [
+        "Couro hidratado recentemente, sem rasgos.",
+        "Espuma firme, de casa sem animais e sem fumantes.",
+        "Muito confortável; vendo porque troquei a decoração da sala."
+      ],
+      "questions": [
+        ["Qual a largura total?", "Mede aproximadamente 2,10 m de largura."],
+        ["Tem algum rasgo ou mancha?", "Não tem rasgos, só marcas naturais do couro."],
+        ["Passa em porta de apartamento?", "Passa sim, os pés são removíveis e facilitam bastante."]
+      ]
+    },
+    "mesa": {
+      "group": "furniture",
+      "shipping_cents": 12000,
+      "extras": [
+        "Madeira firme, sem cupim e sem bambear.",
+        "Tampo com marcas leves de uso, que dão charme à peça.",
+        "Fácil de desmontar para o transporte."
+      ],
+      "questions": [
+        ["Quais as medidas do tampo?", "O tampo tem cerca de 1,40 m por 80 cm."],
+        ["A madeira é maciça?", "É madeira maciça, bem pesada e resistente."],
+        ["Vai desmontada?", "Posso desmontar os pés para facilitar o transporte."]
+      ]
+    },
+    "cadeira": {
+      "group": "furniture",
+      "shipping_cents": 6000,
+      "extras": [
+        "Estrutura firme, sem folgas.",
+        "Assento confortável e bem conservado.",
+        "Ideal para home office ou para compor a sala."
+      ],
+      "questions": [
+        ["Tem algum risco ou parte solta?", "Nada solto, só marcas pequenas de uso."],
+        ["Vende mais de uma unidade?", "Tenho só esta unidade no momento."],
+        ["Aguenta bem o peso de um adulto?", "Aguenta sim, a estrutura é reforçada."]
+      ]
+    },
+    "tenis": {
+      "group": "fashion",
+      "shipping_cents": 2500,
+      "extras": [
+        "Usado poucas vezes, solado praticamente novo.",
+        "Higienizado e sem odores.",
+        "Acompanha a caixa original."
+      ],
+      "questions": [
+        ["A forma é grande ou pequena?", "A forma é normal, pode pedir o seu número de sempre."],
+        ["É original?", "É original, comprado em loja oficial."],
+        ["Tem algum descolado ou desgaste no solado?", "Não, o solado está inteiro e sem descolar."]
+      ]
+    },
+    "violao": {
+      "group": "music",
+      "shipping_cents": 6000,
+      "extras": [
+        "Braço reto, tarraxas firmes e som encorpado.",
+        "Cordas trocadas recentemente.",
+        "Acompanha capa simples para transporte."
+      ],
+      "questions": [
+        ["O braço está empenado?", "Não, o braço está reto e a ação das cordas está confortável."],
+        ["Acompanha capa?", "Acompanha uma capa simples de nylon."],
+        ["Serve para iniciante?", "Serve muito bem, é macio de tocar."]
+      ]
+    },
+    "guitarra": {
+      "group": "music",
+      "shipping_cents": 6500,
+      "extras": [
+        "Captadores funcionando perfeitamente, sem chiados.",
+        "Trastes com pouco desgaste, regulada recentemente.",
+        "Pequenas marcas de uso no corpo, nada que afete o som."
+      ],
+      "questions": [
+        ["Os captadores são originais?", "São os originais de fábrica, todos funcionando."],
+        ["Precisa de regulagem?", "Foi regulada há pouco tempo, está pronta para tocar."],
+        ["Acompanha cabo ou correia?", "Vai com correia; o cabo eu não tenho sobrando."]
+      ]
+    },
+    "livro": {
+      "group": "books",
+      "shipping_cents": 1500,
+      "extras": [
+        "Páginas amareladas pelo tempo, mas sem rasgos.",
+        "Sem anotações nem grifos.",
+        "Exemplar de estante, bem conservado."
+      ],
+      "questions": [
+        ["Tem alguma página solta ou rabiscada?", "Nenhuma página solta, e não há rabiscos."],
+        ["A capa está inteira?", "A capa tem desgaste nas bordas, mas está inteira."],
+        ["Você embala bem para não amassar?", "Embalo com papelão dos dois lados, chega inteiro."]
+      ]
+    },
+    "console": {
+      "group": "games",
+      "shipping_cents": 3500,
+      "extras": [
+        "Testado e funcionando, leitor em bom estado.",
+        "Sempre guardado na caixa, sem marcas de queda.",
+        "Acompanha cabos e fonte."
+      ],
+      "questions": [
+        ["Acompanha algum jogo?", "Vai com o console, os cabos e um controle; os jogos eu vendo à parte."],
+        ["Tem alguma restrição de conta?", "Não, está livre e restaurado de fábrica."],
+        ["O controle tem algum botão falhando?", "Não, o controle está respondendo certinho."]
+      ]
+    },
+    "camera": {
+      "group": "tech",
+      "shipping_cents": 3000,
+      "extras": [
+        "Lente sem fungos e sem riscos.",
+        "Bateria e carregador originais.",
+        "Poucos cliques, usada só em viagens."
+      ],
+      "questions": [
+        ["A lente tem fungo ou risco?", "Não, a lente está limpa e sem riscos."],
+        ["Acompanha cartão de memória?", "Acompanha um cartão e o carregador."],
+        ["Filma em boa qualidade?", "Filma bem para registros do dia a dia e de viagens."]
+      ]
+    },
+    "fone": {
+      "group": "tech",
+      "shipping_cents": 2000,
+      "extras": [
+        "Espumas em bom estado, som limpo dos dois lados.",
+        "Acompanha cabo e estojo.",
+        "Usado poucas vezes, sem mau contato."
+      ],
+      "questions": [
+        ["Funciona dos dois lados?", "Funciona perfeitamente dos dois lados."],
+        ["As espumas estão descascando?", "Não, as espumas estão inteiras."],
+        ["É confortável para usar por muitas horas?", "É bem confortável, uso para trabalhar o dia todo."]
+      ]
+    },
+    "tv": {
+      "group": "appliances",
+      "shipping_cents": 9000,
+      "extras": [
+        "Imagem perfeita, sem manchas nem pixels queimados.",
+        "Acompanha controle remoto e cabo de força.",
+        "Vendo porque comprei uma maior."
+      ],
+      "questions": [
+        ["Tem alguma mancha ou linha na tela?", "Nenhuma, a imagem está perfeita."],
+        ["Acompanha suporte de parede?", "Acompanha a base de mesa; o suporte de parede não está incluso."],
+        ["Tem entrada HDMI?", "Tem duas entradas HDMI e uma USB."]
+      ]
+    },
+    "carrinho_bebe": {
+      "group": "kids",
+      "shipping_cents": 8000,
+      "extras": [
+        "Peça de época, ótima para decoração ou ensaios fotográficos.",
+        "Estrutura firme e rodas girando bem.",
+        "Conservado, com sinais do tempo que fazem parte do charme."
+      ],
+      "questions": [
+        ["Dá para usar com bebê ou é só decorativo?", "Eu recomendo como peça decorativa, pela idade do carrinho."],
+        ["As rodas estão firmes?", "Estão firmes e girando sem travar."],
+        ["Ele fecha para transportar?", "Não fecha; o ideal é transportar em carro com porta-malas grande."]
+      ]
+    },
+    "air_fryer": {
+      "group": "home",
+      "shipping_cents": 4500,
+      "extras": [
+        "Cesto antiaderente sem riscos.",
+        "Funciona perfeitamente, usada poucas vezes.",
+        "Acompanha manual."
+      ],
+      "questions": [
+        ["Qual a voltagem?", "É 127 V."],
+        ["O cesto está descascando?", "Não, o antiaderente está inteiro."],
+        ["Cabe quanto de comida?", "Dá para preparar porções para duas ou três pessoas."]
+      ]
+    },
+    "liquidificador": {
+      "group": "home",
+      "shipping_cents": 3500,
+      "extras": [
+        "Lâminas afiadas e motor forte.",
+        "Copo sem trincas, tampa vedando bem.",
+        "Ótimo para sucos, vitaminas e massas leves."
+      ],
+      "questions": [
+        ["Qual a voltagem?", "É 127 V."],
+        ["Tritura gelo?", "Tritura sim, sem dificuldade."],
+        ["O copo tem alguma trinca?", "Nenhuma trinca, e a tampa é a original."]
+      ]
+    }
+  },
+  "questions": [
+    ["Ainda está disponível?", "Está sim! Pode comprar pelo site que eu envio no dia seguinte."],
+    ["Aceita proposta?", "Aceito propostas razoáveis pelo chat, pode mandar."],
+    ["Qual o motivo da venda?", "Estou desapegando porque quase não uso mais."],
+    ["Envia para o interior?", "Envio para todo o Brasil, bem embalado."],
+    ["Tem nota fiscal?", "Não tenho mais a nota, mas está tudo funcionando direitinho."],
+    ["Posso retirar pessoalmente?", "Pode sim, combinamos pelo chat depois da compra."],
+    ["Tem algum defeito ou detalhe que eu deva saber?", "Só marcas leves de uso, que aparecem nas fotos."],
+    ["O preço é negociável?", "Consigo melhorar um pouco, me chama no chat com a sua proposta."],
+    ["Quanto tempo de uso?", "Pouco mais de um ano, sempre bem cuidado."],
+    ["Vocês embalam bem para o envio?", "Sim, vai com plástico-bolha e caixa reforçada."],
+    ["Consegue enviar ainda esta semana?", "Consigo, posto em até dois dias úteis depois da confirmação."],
+    ["As fotos são do produto real?", "São sim, tiradas aqui em casa na semana do anúncio."]
+  ],
+  "sold_notes": [
+    "Em ótimo estado, com pouco uso.",
+    "Funcionando perfeitamente; vendo por falta de uso.",
+    "Bem conservado, de casa sem animais e sem fumantes.",
+    "Envio rápido e bem embalado.",
+    "Sem defeitos, apenas sinais leves de uso.",
+    "Comprado há menos de dois anos e sempre bem cuidado.",
+    "Ideal para quem procura um bom usado por um preço justo.",
+    "Retirada em mãos ou envio pelo site."
+  ],
+  "sold": {
+    "music": [
+      ["Ukulele soprano com capa", "music", 28000],
+      ["Pedal de distorção para guitarra", "music", 22000],
+      ["Teclado musical de 61 teclas", "music", 65000],
+      ["Cajón acústico de madeira", "music", 32000],
+      ["Amplificador de guitarra 20 W", "music", 48000],
+      ["Suporte de chão para violão", "music", 6000],
+      ["Afinador cromático de clipe", "music", 4500],
+      ["Violão infantil de nylon", "music", 26000],
+      ["Capa acolchoada para guitarra", "music", 12000],
+      ["Pandeiro de couro 10 polegadas", "music", 15000],
+      ["Estante de partitura dobrável", "music", 7000],
+      ["Microfone dinâmico com cabo", "music", 18000],
+      ["Baixo elétrico de 4 cordas preto", "music", 89000],
+      ["Cavaquinho de cedro com capa", "music", 39000],
+      ["Flauta doce soprano", "music", 3500],
+      ["Pedestal de microfone com haste", "music", 9000],
+      ["Bateria eletrônica compacta", "music", 145000],
+      ["Violão de aço folk", "music", 62000],
+      ["Metrônomo digital", "music", 5000],
+      ["Correia de couro para guitarra", "music", 4500],
+      ["Caixa amplificada de 50 W", "music", 54000],
+      ["Encordoamento de aço para violão (3 jogos)", "music", 6500]
+    ],
+    "furniture": [
+      ["Estante de livros com 5 prateleiras", "furniture", 32000],
+      ["Criado-mudo de madeira com gaveta", "furniture", 15000],
+      ["Rack para TV de até 50 polegadas", "furniture", 28000],
+      ["Poltrona de leitura cinza", "furniture", 45000],
+      ["Escrivaninha compacta branca", "furniture", 26000],
+      ["Cômoda de 4 gavetas", "furniture", 38000],
+      ["Banco de madeira para varanda", "furniture", 19000],
+      ["Mesa de centro redonda", "furniture", 17000],
+      ["Sapateira de 3 andares", "furniture", 9000],
+      ["Espelho de chão com moldura", "furniture", 21000],
+      ["Aparador estreito de madeira", "furniture", 29000],
+      ["Guarda-roupa de 2 portas", "furniture", 52000],
+      ["Mesa lateral de madeira", "furniture", 13000],
+      ["Cabideiro de chão", "furniture", 8000],
+      ["Cadeira de balanço de madeira", "furniture", 36000],
+      ["Prateleira flutuante (par)", "furniture", 6000],
+      ["Buffet de madeira com 3 portas", "furniture", 64000],
+      ["Banqueta alta de bar (par)", "furniture", 18000],
+      ["Cama de solteiro com gavetas", "furniture", 47000],
+      ["Penteadeira com espelho", "furniture", 33000],
+      ["Puff redondo de veludo", "furniture", 11000]
+    ],
+    "tech": [
+      ["Kindle 10ª geração com capa", "electronics", 38000],
+      ["Tablet Samsung de 10 polegadas", "phones", 72000],
+      ["Monitor LED de 24 polegadas", "computers", 55000],
+      ["Teclado mecânico ABNT2", "computers", 24000],
+      ["Mouse sem fio ergonômico", "computers", 8000],
+      ["Caixa de som Bluetooth portátil", "electronics", 19000],
+      ["Carregador portátil de 10.000 mAh", "electronics", 9000],
+      ["Roteador Wi-Fi dual band", "computers", 14000],
+      ["HD externo de 1 TB", "computers", 26000],
+      ["Webcam Full HD com microfone", "computers", 13000],
+      ["Smartwatch com pulseira extra", "electronics", 35000],
+      ["Impressora multifuncional jato de tinta", "computers", 31000],
+      ["Tripé de alumínio para câmera", "electronics", 12000],
+      ["Lente 50 mm para câmera DSLR", "electronics", 48000],
+      ["Capa e película para smartphone", "phones", 3000],
+      ["Suporte articulado para notebook", "computers", 7000],
+      ["SSD de 480 GB", "computers", 19000],
+      ["Memória de 8 GB para notebook", "computers", 14000],
+      ["Carregador original para notebook", "computers", 11000],
+      ["Leitor de cartões USB", "computers", 3500],
+      ["Hub USB com 4 portas", "computers", 5000],
+      ["Fone intra-auricular sem fio", "electronics", 16000]
+    ],
+    "games": [
+      ["Controle sem fio para PlayStation 4", "games", 19000],
+      ["Jogo de corrida para Nintendo Switch", "games", 18000],
+      ["Controle extra para Xbox One", "games", 21000],
+      ["Headset gamer com microfone", "games", 17000],
+      ["Volante com pedais para console", "games", 62000],
+      ["Cartão de memória para PlayStation 2", "games", 5000],
+      ["Super Nintendo com 2 controles", "games", 58000],
+      ["PlayStation 2 com jogos", "games", 42000],
+      ["Jogo de futebol para PlayStation 4", "games", 9000],
+      ["Base carregadora para controles", "games", 8000],
+      ["Game Boy Color roxo", "games", 45000],
+      ["Nintendo 3DS com carregador", "games", 62000],
+      ["Cadeira gamer reclinável", "furniture", 68000]
+    ],
+    "home": [
+      ["Jogo de panelas antiaderentes com 5 peças", "home", 21000],
+      ["Cafeteira elétrica para 30 xícaras", "home", 12000],
+      ["Sanduicheira e grill", "home", 8000],
+      ["Batedeira planetária de 4 L", "home", 34000],
+      ["Jogo de pratos de porcelana com 12 peças", "home", 16000],
+      ["Panela de pressão elétrica", "home", 29000],
+      ["Aspirador de pó vertical", "home", 26000],
+      ["Ferro de passar a vapor", "home", 9000],
+      ["Purificador de água de bancada", "home", 19000],
+      ["Conjunto de potes herméticos", "home", 7000],
+      ["Ventilador de mesa de 40 cm", "home", 13000],
+      ["Espremedor de frutas elétrico", "home", 8000],
+      ["Mixer de mão com copo", "home", 9000],
+      ["Torradeira de 2 fatias", "home", 7000],
+      ["Chaleira elétrica de inox", "home", 8500],
+      ["Processador de alimentos", "home", 24000],
+      ["Grill elétrico antiaderente", "home", 13000],
+      ["Balança de cozinha digital", "home", 3500],
+      ["Panela elétrica de arroz", "home", 11000],
+      ["Garrafa térmica de 1 litro", "home", 4500],
+      ["Máquina de costura portátil", "home", 29000]
+    ],
+    "appliances": [
+      ["Máquina de lavar de 8 kg", "appliances", 78000],
+      ["Fogão de 4 bocas com forno", "appliances", 52000],
+      ["Frigobar de 80 litros", "appliances", 55000],
+      ["Ar-condicionado portátil", "appliances", 120000],
+      ["Lava-louças compacta", "appliances", 98000],
+      ["Freezer horizontal de 1 porta", "appliances", 110000],
+      ["Climatizador de ar", "appliances", 34000],
+      ["Forno elétrico de 44 litros", "appliances", 36000],
+      ["Depurador de ar de 60 cm", "appliances", 24000],
+      ["Micro-ondas de 20 litros", "appliances", 32000],
+      ["Soundbar para TV", "electronics", 42000],
+      ["Suporte articulado para TV", "electronics", 9000]
+    ],
+    "sports": [
+      ["Capacete de ciclismo tamanho M", "bikes", 12000],
+      ["Par de halteres de 5 kg", "sports", 9000],
+      ["Esteira elétrica dobrável", "sports", 135000],
+      ["Bomba de ar de pé para bicicleta", "bikes", 6000],
+      ["Skate longboard completo", "sports", 38000],
+      ["Patins inline tamanho 39", "sports", 26000],
+      ["Barraca de camping para 4 pessoas", "sports", 34000],
+      ["Colchonete para yoga", "sports", 6000],
+      ["Raquete de tênis com capa", "sports", 22000],
+      ["Bicicleta ergométrica", "sports", 68000],
+      ["Suporte de parede para bicicleta", "bikes", 7000],
+      ["Mochila de hidratação de 2 L", "sports", 11000],
+      ["Bola de basquete oficial", "sports", 8000],
+      ["Farol e lanterna para bicicleta", "bikes", 5000],
+      ["Selim de gel confortável", "bikes", 6500],
+      ["Cadeado de corrente para bicicleta", "bikes", 4500],
+      ["Bagageiro traseiro de alumínio", "bikes", 8000],
+      ["Par de pedais de alumínio", "bikes", 5500],
+      ["Luvas de ciclismo tamanho M", "bikes", 3500],
+      ["Rolo de treino para bicicleta", "bikes", 42000],
+      ["Bermuda de ciclismo tamanho G", "bikes", 6000],
+      ["Cadeirinha infantil para bicicleta", "bikes", 16000]
+    ],
+    "books": [
+      ["Coleção de romances policiais (6 livros)", "books", 9000],
+      ["Box de fantasia em 3 volumes", "books", 12000],
+      ["Dicionário de inglês ilustrado", "books", 4500],
+      ["Livros de receitas (lote com 4)", "books", 6000],
+      ["Enciclopédia infantil em 8 volumes", "books", 18000],
+      ["Atlas geográfico escolar", "books", 3500],
+      ["Livro de fotografia de capa dura", "books", 8000],
+      ["Mangás (lote com 10 volumes)", "books", 13000],
+      ["Livros de concurso (lote com 5)", "books", 9500],
+      ["Biografias (lote com 3 livros)", "books", 5500],
+      ["Livro de colorir para adultos", "books", 2500],
+      ["Coleção de clássicos da literatura (10 livros)", "books", 16000],
+      ["Gibis antigos (lote com 20)", "collectibles", 15000]
+    ],
+    "fashion": [
+      ["Jaqueta jeans tamanho M", "fashion", 12000],
+      ["Bota de couro feminina 37", "shoes", 18000],
+      ["Vestido de festa longo azul", "fashion", 22000],
+      ["Mochila de couro marrom", "fashion", 16000],
+      ["Tênis de corrida 41", "shoes", 19000],
+      ["Óculos de sol com estojo", "fashion", 9000],
+      ["Relógio de pulso analógico", "fashion", 14000],
+      ["Casaco de lã cinza tamanho G", "fashion", 15000],
+      ["Sandália de salto 36", "shoes", 8000],
+      ["Bolsa transversal preta", "fashion", 11000],
+      ["Camisa social slim tamanho M", "fashion", 6000],
+      ["Chuteira society 40", "shoes", 13000],
+      ["Tênis casual branco 38", "shoes", 11000],
+      ["Bota de trilha 42", "shoes", 21000],
+      ["Sapatilha de couro 36", "shoes", 7000],
+      ["Tênis infantil 30", "shoes", 6000],
+      ["Calça jeans reta tamanho 40", "fashion", 7500],
+      ["Moletom com capuz tamanho M", "fashion", 9000],
+      ["Cinto de couro marrom", "fashion", 4500],
+      ["Mochila escolar reforçada", "fashion", 8000],
+      ["Sapatênis de couro 42", "shoes", 12000]
+    ],
+    "kids": [
+      ["Berço portátil dobrável", "baby", 32000],
+      ["Cadeirinha de carro para bebê", "baby", 38000],
+      ["Triciclo infantil com empurrador", "toys", 17000],
+      ["Kit de blocos de montar (500 peças)", "toys", 9000],
+      ["Cadeira de alimentação", "baby", 21000],
+      ["Bicicleta infantil aro 16", "bikes", 28000],
+      ["Casinha de boneca de madeira", "toys", 19000],
+      ["Banheira de bebê com suporte", "baby", 9000],
+      ["Andador infantil", "baby", 11000],
+      ["Patinete infantil de 3 rodas", "toys", 12000],
+      ["Quebra-cabeça de 1000 peças", "toys", 4500],
+      ["Mesinha infantil com 2 cadeiras", "toys", 15000]
+    ],
+    "misc": [
+      ["Furadeira de impacto com maleta", "tools", 24000],
+      ["Jogo de chaves de fenda com 12 peças", "tools", 6000],
+      ["Caixa de transporte para gatos", "pets", 9000],
+      ["Arranhador para gatos de 3 andares", "pets", 14000],
+      ["Aquário de 60 litros com filtro", "pets", 26000],
+      ["Secador de cabelo profissional", "beauty", 15000],
+      ["Chapinha de cerâmica", "beauty", 11000],
+      ["Escada de alumínio de 5 degraus", "tools", 13000],
+      ["Calotas aro 14 (jogo com 4)", "auto-parts", 9000],
+      ["Suporte veicular para bicicletas", "auto-parts", 22000],
+      ["Coleção de moedas antigas", "collectibles", 18000],
+      ["Parafusadeira a bateria", "tools", 19000],
+      ["Casinha para cachorro de porte médio", "pets", 17000],
+      ["Miniaturas de carros (lote com 12)", "collectibles", 13000]
+    ]
+  },
+  "reviews": {
+    "5": [
+      "Chegou antes do prazo e muito bem embalado. Recomendo!",
+      "Produto exatamente como descrito. Vendedor atencioso.",
+      "Tudo certo, entrega rápida e produto em ótimo estado.",
+      "Superou minhas expectativas, parece novo.",
+      "Atendimento muito simpático, respondeu todas as dúvidas.",
+      "Compra tranquila do início ao fim. Voltarei a comprar.",
+      "Embalagem caprichada e envio no dia seguinte.",
+      "Ótimo custo-benefício, valeu cada centavo.",
+      "Funcionando perfeitamente. Muito obrigado!",
+      "Negociação honesta e sem enrolação.",
+      "Chegou direitinho, igual às fotos.",
+      "Excelente! Já estou usando e adorei.",
+      "Atendimento nota dez e produto impecável.",
+      "Rápido, seguro e bem embalado. Recomendo de olhos fechados.",
+      "Minha filha amou o presente. Obrigada pelo cuidado no envio!",
+      "Produto de qualidade e vendedor muito prestativo.",
+      "Veio até com um bilhetinho de agradecimento. Adorei!",
+      "Entrega no prazo e tudo conforme combinado.",
+      "Melhor do que eu esperava pelo preço.",
+      "Tudo perfeito, sem nenhum problema.",
+      "Comprei com receio por ser usado, mas está em estado de novo.",
+      "Recomendo! Comunicação fácil e envio ágil.",
+      "Muito bem conservado, dá para ver que foi bem cuidado.",
+      "Segunda compra aqui e novamente tudo certo.",
+      "Perfeito, obrigado!",
+      "Chegou em dois dias. Nota máxima."
+    ],
+    "4": [
+      "Produto bom, só demorou um pouco mais do que eu esperava para chegar.",
+      "Tudo certo, mas a embalagem poderia ser mais reforçada.",
+      "Bom produto, com algumas marcas de uso a mais do que nas fotos.",
+      "Gostei, funciona bem. O envio levou alguns dias.",
+      "Conforme o anúncio. Atendimento ok.",
+      "Produto ótimo, só achei o frete um pouco caro.",
+      "Chegou certinho, apenas a caixa veio amassada.",
+      "Bom negócio, recomendo.",
+      "Vendedor atencioso, produto dentro do esperado.",
+      "Cumpre o que promete."
+    ],
+    "3": [
+      "Produto razoável, tinha mais sinais de uso do que eu imaginava.",
+      "Demorou para ser enviado, mas chegou funcionando.",
+      "Atende, mas a descrição poderia ser mais detalhada.",
+      "Esperava um pouco mais pelo valor.",
+      "Chegou com atraso e o vendedor demorou a responder.",
+      "Funciona, porém veio sem um acessório que aparecia na foto."
+    ],
+    "2": [
+      "Envio muito demorado e pouca comunicação.",
+      "Produto com um defeito pequeno que não estava no anúncio.",
+      "Veio mal embalado e chegou arranhado.",
+      "Demorou mais de uma semana para postar."
+    ],
+    "1": [
+      "Experiência ruim: atraso grande e nenhuma resposta às mensagens.",
+      "Produto bem diferente do anunciado.",
+      "Não recomendo, tive muita dor de cabeça com esta compra."
+    ]
+  },
+  "chats": {
+    "openers": [
+      ["Oi, tudo bem? Ainda está disponível?", "Oi! Tudo ótimo. Está disponível sim."],
+      ["Boa tarde! Vi o anúncio e fiquei interessado.", "Boa tarde! Que bom, pode perguntar o que quiser."],
+      ["Olá! Esse anúncio ainda está valendo?", "Olá! Está sim, pode comprar tranquilo."],
+      ["Oi! Consegue me passar mais detalhes do estado?", "Claro! Está bem conservado, só com sinais normais de uso."],
+      ["Bom dia! Ainda tem para vender?", "Bom dia! Tenho sim, está aqui guardado."],
+      ["Oi, esse item ainda está com você?", "Oi! Está comigo, sim."]
+    ],
+    "followups": [
+      ["Tem alguma marca ou defeito que não aparece nas fotos?", "Nada escondido: o que tem de detalhe está nas fotos."],
+      ["Você envia rápido? Preciso para a semana que vem.", "Envio em até dois dias úteis depois do pagamento confirmado."],
+      ["Em que região você fica? Talvez eu consiga retirar.", "Fico perto do centro. Dá para combinar a retirada depois da compra pelo site."],
+      ["Posso ver funcionando antes de levar?", "Pode sim, na retirada eu mostro tudo funcionando."],
+      ["Faz tempo que você tem?", "Uns dois anos, mas usei bem pouco."],
+      ["Se eu comprar hoje, você posta amanhã?", "Posto amanhã cedo, sem problema."],
+      ["Beleza, vou pensar e te aviso.", "Combinado, fico no aguardo!"],
+      ["Obrigado pelas respostas, vou fechar pelo site.", "Eu que agradeço! Qualquer coisa é só chamar."]
+    ],
+    "offer_intros": [
+      "Consegue fazer um preço melhor? Vou mandar uma proposta.",
+      "Achei um pouco acima do que eu posso pagar. Posso fazer uma oferta?",
+      "Se você fizer um desconto, eu fecho hoje.",
+      "Gostei bastante! Vou te mandar uma proposta, vê se fica bom para você."
+    ],
+    "accepted": [
+      "Fechado! Aceitei a proposta, é só pagar pelo site que eu já separo para envio.",
+      "Combinado, pode finalizar a compra.",
+      "Aceito! Assim que o pagamento confirmar eu embalo."
+    ],
+    "paying": [
+      "Maravilha, já vou pagar.",
+      "Ótimo! Finalizando a compra agora.",
+      "Perfeito, obrigado! Pago ainda hoje."
+    ],
+    "declined": [
+      "Poxa, nesse valor eu não consigo. Já está bem abaixo do que paguei.",
+      "Infelizmente não dá, o preço já está no limite.",
+      "Agradeço a proposta, mas por esse valor prefiro segurar mais um pouco."
+    ],
+    "countered": [
+      "Nesse valor não consigo, mas te mandei uma contraproposta.",
+      "Consigo chegar um pouco mais perto. Vê se a contraproposta fica boa.",
+      "Fiz o meu melhor preço na contraproposta."
+    ],
+    "counter_accepted": [
+      "Fechou, aceito!",
+      "Combinado, fica bom para mim.",
+      "Pode ser, vamos fechar."
+    ],
+    "counter_declined": [
+      "Ainda fica pesado para mim, vou deixar passar. Obrigado!",
+      "Não vou conseguir agora. Se baixar, me avisa.",
+      "Vou ter que pensar mais um pouco. Obrigado pela atenção!"
+    ],
+    "cancelled": [
+      "Desculpa, surgiu um imprevisto e vou cancelar a proposta por enquanto.",
+      "Acabei encontrando outro mais perto de casa, vou retirar a proposta. Obrigado!",
+      "Preciso esperar o mês virar, vou cancelar a proposta e volto depois."
+    ],
+    "off_platform": [
+      ["Posso te pagar por pix direto? Sai mais rápido.", "Prefiro fazer tudo pelo site, assim nós dois ficamos protegidos."],
+      ["Se eu fizer uma transferência agora, você segura para mim?", "Melhor comprar pelo site mesmo: o pagamento fica garantido para os dois lados."]
+    ]
+  }
+}
