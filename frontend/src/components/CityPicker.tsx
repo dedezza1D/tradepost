@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
 import { errorMessage } from '../lib/errors'
@@ -45,9 +45,16 @@ export function CityPicker({
   const [cepError, setCepError] = useState<string | null>(null)
   const query = useDebounced(text.split(' - ')[0].trim(), 200)
 
+  // Show a city chosen here or by the page, and empty the box when the page clears it. Typing
+  // clears the value too, but keeps what is being typed; a new object for the same city changes
+  // nothing.
+  const shown = value ? `${value.name} - ${value.state}` : null
+  const clearedByTyping = useRef(false)
   useEffect(() => {
-    setText(value ? `${value.name} - ${value.state}` : '')
-  }, [value])
+    if (shown !== null) setText(shown)
+    else if (!clearedByTyping.current) setText('')
+    clearedByTyping.current = false
+  }, [shown])
 
   const results = useQuery({
     queryKey: ['cities', query],
@@ -92,7 +99,10 @@ export function CityPicker({
             setText(e.target.value)
             setOpen(true)
             setActive(0)
-            if (value) onChange(null)
+            if (value) {
+              clearedByTyping.current = true
+              onChange(null)
+            }
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}

@@ -2,10 +2,10 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useMe } from '../api/auth'
 import { ApiError, api, json } from '../api/client'
 import { type Checkout, useProviders } from '../api/orders'
 import { CityPicker, type City } from '../components/CityPicker'
+import { useShipToCity } from '../lib/city'
 import { errorMessage } from '../lib/errors'
 import { formatMoney } from '../lib/format'
 import { Icon } from '../ui/icons'
@@ -35,7 +35,6 @@ export function CheckoutStartPage() {
   const { t } = useTranslation()
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const { data: me } = useMe()
   const fromCart = params.get('from') === 'cart'
   const listingId = params.get('listing')
   const variantId = params.get('variant')
@@ -44,9 +43,11 @@ export function CheckoutStartPage() {
   const offerId = params.get('offer')
   const providers = useProviders()
   const [provider, setProvider] = useState<string | null>(null)
-  const own = me?.municipality_id && me.city && me.state ? { ibge_code: me.municipality_id, name: me.city, state: me.state } : null
-  const [city, setCity] = useState<City | null>(null)
-  const destination = city ?? own
+  // Starts at the ship-to city; a city typed here applies to this checkout only. While typing,
+  // the destination is empty rather than falling back (which would put the old city back).
+  const [shipTo] = useShipToCity()
+  const [city, setCity] = useState<City | null | undefined>(undefined)
+  const destination = city === undefined ? shipTo : city
   const [service, setService] = useState<Service>('standard')
   const [couponInput, setCouponInput] = useState('')
   const [coupon, setCoupon] = useState<string | null>(null)
@@ -97,7 +98,7 @@ export function CheckoutStartPage() {
       {(calculated || needsCity) && (
         <section className="card space-y-3 p-4">
           <p className="font-semibold">{t('shipping.deliverTo')}</p>
-          <CityPicker key={destination?.ibge_code ?? 'none'} value={destination} onChange={setCity} label={t('shipping.to')} />
+          <CityPicker value={destination} onChange={setCity} label={t('shipping.to')} />
           {calculated && (
             <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t('shipping.title')}>
               {(['standard', 'express'] as const).map((s) => (
