@@ -14,6 +14,7 @@ from tradepost.deps import DbSession
 from tradepost.errors import AppError, NotFound
 from tradepost.identity.models import User
 from tradepost.identity.sessions import CurrentUser
+from tradepost.logs import error_summary
 from tradepost.media.storage import Storage
 from tradepost.orders import processing, service
 from tradepost.orders.models import (
@@ -624,7 +625,7 @@ async def webhook(
         async with db.begin_nested():
             await processing.process_event(db, payments, event)
     except Exception as exc:  # left for the inbox job
-        event.last_error = f"{type(exc).__name__}: {exc}"[:500]
+        event.last_error = error_summary(exc)[:500]
     return {"status": "received"}
 
 

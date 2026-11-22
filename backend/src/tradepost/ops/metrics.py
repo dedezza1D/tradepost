@@ -17,7 +17,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.db import Database
-from tradepost.logs import get_logger
+from tradepost.logs import get_logger, safe_message, safe_traceback
 
 log = get_logger(__name__)
 
@@ -113,12 +113,17 @@ async def flush(db: AsyncSession, source: Collector | None = None) -> int:
     return len(cells)
 
 
-async def purge(db: AsyncSession, days: int = 7) -> int:
-    result = await db.execute(
+async def purge(db: AsyncSession, days: int = 7, error_days: int = 30) -> int:
+    """Request statistics after ``days``; error groups not seen for ``error_days``."""
+    stats = await db.execute(
         text("DELETE FROM request_stats WHERE minute < now() - make_interval(days => :d)"),
         {"d": days},
     )
-    return int(result.rowcount or 0)  # type: ignore[attr-defined]
+    errors = await db.execute(
+        text("DELETE FROM error_events WHERE last_seen < now() - make_interval(days => :d)"),
+        {"d": error_days},
+    )
+    return int(stats.rowcount or 0) + int(errors.rowcount or 0)  # type: ignore[attr-defined]
 
 
 # --- errors ------------------------------------------------------------------------------------
@@ -154,7 +159,7 @@ async def record_error(
     """Store an unhandled error in its own transaction. Never raises: recording an error must
     not hide the original one."""
     try:
-        tb = "".join(traceback.format_exception(exc))[-4000:]
+        tb = safe_traceback(exc)[-4000:]
         async with database.sessionmaker() as db, db.begin():
             await db.execute(
                 _RECORD,
@@ -162,7 +167,7 @@ async def record_error(
                     "fp": fingerprint(exc, route),
                     "kind": type(exc).__name__[:120],
                     "route": route[:160],
-                    "message": str(exc)[:300],
+                    "message": safe_message(exc)[:300],
                     "tb": tb,
                     "rid": request_id,
                 },

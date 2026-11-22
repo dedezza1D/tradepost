@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.identity.models import User
-from tradepost.logs import get_logger
+from tradepost.logs import error_summary, get_logger
 from tradepost.notifications.service import notify
 from tradepost.ops.metrics import BUCKETS_MS
 from tradepost.ops.models import AlertState, FeatureFlag, JobRun
@@ -96,7 +96,7 @@ async def track_job(
                 {
                     "name": name,
                     "started": started,
-                    "error": f"{type(exc).__name__}: {exc}"[:300],
+                    "error": error_summary(exc)[:300],
                     "ms": ms,
                 },
             )
