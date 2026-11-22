@@ -7,10 +7,12 @@ import { useApiWaiting } from '../api/status'
 import { useUnreadChats } from '../api/chat'
 import { useCart } from '../api/orders'
 import { LANGUAGES, currentLanguage } from '../i18n'
+import { useShipToField } from '../lib/city'
 import { useChangeLanguage } from '../lib/language'
 import { CategoryIcon } from '../ui/categoryIcons'
 import { Icon, type IconName } from '../ui/icons'
 import { BrandMark, Logo } from './Brand'
+import { CityPicker } from './CityPicker'
 import { NotificationBell } from './NotificationBell'
 import { SearchBox } from './SearchBox'
 
@@ -89,19 +91,60 @@ function CartLink() {
   )
 }
 
-/** Where listings are measured from: the signed-in person's city, or a prompt to choose one. */
+/**
+ * Where to ship and measure distances from: any Brazilian city, chosen by name or postal code
+ * (kept in this browser), else the signed-in person's city. Closes on Escape and outside clicks.
+ */
 function ShipTo() {
   const { t } = useTranslation()
-  const { data: me } = useMe()
-  const city = me?.city ? `${me.city} - ${me.state}` : null
+  const { city, value, onChange } = useShipToField()
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const location = useLocation()
+  useEffect(() => setOpen(false), [location])
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent) => box.current && !box.current.contains(e.target as Node) && setOpen(false)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [open])
   return (
-    <Link to="/?tab=nearby" className="flex min-w-0 items-center gap-1.5 rounded-lg py-1 pr-2 hover:bg-white/10">
-      <Icon name="pin" size={20} className="shrink-0 opacity-90" />
-      <span className="min-w-0 leading-tight">
-        <span className="block text-[11px] opacity-80">{t('nav.shipTo')}</span>
-        <span className="block truncate text-sm font-semibold">{city ?? t('nav.chooseCity')}</span>
-      </span>
-    </Link>
+    <div className="relative" ref={box}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="ship-to-panel"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full min-w-0 items-center gap-1.5 rounded-lg py-1 pr-2 text-left hover:bg-white/10"
+      >
+        <Icon name="pin" size={20} className="shrink-0 opacity-90" />
+        <span className="min-w-0 leading-tight">
+          <span className="block text-[11px] opacity-80">{t('nav.shipTo')}</span>
+          <span className="block truncate text-sm font-semibold">{city ? `${city.name} - ${city.state}` : t('nav.chooseCity')}</span>
+        </span>
+      </button>
+      {open && (
+        <div id="ship-to-panel" className="card absolute top-full left-0 z-30 mt-2 w-80 space-y-3 p-4 text-fg shadow-[var(--shadow-lift)]">
+          <CityPicker
+            value={value}
+            onChange={(next) => {
+              onChange(next)
+              if (next) setOpen(false)
+            }}
+            label={t('nav.shipTo')}
+          />
+          <Link to="/?tab=nearby" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+            <Icon name="pin" size={16} />
+            {t('feed.tabs.nearby')}
+          </Link>
+        </div>
+      )}
+    </div>
   )
 }
 

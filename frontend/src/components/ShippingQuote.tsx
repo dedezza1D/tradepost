@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMe } from '../api/auth'
 import { api } from '../api/client'
 import type { ShippingOption } from '../api/types'
+import { useShipToField } from '../lib/city'
 import { formatMoney } from '../lib/format'
-import { CityPicker, type City } from './CityPicker'
+import { CityPicker } from './CityPicker'
 
 interface Quote {
   mode: 'fixed' | 'calculated'
@@ -16,9 +15,7 @@ interface Quote {
 /** Shipping options for a listing with calculated shipping, to a city the visitor picks. */
 export function ShippingQuote({ listingId }: { listingId: string }) {
   const { t } = useTranslation()
-  const { data: me } = useMe()
-  const own = me?.municipality_id && me.city && me.state ? { ibge_code: me.municipality_id, name: me.city, state: me.state } : null
-  const [city, setCity] = useState<City | null>(own)
+  const { city, value, onChange } = useShipToField()
   const quote = useQuery({
     queryKey: ['shipping', listingId, city?.ibge_code],
     queryFn: () => api<Quote>(`/api/listings/${listingId}/shipping?to=${city?.ibge_code}`),
@@ -27,7 +24,7 @@ export function ShippingQuote({ listingId }: { listingId: string }) {
   return (
     <section className="card space-y-3 p-4" aria-labelledby="shipping-title">
       <h2 id="shipping-title" className="font-semibold">{t('shipping.title')}</h2>
-      <CityPicker key={city?.ibge_code ?? 'none'} value={city} onChange={setCity} label={t('shipping.to')} />
+      <CityPicker value={value} onChange={onChange} label={t('shipping.to')} />
       {quote.isFetching && <div className="skeleton h-12" />}
       {quote.data && quote.data.options.length > 0 && (
         <ul className="space-y-2" aria-live="polite">

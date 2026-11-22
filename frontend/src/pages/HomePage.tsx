@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react'
+import type { KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useMe } from '../api/auth'
@@ -6,10 +6,11 @@ import { useCategories } from '../api/catalog'
 import { useListingSearch } from '../api/listings'
 import { useFeed } from '../api/social'
 import type { FeedTab, Me } from '../api/types'
-import { CityPicker, type City } from '../components/CityPicker'
+import { CityPicker } from '../components/CityPicker'
 import { HeroCarousel } from '../components/HeroCarousel'
 import { InfiniteGrid } from '../components/InfiniteGrid'
 import { ListingRail } from '../components/ListingGrid'
+import { useShipToField } from '../lib/city'
 import { CategoryIcon } from '../ui/categoryIcons'
 import { Icon, type IconName } from '../ui/icons'
 import { EmptyState } from '../ui/primitives'
@@ -19,16 +20,6 @@ const TABS: { id: FeedTab; icon: IconName }[] = [
   { id: 'nearby', icon: 'pin' },
   { id: 'following', icon: 'users' },
 ]
-const NEAR_KEY = 'tp_near'
-
-function readNear(): City | null {
-  try {
-    const raw = localStorage.getItem(NEAR_KEY)
-    return raw ? (JSON.parse(raw) as City) : null
-  } catch {
-    return null
-  }
-}
 
 function Trending() {
   const { t } = useTranslation()
@@ -41,27 +32,15 @@ function Trending() {
   )
 }
 
-function Nearby({ me }: { me: Me | null | undefined }) {
+function Nearby() {
   const { t } = useTranslation()
-  const own = me?.municipality_id && me.city && me.state ? { ibge_code: me.municipality_id, name: me.city, state: me.state } : null
-  const [picked, setPicked] = useState<City | null>(readNear)
-  const city = picked ?? own
+  const { city, value, onChange } = useShipToField()
   const feed = useFeed('nearby', city ? { near: String(city.ibge_code), radius_km: '50' } : {}, Boolean(city))
-
-  function choose(next: City | null) {
-    setPicked(next)
-    try {
-      if (next) localStorage.setItem(NEAR_KEY, JSON.stringify(next))
-      else localStorage.removeItem(NEAR_KEY)
-    } catch {
-      // Private mode: the choice lasts for this visit only.
-    }
-  }
 
   return (
     <div className="space-y-4">
       <div className="card p-4">
-        <CityPicker key={city?.ibge_code ?? 'none'} value={city} onChange={choose} label={t('feed.nearCity')} />
+        <CityPicker value={value} onChange={onChange} label={t('feed.nearCity')} />
         {city && <p className="mt-2 text-xs text-muted">{t('feed.nearHint', { city: city.name })}</p>}
       </div>
       {city ? (
@@ -228,7 +207,7 @@ export function HomePage() {
         </div>
         <div id="feed-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
           {tab === 'trending' && <Trending />}
-          {tab === 'nearby' && <Nearby me={me} />}
+          {tab === 'nearby' && <Nearby />}
           {tab === 'following' && <Following me={me} />}
         </div>
       </section>
