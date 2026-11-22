@@ -20,6 +20,7 @@ from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
 from tradepost.db import Database
 from tradepost.disputes import escalate_overdue as escalate_disputes
+from tradepost.fx import refresh as refresh_fx
 from tradepost.logs import get_logger
 from tradepost.notifications.service import prune as prune_notifications
 from tradepost.ops.metrics import flush as flush_metrics
@@ -68,6 +69,7 @@ TASKS: dict[str, Task] = {
     "ops_alerts": lambda db, ctx: notify_alerts(db, ctx.settings),
     "embed_listings": lambda db, ctx: _embed_listings(db, ctx),
     "saved_search_alerts": lambda db, _: send_saved_search_alerts(db),
+    "refresh_fx": lambda db, _: refresh_fx(db),
 }
 
 

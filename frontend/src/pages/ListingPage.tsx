@@ -15,6 +15,7 @@ import { ReportSheet } from '../components/ReportSheet'
 import { SaveButton } from '../components/SaveButton'
 import { useStartConversation } from '../api/chat'
 import { Questions } from '../components/Questions'
+import { ApproxPrice } from '../components/ApproxPrice'
 import { ListingGrid } from '../components/ListingGrid'
 import { useSimilarListings } from '../api/discovery'
 import { ShippingQuote } from '../components/ShippingQuote'
@@ -319,6 +320,7 @@ export function ListingPage() {
               </div>
               <h1 className="text-xl leading-snug font-bold tracking-tight sm:text-2xl">{item.title}</h1>
               <p className="text-[2rem] leading-none font-extrabold tracking-tight">{formatMoney(item.price_cents)}</p>
+              <ApproxPrice cents={item.price_cents} detail className="text-sm" />
             </div>
             <ul className="space-y-2 text-sm">
               <li className={`flex items-center gap-2 ${item.shipping_mode !== 'calculated' && !item.shipping_cents ? 'font-semibold text-success' : 'text-muted'}`}>

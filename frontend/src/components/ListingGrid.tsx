@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useMe } from '../api/auth'
@@ -6,6 +6,7 @@ import type { ListingCard } from '../api/types'
 import { formatMoney } from '../lib/format'
 import { Badge } from '../ui/primitives'
 import { Icon } from '../ui/icons'
+import { ApproxPrice } from './ApproxPrice'
 import { SaveButton } from './SaveButton'
 
 export function ListingTile({ item, showStatus = false }: { item: ListingCard; showStatus?: boolean }) {
@@ -42,6 +43,7 @@ export function ListingTile({ item, showStatus = false }: { item: ListingCard; s
         <div className="flex flex-1 flex-col gap-1 border-t border-line/60 p-3">
           <p className="line-clamp-2 min-h-[2.5em] text-[13px] leading-snug text-fg/90 sm:text-sm">{item.title}</p>
           <p className="text-lg font-extrabold tracking-tight sm:text-xl">{formatMoney(item.price_cents)}</p>
+          <ApproxPrice cents={item.price_cents} className="-mt-1 text-xs font-medium" />
           <p className="mt-auto flex items-center gap-1 text-xs text-muted">
             <Icon name="pin" size={13} />
             <span className="truncate">
@@ -81,12 +83,28 @@ export function ListingGrid({ items, showStatus }: { items: ListingCard[]; showS
 export function ListingRail({ items, label }: { items: ListingCard[]; label: string }) {
   const { t } = useTranslation()
   const track = useRef<HTMLUListElement>(null)
+  // Which ends can still be scrolled to; an arrow shows only when it would move the shelf.
+  const [ends, setEnds] = useState({ previous: false, next: false })
+  const measure = useCallback(() => {
+    const el = track.current
+    if (!el) return
+    setEnds({ previous: el.scrollLeft > 8, next: el.scrollLeft + el.clientWidth < el.scrollWidth - 8 })
+  }, [])
+  useEffect(() => {
+    measure()
+    const el = track.current
+    if (!el) return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [measure, items.length])
   const scroll = (direction: number) =>
     track.current?.scrollBy({ left: direction * track.current.clientWidth * 0.9, behavior: 'smooth' })
   return (
     <div className="group/rail relative">
       <ul
         ref={track}
+        onScroll={measure}
         aria-label={label}
         className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pt-1 pb-3 sm:gap-4"
       >
@@ -96,7 +114,7 @@ export function ListingRail({ items, label }: { items: ListingCard[]; label: str
           </li>
         ))}
       </ul>
-      {(['previous', 'next'] as const).map((dir) => (
+      {(['previous', 'next'] as const).filter((dir) => ends[dir]).map((dir) => (
         <button
           key={dir}
           type="button"

@@ -1,0 +1,1247 @@
+[
+  {
+    "photo": "bicicleta-01.jpg",
+    "title": "Bicicleta antiga vermelha",
+    "description": "Bicicleta para passeios e para o dia a dia na cidade.",
+    "category": "bikes",
+    "condition": "used",
+    "price_cents": 323000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Kenneth C. Zirkel",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Safety_Bicycle_ca._1890_side_view.jpg"
+    }
+  },
+  {
+    "photo": "bicicleta-02.jpg",
+    "title": "Bicicleta antiga preta",
+    "description": "Bicicleta para passeios e para o dia a dia na cidade.",
+    "category": "bikes",
+    "condition": "used",
+    "price_cents": 190000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "User:Javier Carro",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Kellner_bicycle_side_view.JPG"
+    }
+  },
+  {
+    "photo": "bicicleta-03.jpg",
+    "title": "Bicicleta Saxon de corrida preta",
+    "description": "Bicicleta para passeios e para o dia a dia na cidade.",
+    "category": "bikes",
+    "condition": "used",
+    "price_cents": 225000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "User:Javier Carro",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Sporting_bicycle_side_view.JPG"
+    }
+  },
+  {
+    "photo": "bicicleta-04.jpg",
+    "title": "Bicicleta urbana vermelha",
+    "description": "Bicicleta para passeios e para o dia a dia na cidade.",
+    "category": "bikes",
+    "condition": "used",
+    "price_cents": 236000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "User:Javier Carro",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Moor_bicycle_side_view.JPG"
+    }
+  },
+  {
+    "photo": "celular-01.jpg",
+    "title": "iPhone 3G preto",
+    "description": "Celular desbloqueado, com carregador.",
+    "category": "phones",
+    "condition": "used",
+    "price_cents": 68000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "William Hook from Stafford, United Kingdom",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Hook%27s_iPhone_front.jpg"
+    }
+  },
+  {
+    "photo": "celular-02.jpg",
+    "title": "iPhone 16 GB preto",
+    "description": "Celular desbloqueado, com carregador.",
+    "category": "phones",
+    "condition": "used",
+    "price_cents": 263000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "William Hook from Stafford, United Kingdom",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Hook%27s_iPhone_back.jpg"
+    }
+  },
+  {
+    "photo": "celular-03.jpg",
+    "title": "Celular Samsung Galaxy S",
+    "description": "Celular desbloqueado, com carregador.",
+    "category": "phones",
+    "condition": "used",
+    "price_cents": 321000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Vankata453",
+      "license": "CC0",
+      "source": "https://commons.wikimedia.org/wiki/File:Samsung_Galaxy_i7500_Home_Screen.jpg"
+    }
+  },
+  {
+    "photo": "celular-04.jpg",
+    "title": "Samsung Galaxy S preto",
+    "description": "Celular desbloqueado, com carregador.",
+    "category": "phones",
+    "condition": "used",
+    "price_cents": 112000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Beamish4",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Samsung_Galaxy_(Onyx_Black)_-_Front_(splash_screen).jpg"
+    }
+  },
+  {
+    "photo": "celular-05.jpg",
+    "title": "Smartphone Samsung Galaxy S7 prata",
+    "description": "Celular desbloqueado, com carregador.",
+    "category": "phones",
+    "condition": "used",
+    "price_cents": 220000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Beamish4",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Samsung_Galaxy_S6_(Gold_Platinum)_-_Front.jpg"
+    }
+  },
+  {
+    "photo": "notebook-01.jpg",
+    "title": "MacBook Air prata",
+    "description": "Notebook para estudo e trabalho, com carregador original.",
+    "category": "computers",
+    "condition": "used",
+    "price_cents": 270000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "https://es.ifixit.com/User/524640/Sam+Lionheart",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Macbook_Air.jpg"
+    }
+  },
+  {
+    "photo": "notebook-02.jpg",
+    "title": "MacBook Pro 13\" cinza espacial",
+    "description": "Notebook para estudo e trabalho, com carregador original.",
+    "category": "computers",
+    "condition": "used",
+    "price_cents": 313000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Laptopsarena",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:MacBook_Pro_2019_13_inch.jpg"
+    }
+  },
+  {
+    "photo": "notebook-03.jpg",
+    "title": "MacBook Pro 15\" cinza",
+    "description": "Notebook para estudo e trabalho, com carregador original.",
+    "category": "computers",
+    "condition": "used",
+    "price_cents": 211000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Sonicdrewdriver",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Late_2016_MacBook_Pro.jpg"
+    }
+  },
+  {
+    "photo": "notebook-04.jpg",
+    "title": "MacBook Pro prata",
+    "description": "Notebook para estudo e trabalho, com carregador original.",
+    "category": "computers",
+    "condition": "used",
+    "price_cents": 281000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "unknown",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:MacBook_Pro.jpg"
+    }
+  },
+  {
+    "photo": "notebook-05.jpg",
+    "title": "Notebook IBM ThinkPad",
+    "description": "Notebook para estudo e trabalho, com carregador original.",
+    "category": "computers",
+    "condition": "used",
+    "price_cents": 407000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "André Karwath aka Aka",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:IBM_Thinkpad_R51.jpg"
+    }
+  },
+  {
+    "photo": "geladeira-01.jpg",
+    "title": "Geladeira de inox",
+    "description": "Geladeira espaçosa. Retirada no local ou frete combinado.",
+    "category": "appliances",
+    "condition": "used",
+    "price_cents": 188000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "W.carter",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Open_refrigerator_with_food_at_night.jpg"
+    }
+  },
+  {
+    "photo": "geladeira-02.jpg",
+    "title": "Geladeira Panasonic 3 portas",
+    "description": "Geladeira espaçosa. Retirada no local ou frete combinado.",
+    "category": "appliances",
+    "condition": "used",
+    "price_cents": 155000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Dinkun Chen",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Panasonic_HOME_REFRIGERATOR_NR-C320WP-N.jpg"
+    }
+  },
+  {
+    "photo": "geladeira-03.jpg",
+    "title": "Geladeira duplex inox",
+    "description": "Geladeira espaçosa. Retirada no local ou frete combinado.",
+    "category": "appliances",
+    "condition": "used",
+    "price_cents": 224000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Infrogmation of New Orleans",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:US_Domestic_Refrigerator_-_Frigidaire.jpg"
+    }
+  },
+  {
+    "photo": "geladeira-04.jpg",
+    "title": "Geladeira Samsung Frost Free",
+    "description": "Geladeira espaçosa. Retirada no local ou frete combinado.",
+    "category": "appliances",
+    "condition": "used",
+    "price_cents": 123000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Dinkun Chen",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:SAMSUNG_REFRIGERATOR_RF60J9030WZ.jpg"
+    }
+  },
+  {
+    "photo": "geladeira-05.jpg",
+    "title": "Geladeira Hisense inox",
+    "description": "Geladeira espaçosa. Retirada no local ou frete combinado.",
+    "category": "appliances",
+    "condition": "used",
+    "price_cents": 216000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Matti Blume",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Hisense,_IFA_2018,_Berlin_(P1070179).jpg"
+    }
+  },
+  {
+    "photo": "sofa-01.jpg",
+    "title": "Sofá de couro caramelo com almofadas",
+    "description": "Sofá confortável para a sala. Retirada no local.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 96000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Aaaatu",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Decorative_pillows_on_a_leather_sofa.jpg"
+    }
+  },
+  {
+    "photo": "sofa-02.jpg",
+    "title": "Sofá de couro marrom 3 lugares",
+    "description": "Sofá confortável para a sala. Retirada no local.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 117000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "Donald Trung Quoc Don (Chữ Hán: 徵國單) - Wikimedia Commons - © CC BY-SA 4.0 International.(Want to use this image?)Original publication 📤: --Donald Trung 『徵國單』 (No Fake News 💬) (WikiProject Numismatics ",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Leather_brown_sofa,_Oude_Pekela_(2020)_01.jpg"
+    }
+  },
+  {
+    "photo": "sofa-03.jpg",
+    "title": "Sofá de couro marrom",
+    "description": "Sofá confortável para a sala. Retirada no local.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 92000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Donald Trung Quoc Don (Chữ Hán: 徵國單) - Wikimedia Commons - © CC BY-SA 4.0 International.(Want to use this image?)Original publication 📤: --Donald Trung 『徵國單』 (No Fake News 💬) (WikiProject Numismatics ",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Leather_brown_sofa,_Oude_Pekela_(2020)_02.jpg"
+    }
+  },
+  {
+    "photo": "sofa-04.jpg",
+    "title": "Sofá de couro preto",
+    "description": "Sofá confortável para a sala. Retirada no local.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 145000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Thomas Quine",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Antique_leather_sofa_(38642034240).jpg"
+    }
+  },
+  {
+    "photo": "sofa-05.jpg",
+    "title": "Sofá Chesterfield vermelho com 2 poltronas",
+    "description": "Sofá confortável para a sala. Retirada no local.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 103000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Dominic's pics",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Burgundy_Leather_Sofa_Set,_Lower_Clapton_02.jpg"
+    }
+  },
+  {
+    "photo": "mesa-01.jpg",
+    "title": "Mesa antiga de madeira",
+    "description": "Mesa firme, boa para a sala de jantar.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 50000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "ZemplinTemplar",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:East_Slovak_Museum_in_Ko%C5%A1ice_-_Experience_Gothic_exhibit_-_Wooden_dining_table,_15th_century,_Spi%C5%A1_region.jpg"
+    }
+  },
+  {
+    "photo": "mesa-02.jpg",
+    "title": "Mesa de jantar com 6 cadeiras",
+    "description": "Mesa firme, boa para a sala de jantar.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 97000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Gausanchennai",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Dining_table_1.jpg"
+    }
+  },
+  {
+    "photo": "mesa-03.jpg",
+    "title": "Mesa antiga de madeira maciça",
+    "description": "Mesa firme, boa para a sala de jantar.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 56000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "ZemplinTemplar",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:East_Slovak_Museum_in_Ko%C5%A1ice_-_Salon_Renaissance_exhibit_-_Wooden_table,_1500-1550_(first_half_of_the_16th_century),_Slovakia,_Kingdom_of_Hungary_01.jpg"
+    }
+  },
+  {
+    "photo": "mesa-04.jpg",
+    "title": "Mesa rústica de madeira",
+    "description": "Mesa firme, boa para a sala de jantar.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 49000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Andy Dingley (scanner)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Small_oak_dining_table,_Gordon_Russell_(Time,_Taste_and_Furniture,_Gloag,_1925).jpg"
+    }
+  },
+  {
+    "photo": "mesa-05.jpg",
+    "title": "Mesa redonda com 2 cadeiras",
+    "description": "Mesa firme, boa para a sala de jantar.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 82000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "JesusisGreat7",
+      "license": "CC0",
+      "source": "https://commons.wikimedia.org/wiki/File:Wooden_table_with_two_chairs.jpg"
+    }
+  },
+  {
+    "photo": "cadeira-01.jpg",
+    "title": "Cadeira de escritório preta",
+    "description": "Cadeira confortável, ideal para casa ou escritório.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 18000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Photograph: Frank C. Müller, Baden-Baden",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Buerostuhl_(fcm).jpg"
+    }
+  },
+  {
+    "photo": "cadeira-02.jpg",
+    "title": "Cadeira de madeira clara",
+    "description": "Cadeira confortável, ideal para casa ou escritório.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 35000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Dakota Jackson Inc.",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Library_Chair_dakota_jackson.jpg"
+    }
+  },
+  {
+    "photo": "cadeira-03.jpg",
+    "title": "Cadeira de escritório ergonômica",
+    "description": "Cadeira confortável, ideal para casa ou escritório.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 20000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Willaw1507",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:ErgoFlip_Active_Ergonomic_Chair_eye_view.jpg"
+    }
+  },
+  {
+    "photo": "cadeira-04.jpg",
+    "title": "Banqueta giratória de aço",
+    "description": "Cadeira confortável, ideal para casa ou escritório.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 12000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Alex Rio Brazil",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Stainless_Steel_Laboratory_Pneumatic_Chair_with_wheels.jpg"
+    }
+  },
+  {
+    "photo": "cadeira-05.jpg",
+    "title": "Cadeira de madeira com assento de veludo",
+    "description": "Cadeira confortável, ideal para casa ou escritório.",
+    "category": "furniture",
+    "condition": "used",
+    "price_cents": 28000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Fallaner",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Chair_2020_P02.jpg"
+    }
+  },
+  {
+    "photo": "tenis-01.jpg",
+    "title": "Tênis Adidas Yeezy Boost 350 cinza",
+    "description": "Tênis confortável para o dia a dia.",
+    "category": "shoes",
+    "condition": "used",
+    "price_cents": 24000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Jacek Halicki",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:2023_Adidas_Yeezy_350_V2_EF2905_(1).jpg"
+    }
+  },
+  {
+    "photo": "tenis-02.jpg",
+    "title": "Tênis esportivo azul e preto",
+    "description": "Tênis confortável para o dia a dia.",
+    "category": "shoes",
+    "condition": "used",
+    "price_cents": 17000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Викидим",
+      "license": "CC BY 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Street_dance_sneakers_(Fuego).jpg"
+    }
+  },
+  {
+    "photo": "tenis-03.jpg",
+    "title": "Tênis Reebok branco e vinho",
+    "description": "Tênis confortável para o dia a dia.",
+    "category": "shoes",
+    "condition": "used",
+    "price_cents": 33000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "Petar Milošević",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Reebok_Royal_Glide_Ripple_Clip_shoe.jpg"
+    }
+  },
+  {
+    "photo": "tenis-04.jpg",
+    "title": "Tênis Converse All Star azul",
+    "description": "Tênis confortável para o dia a dia.",
+    "category": "shoes",
+    "condition": "used",
+    "price_cents": 41000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Brooke Fishwick",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Black_Converse_sneakers.JPG"
+    }
+  },
+  {
+    "photo": "tenis-05.jpg",
+    "title": "Tênis feminino bege de camurça",
+    "description": "Tênis confortável para o dia a dia.",
+    "category": "shoes",
+    "condition": "used",
+    "price_cents": 48000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "SPERA.de Designerschuhe, Taschen und Accessoires from Deutschland",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Michael_Kors_Kristy_Lace_Up_Sneaker_43S4KRFS2E_Kalbsleder_braun_(1)_(16286299927).jpg"
+    }
+  },
+  {
+    "photo": "violao-01.jpg",
+    "title": "Violão clássico de nylon",
+    "description": "Violão de cordas de nylon, bom para estudo e apresentações.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 75000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Martin Möller",
+      "license": "CC BY-SA 2.0 de",
+      "source": "https://commons.wikimedia.org/wiki/File:Classical_Guitar_two_views.jpg"
+    }
+  },
+  {
+    "photo": "violao-02.jpg",
+    "title": "Violão clássico de madeira",
+    "description": "Violão de cordas de nylon, bom para estudo e apresentações.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 127000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Arashk rp2",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:A_Classical_Guitar.jpg"
+    }
+  },
+  {
+    "photo": "violao-03.jpg",
+    "title": "Violão de nylon tampo claro",
+    "description": "Violão de cordas de nylon, bom para estudo e apresentações.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 48000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "AnonymousUnknown author",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Modern_Classical_Guitar_29.jpg"
+    }
+  },
+  {
+    "photo": "violao-04.jpg",
+    "title": "Violão clássico com tampo de abeto",
+    "description": "Violão de cordas de nylon, bom para estudo e apresentações.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 105000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Kirkwood123",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Matao_MC-1_classical_guitar_01.jpg"
+    }
+  },
+  {
+    "photo": "violao-05.jpg",
+    "title": "Violão clássico de luthier",
+    "description": "Violão de cordas de nylon, bom para estudo e apresentações.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 134000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Maxneo111",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Modern_Classical_Guitar_121.jpg"
+    }
+  },
+  {
+    "photo": "guitarra-01.jpg",
+    "title": "Guitarra elétrica vermelha",
+    "description": "Guitarra elétrica, ótima para ensaios e shows.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 66000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "Rjcastillo",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Guitarra_el%C3%A9ctrica.JPG"
+    }
+  },
+  {
+    "photo": "guitarra-02.jpg",
+    "title": "Guitarra Fender Stratocaster sunburst",
+    "description": "Guitarra elétrica, ótima para ensaios e shows.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 40000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Elmschrat",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Isonez_Stratocaster_Type_electric_guitar_01.jpg"
+    }
+  },
+  {
+    "photo": "guitarra-03.jpg",
+    "title": "Guitarra Strato madeira natural",
+    "description": "Guitarra elétrica, ótima para ensaios e shows.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 187000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Elmschrat",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:0_Rockinger_electric_guitar_1980s_vintage.jpg"
+    }
+  },
+  {
+    "photo": "guitarra-04.jpg",
+    "title": "Guitarra Stratocaster preta com capa",
+    "description": "Guitarra elétrica, ótima para ensaios e shows.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 86000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Elmschrat",
+      "license": "CC BY 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Yamaha_Pacifica_012_electric_guitar_body.jpg"
+    }
+  },
+  {
+    "photo": "guitarra-05.jpg",
+    "title": "Guitarra Stratocaster sunburst",
+    "description": "Guitarra elétrica, ótima para ensaios e shows.",
+    "category": "music",
+    "condition": "used",
+    "price_cents": 50000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Elmschrat",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Isonez_Stratocaster_Type_electric_guitar_body.jpg"
+    }
+  },
+  {
+    "photo": "livro-01.jpg",
+    "title": "Livro Ancient Wisdom for Modern Campaigns",
+    "description": "Livro em bom estado de leitura.",
+    "category": "books",
+    "condition": "used",
+    "price_cents": 2800,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Caitlin Huxley",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Ancient_Wisdom_for_Modern_Campaigns_paperback_cover.jpg"
+    }
+  },
+  {
+    "photo": "livro-02.jpg",
+    "title": "Lote de livros usados",
+    "description": "Livro em bom estado de leitura.",
+    "category": "books",
+    "condition": "used",
+    "price_cents": 3200,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Milica Buha",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Different_formats_of_paperback_books.jpg"
+    }
+  },
+  {
+    "photo": "livro-03.jpg",
+    "title": "Livro antigo Early Vanities",
+    "description": "Livro em bom estado de leitura.",
+    "category": "books",
+    "condition": "used",
+    "price_cents": 2500,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Clodfelter, N. J. (Noah J.), 1853-1901",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Cloth_book_cover_of_%22Early_Vanities%22.jpg"
+    }
+  },
+  {
+    "photo": "livro-04.jpg",
+    "title": "Livro Hurly-Burly, Emma Marshall",
+    "description": "Livro em bom estado de leitura.",
+    "category": "books",
+    "condition": "used",
+    "price_cents": 4000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "Emma Marshall",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Hurly-Burly;_or,_After_a_Storm_Comes_a_Calm_1893_book_cover_by_Emma_Marshall_-_P15808coll4_2988_full.jpg"
+    }
+  },
+  {
+    "photo": "console-01.jpg",
+    "title": "Xbox One com Kinect e controle",
+    "description": "Console com controle, pronto para jogar.",
+    "category": "games",
+    "condition": "used",
+    "price_cents": 145000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Evan-Amos",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Microsoft-Xbox-One-Console-Set-wKinect.jpg"
+    }
+  },
+  {
+    "photo": "console-02.jpg",
+    "title": "Sega Mega Drive com controle",
+    "description": "Console com controle, pronto para jogar.",
+    "category": "games",
+    "condition": "used",
+    "price_cents": 254000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Evan-Amos",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Sega-Mega-Drive-JP-Mk1-Console-Set.jpg"
+    }
+  },
+  {
+    "photo": "console-03.jpg",
+    "title": "Nintendo Switch neon azul e vermelho",
+    "description": "Console com controle, pronto para jogar.",
+    "category": "games",
+    "condition": "used",
+    "price_cents": 151000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Evan-Amos",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo-Switch-Console-Docked-wJoyConRB.jpg"
+    }
+  },
+  {
+    "photo": "console-04.jpg",
+    "title": "Game Boy Advance transparente",
+    "description": "Console com controle, pronto para jogar.",
+    "category": "games",
+    "condition": "used",
+    "price_cents": 158000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Evan-Amos",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo-Game-Boy-Advance-Milky-Blue-FL.jpg"
+    }
+  },
+  {
+    "photo": "console-05.jpg",
+    "title": "Nintendo DS preto",
+    "description": "Console com controle, pronto para jogar.",
+    "category": "games",
+    "condition": "used",
+    "price_cents": 104000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Evan-Amos",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo-DS-Lite-Black-Open.jpg"
+    }
+  },
+  {
+    "photo": "camera-01.jpg",
+    "title": "Câmera Nikon D850 (corpo)",
+    "description": "Câmera fotográfica com carregador e cartão de memória.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 149000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "This Photo was taken by Wolfgang Moroder. Feel free to use my photos, but please mention me as the author and send me a message. This image is not in the public domain. Please respect the copyright pr",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Nikon_DSLR_camera_D850.jpg"
+    }
+  },
+  {
+    "photo": "camera-02.jpg",
+    "title": "Câmera Sony Cyber-shot 12.1 MP",
+    "description": "Câmera fotográfica com carregador e cartão de memória.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 114000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "Joydeep",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Sony_Cybershot_DSC_W210.jpg"
+    }
+  },
+  {
+    "photo": "camera-03.jpg",
+    "title": "Câmera digital vermelha 12 MP",
+    "description": "Câmera fotográfica com carregador e cartão de memória.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 241000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Packer1028",
+      "license": "CC0",
+      "source": "https://commons.wikimedia.org/wiki/File:12_MP_digital_camera_-_red.jpg"
+    }
+  },
+  {
+    "photo": "camera-04.jpg",
+    "title": "Câmera Lumix DMC-TZ18",
+    "description": "Câmera fotográfica com carregador e cartão de memória.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 119000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Pittigrilli",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Panasonic_Lumix_DMC-TZ18_digital_camera_(2010)_no.4.jpg"
+    }
+  },
+  {
+    "photo": "camera-05.jpg",
+    "title": "Câmera à prova d'água Bell+Howell Splash",
+    "description": "Câmera fotográfica com carregador e cartão de memória.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 131000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Indiana jo",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:BELL%2BHOWELL_Digital_Camera.jpg"
+    }
+  },
+  {
+    "photo": "fone-01.jpg",
+    "title": "Fone Bose QuietComfort 35 II",
+    "description": "Fone de ouvido com ótimo som.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 41000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Florian Fuchs",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Bose_QuietComfort_25_Acoustic_Noise_Cancelling_Headphones_with_Carry_Case.jpg"
+    }
+  },
+  {
+    "photo": "fone-02.jpg",
+    "title": "Fone de ouvido Skullcandy roxo",
+    "description": "Fone de ouvido com ótimo som.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 26000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Lirazelf",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Headphones_on_desk.jpg"
+    }
+  },
+  {
+    "photo": "fone-03.jpg",
+    "title": "Fone de ouvido retrô preto e branco",
+    "description": "Fone de ouvido com ótimo som.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 67000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "No machine-readable author provided. PJ assumed (based on copyright claims).",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Headphones_1.jpg"
+    }
+  },
+  {
+    "photo": "fone-04.jpg",
+    "title": "Fone de ouvido over-ear preto",
+    "description": "Fone de ouvido com ótimo som.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 39000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "david falkner from Birmingham, England",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:AudioQuest_NightHawk_Carbon_headphones_(33582571334).jpg"
+    }
+  },
+  {
+    "photo": "fone-05.jpg",
+    "title": "Fone de ouvido Philips preto",
+    "description": "Fone de ouvido com ótimo som.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 22000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "KrypteriaIV",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:DJ_headphones_by_Philips_A5-PRO.jpg"
+    }
+  },
+  {
+    "photo": "tv-01.jpg",
+    "title": "Smart TV Samsung 32 polegadas",
+    "description": "TV com controle remoto.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 91000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "EvanProdromou",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:A_flat-screen_television.jpg"
+    }
+  },
+  {
+    "photo": "tv-02.jpg",
+    "title": "TV LED 32 polegadas com controle",
+    "description": "TV com controle remoto.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 138000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Uri Tours",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Koryo_Hotel_-_Flat_Screen_Arirang_TV_with_access_to_BBC_and_other_international_news_(11416726563).jpg"
+    }
+  },
+  {
+    "photo": "tv-03.jpg",
+    "title": "TV LED 40 polegadas",
+    "description": "TV com controle remoto.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 93000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Percivalor",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Techwood_flat_screen_television_from_2010.jpg"
+    }
+  },
+  {
+    "photo": "tv-04.jpg",
+    "title": "TV de parede 32 polegadas",
+    "description": "TV com controle remoto.",
+    "category": "electronics",
+    "condition": "used",
+    "price_cents": 84000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Love Krittaya",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:RFE06_Arcelik.jpg"
+    }
+  },
+  {
+    "photo": "carrinho_bebe-01.jpg",
+    "title": "Carrinho de bebê vintage",
+    "description": "Carrinho de bebê clássico, peça de decoração ou uso.",
+    "category": "baby",
+    "condition": "used",
+    "price_cents": 68000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Jason7825 at en.wikipedia",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Baby_pram.jpg"
+    }
+  },
+  {
+    "photo": "carrinho_bebe-02.jpg",
+    "title": "Carrinho de bebê antigo de vime",
+    "description": "Carrinho de bebê clássico, peça de decoração ou uso.",
+    "category": "baby",
+    "condition": "used",
+    "price_cents": 84000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Andy Mabbett",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Wicker_pram_-_Museum_der_Arbeit.jpg"
+    }
+  },
+  {
+    "photo": "carrinho_bebe-03.jpg",
+    "title": "Carrinho de bebê antigo azul",
+    "description": "Carrinho de bebê clássico, peça de decoração ou uso.",
+    "category": "baby",
+    "condition": "used",
+    "price_cents": 31000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Alf van Beem",
+      "license": "CC0",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_pram_at_the_Mus%C3%A9e_Automobile_de_Vend%C3%A9e_pic-2.JPG"
+    }
+  },
+  {
+    "photo": "air_fryer-01.jpg",
+    "title": "Air fryer preta",
+    "description": "Fritadeira sem óleo, prática para o dia a dia.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 28000,
+    "city": "Curitiba",
+    "state": "PR",
+    "credit": {
+      "author": "I am R.",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Air_Fryer_2020.jpg"
+    }
+  },
+  {
+    "photo": "air_fryer-02.jpg",
+    "title": "Air fryer Philips 2,2 L",
+    "description": "Fritadeira sem óleo, prática para o dia a dia.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 21000,
+    "city": "Porto Alegre",
+    "state": "RS",
+    "credit": {
+      "author": "Maurina Rara",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Airfryer_Convert.jpg"
+    }
+  },
+  {
+    "photo": "air_fryer-03.jpg",
+    "title": "Air fryer com cesto antiaderente",
+    "description": "Fritadeira sem óleo, prática para o dia a dia.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 16000,
+    "city": "Salvador",
+    "state": "BA",
+    "credit": {
+      "author": "Kolforn (Kolforn) I'd appreciate if you could mail me (Kolforn@gmail.com) if you want to use this picture out of the Wikimedia project scope. This file is licensed under the Creative Commons Attributi",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:-2022-11-16_Pork_sausages,_Trimingham,_Norfolk.JPG"
+    }
+  },
+  {
+    "photo": "liquidificador-01.jpg",
+    "title": "Liquidificador branco",
+    "description": "Liquidificador para sucos e vitaminas.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 14000,
+    "city": "Fortaleza",
+    "state": "CE",
+    "credit": {
+      "author": "Infrogmation of New Orleans",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_blender_on_shelf_in_New_Orleans_kitchen.jpg"
+    }
+  },
+  {
+    "photo": "liquidificador-02.jpg",
+    "title": "Mini liquidificador inox",
+    "description": "Liquidificador para sucos e vitaminas.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 10000,
+    "city": "São Paulo",
+    "state": "SP",
+    "credit": {
+      "author": "Vimkay",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:A_table-top_mixer-grinder_or_mixie.jpg"
+    }
+  },
+  {
+    "photo": "liquidificador-03.jpg",
+    "title": "Liquidificador compacto SMIX",
+    "description": "Liquidificador para sucos e vitaminas.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 20000,
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "credit": {
+      "author": "Infrogmation",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_Osterizer_blender_parts_-_all.jpg"
+    }
+  },
+  {
+    "photo": "liquidificador-04.jpg",
+    "title": "Liquidificador Oster 1,5 L",
+    "description": "Liquidificador para sucos e vitaminas.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 14000,
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "credit": {
+      "author": "Infrogmation",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_Osterizer_blender_parts_-_pitcher_on_counter_without_lid.jpg"
+    }
+  },
+  {
+    "photo": "liquidificador-05.jpg",
+    "title": "Copo de liquidificador Oster",
+    "description": "Liquidificador para sucos e vitaminas.",
+    "category": "home",
+    "condition": "used",
+    "price_cents": 26000,
+    "city": "Recife",
+    "state": "PE",
+    "credit": {
+      "author": "Infrogmation",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_Osterizer_blender_parts_-_pitcher_on_counter_with_lid.jpg"
+    }
+  }
+]

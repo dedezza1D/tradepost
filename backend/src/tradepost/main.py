@@ -20,6 +20,7 @@ from tradepost.db import Database
 from tradepost.deps import DbSession
 from tradepost.disputes import router as disputes_router
 from tradepost.errors import install_error_handlers
+from tradepost.fx import router as fx_router
 from tradepost.geo.router import router as geo_router
 from tradepost.identity.router import router as identity_router
 from tradepost.logs import configure_logging
@@ -98,6 +99,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ops_router)
     app.include_router(saved_searches_router)
     app.include_router(assistant_router)
+    app.include_router(fx_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

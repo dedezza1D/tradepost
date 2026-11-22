@@ -5,7 +5,8 @@ import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
 import { useUnreadChats } from '../api/chat'
 import { useCart } from '../api/orders'
-import { currentLanguage } from '../i18n'
+import { LANGUAGES, currentLanguage } from '../i18n'
+import { useChangeLanguage } from '../lib/language'
 import { CategoryIcon } from '../ui/categoryIcons'
 import { Icon, type IconName } from '../ui/icons'
 import { BrandMark, Logo } from './Brand'
@@ -25,6 +26,30 @@ function HeaderSearch({ className }: { className: string }) {
       onChange={setQ}
       onSearch={(query) => navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/search')}
     />
+  )
+}
+
+/** PT / EN toggle, for everyone (signed-in people also keep it on their account). */
+function LanguageSwitch() {
+  const { t } = useTranslation()
+  const change = useChangeLanguage()
+  const current = currentLanguage()
+  return (
+    <div role="group" aria-label={t('common.language')} className="flex shrink-0 items-center rounded-full bg-bg/15 p-0.5 text-[11px] font-bold">
+      {LANGUAGES.map((l) => (
+        <button
+          key={l.code}
+          type="button"
+          lang={l.code}
+          aria-label={l.label}
+          aria-pressed={current === l.code}
+          onClick={() => void change(l.code)}
+          className={`min-h-6 rounded-full px-2.5 transition ${current === l.code ? 'bg-bg text-fg' : 'hover:bg-bg/20'}`}
+        >
+          {l.code === 'en' ? 'EN' : 'PT'}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -331,8 +356,13 @@ export function AppShell() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-surface focus:p-2">
         {t('nav.skip')}
       </a>
-      <div className="bg-fg px-4 py-1 text-center text-[11px] text-bg sm:text-xs">
-        <Trans i18nKey="nav.demoBanner" components={{ strong: <strong /> }} />
+      <div className="bg-fg text-bg">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-1">
+          <p className="min-w-0 flex-1 text-[11px] sm:text-center sm:text-xs">
+            <Trans i18nKey="nav.demoBanner" components={{ strong: <strong /> }} />
+          </p>
+          <LanguageSwitch />
+        </div>
       </div>
       <header className="band sticky top-0 z-20 shadow-[0_2px_12px_-4px_rgb(90_10_20/0.35)]">
         <div className="mx-auto max-w-6xl px-4">

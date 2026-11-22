@@ -972,5 +972,9 @@
       "1": "Frete calculado em todo anúncio",
       "2": "Chat e ofertas com quem vende"
     }
+  },
+  "price": {
+    "approx": "≈ {{amount}}",
+    "approxDetail": "≈ {{amount}} a R$ {{rate}} por dólar (Banco Central, {{date}}). Cobrado em reais."
   }
 }

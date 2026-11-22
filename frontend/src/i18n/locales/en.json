@@ -972,5 +972,9 @@
       "1": "Shipping quoted on every listing",
       "2": "Chat and offers with the seller"
     }
+  },
+  "price": {
+    "approx": "≈ {{amount}}",
+    "approxDetail": "≈ {{amount}} at R$ {{rate}} per dollar (Banco Central, {{date}}). Charged in reais."
   }
 }

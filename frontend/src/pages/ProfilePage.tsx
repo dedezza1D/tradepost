@@ -7,8 +7,9 @@ import { api, json } from '../api/client'
 import type { Me } from '../api/types'
 import { Avatar } from '../components/Avatar'
 import { CityPicker } from '../components/CityPicker'
-import { LANGUAGES, currentLanguage, type Language } from '../i18n'
+import { LANGUAGES, currentLanguage } from '../i18n'
 import { errorMessage } from '../lib/errors'
+import { useChangeLanguage } from '../lib/language'
 import { setThemeChoice, themeChoice, type ThemeChoice } from '../theme'
 import { Icon, type IconName } from '../ui/icons'
 
@@ -142,24 +143,13 @@ function PasswordForm() {
 }
 
 export function ProfilePage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { data: me } = useMe()
   const logout = useLogout()
   const navigate = useNavigate()
-  const qc = useQueryClient()
   const [theme, setTheme] = useState<ThemeChoice>(themeChoice())
+  const changeLanguage = useChangeLanguage()
   if (!me) return null
-
-  async function changeLanguage(language: Language) {
-    await i18n.changeLanguage(language)
-    void qc.invalidateQueries()
-    try {
-      const updated = await api<Me>('/api/auth/me', { method: 'PATCH', body: json({ locale: language }) })
-      qc.setQueryData(['me'], updated)
-    } catch {
-      // Applied in this browser anyway.
-    }
-  }
 
   return (
     <div className="mx-auto max-w-xl space-y-6">

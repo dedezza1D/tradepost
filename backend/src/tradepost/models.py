@@ -7,6 +7,7 @@ from tradepost.chat.models import Conversation, Message, Offer
 from tradepost.coupons import Coupon
 from tradepost.db import Base
 from tradepost.disputes import Dispute, DisputeMessage
+from tradepost.fx import FxRate
 from tradepost.geo.models import Municipality
 from tradepost.identity.models import Session, User
 from tradepost.notifications.models import Notification
@@ -45,6 +46,7 @@ __all__ = [
     "ErrorEvent",
     "FeatureFlag",
     "Follow",
+    "FxRate",
     "JobRun",
     "LedgerEntry",
     "Listing",
