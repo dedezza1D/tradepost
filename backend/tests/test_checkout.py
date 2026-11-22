@@ -481,3 +481,26 @@ async def test_checkout_from_cart(app: Any, seller: Any, buyer: Any) -> None:
     assert response.status_code == 201
     assert response.json()["total_cents"] == cart["total_cents"]
     assert len(response.json()["orders"]) == 1
+
+
+async def test_processed_payment_events_are_purged_after_90_days(app: Any) -> None:
+    from tradepost.orders.processing import purge_events
+
+    now = datetime.now(UTC)
+    for event_id, processed in (
+        ("old", now - timedelta(days=91)),
+        ("recent", now - timedelta(days=1)),
+        ("pending", None),
+    ):
+        await sql(
+            app,
+            "INSERT INTO payment_events (provider, event_id, event_type, received_at,"
+            " processed_at, attempts) VALUES ('fake', :id, 't', :received, :processed, 0)",
+            id=event_id,
+            received=now - timedelta(days=100),
+            processed=processed,
+        )
+    async with app.state.db.sessionmaker() as db, db.begin():
+        assert await purge_events(db) == 1
+    left = await sql(app, "SELECT event_id FROM payment_events ORDER BY event_id")
+    assert left == [("pending",), ("recent",)]
