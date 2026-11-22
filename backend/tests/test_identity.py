@@ -1,5 +1,7 @@
 from typing import Any
 
+import pytest
+
 from tests.conftest import make_client, register
 
 
@@ -81,6 +83,44 @@ async def test_cross_origin_unsafe_requests_are_rejected(client: Any) -> None:
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "bad_origin"
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {"Origin": "null"},
+        {"Sec-Fetch-Site": "cross-site"},
+        {"Sec-Fetch-Site": "same-site"},
+        {"Sec-Fetch-Site": "none"},
+        # A matching Origin does not excuse a browser that says the request is cross-site.
+        {"Sec-Fetch-Site": "cross-site", "Origin": "http://testserver"},
+    ],
+)
+async def test_sign_in_from_another_site_is_rejected(client: Any, headers: dict[str, str]) -> None:
+    body = {"email": "nobody@example.com", "password": "correct horse battery"}
+    response = await client.post("/api/auth/login", json=body, headers=headers)
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "bad_origin"
+
+
+async def test_same_origin_browser_requests_and_webhooks_pass(client: Any, app: Any) -> None:
+    from tests.conftest import make_client
+
+    user = await register(client, password="correct horse battery")
+    await client.post("/api/auth/logout")
+    login = await client.post(
+        "/api/auth/login",
+        json={"email": user["email"], "password": "correct horse battery"},
+        headers={"Sec-Fetch-Site": "same-origin", "Origin": "http://testserver"},
+    )
+    assert login.status_code == 200
+    async with make_client(app) as provider:
+        # Server-to-server: exempt from the origin checks, refused only for the bad signature.
+        webhook = await provider.post(
+            "/api/webhooks/fake", content=b"{}", headers={"Sec-Fetch-Site": "cross-site"}
+        )
+    assert webhook.status_code == 400
+    assert webhook.json()["error"]["code"] == "invalid_webhook"
 
 
 async def test_logout_revokes_the_session(client: Any) -> None:

@@ -73,7 +73,14 @@ class ProxyGuardMiddleware(BaseHTTPMiddleware):
 
 
 class OriginCheckMiddleware(BaseHTTPMiddleware):
-    """Rejects unsafe cross-origin requests. Complements SameSite cookies and the CSRF token."""
+    """Rejects unsafe cross-origin requests. Complements SameSite cookies and the CSRF token.
+
+    Browsers label every request with ``Sec-Fetch-Site``; when it is present, an unsafe request
+    must say ``same-origin``. ``Origin``, when present, must be the app's own (``null``, sent by
+    sandboxed frames and some redirects, never matches). Requests with neither header come from
+    non-browser clients, which cannot carry a victim's cookies, and stay allowed: sign-in and
+    sign-up rely on these checks, every other unsafe route also needs the session's CSRF token.
+    """
 
     def __init__(self, app: object, settings: Settings) -> None:
         super().__init__(app)  # type: ignore[arg-type]
@@ -83,6 +90,9 @@ class OriginCheckMiddleware(BaseHTTPMiddleware):
         if request.method in _UNSAFE_METHODS and not request.url.path.startswith(
             _ORIGIN_EXEMPT_PREFIXES
         ):
+            site = request.headers.get("sec-fetch-site")
+            if site is not None and site != "same-origin":
+                return _error(403, "bad_origin", "Cross-origin request rejected.")
             origin = request.headers.get("origin")
             if origin is not None and origin.rstrip("/") != self._allowed:
                 return _error(403, "bad_origin", "Cross-origin request rejected.")
