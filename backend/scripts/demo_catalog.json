@@ -144,7 +144,7 @@
     "city": "Rio de Janeiro",
     "state": "RJ",
     "credit": {
-      "author": "https://es.ifixit.com/User/524640/Sam+Lionheart",
+      "author": "Sam Lionheart (iFixit)",
       "license": "CC BY-SA 3.0",
       "source": "https://commons.wikimedia.org/wiki/File:Macbook_Air.jpg"
     }
@@ -309,7 +309,7 @@
     "city": "Curitiba",
     "state": "PR",
     "credit": {
-      "author": "Donald Trung Quoc Don (Chữ Hán: 徵國單) - Wikimedia Commons - © CC BY-SA 4.0 International.(Want to use this image?)Original publication 📤: --Donald Trung 『徵國單』 (No Fake News 💬) (WikiProject Numismatics ",
+      "author": "Donald Trung Quoc Don",
       "license": "CC BY-SA 4.0",
       "source": "https://commons.wikimedia.org/wiki/File:Leather_brown_sofa,_Oude_Pekela_(2020)_01.jpg"
     }
@@ -324,7 +324,7 @@
     "city": "Porto Alegre",
     "state": "RS",
     "credit": {
-      "author": "Donald Trung Quoc Don (Chữ Hán: 徵國單) - Wikimedia Commons - © CC BY-SA 4.0 International.(Want to use this image?)Original publication 📤: --Donald Trung 『徵國單』 (No Fake News 💬) (WikiProject Numismatics ",
+      "author": "Donald Trung Quoc Don",
       "license": "CC BY-SA 4.0",
       "source": "https://commons.wikimedia.org/wiki/File:Leather_brown_sofa,_Oude_Pekela_(2020)_02.jpg"
     }
@@ -870,21 +870,6 @@
     }
   },
   {
-    "photo": "camera-01.jpg",
-    "title": "Câmera Nikon D850 (corpo)",
-    "description": "Câmera fotográfica com carregador e cartão de memória.",
-    "category": "electronics",
-    "condition": "used",
-    "price_cents": 149000,
-    "city": "Recife",
-    "state": "PE",
-    "credit": {
-      "author": "This Photo was taken by Wolfgang Moroder. Feel free to use my photos, but please mention me as the author and send me a message. This image is not in the public domain. Please respect the copyright pr",
-      "license": "CC BY-SA 3.0",
-      "source": "https://commons.wikimedia.org/wiki/File:Nikon_DSLR_camera_D850.jpg"
-    }
-  },
-  {
     "photo": "camera-02.jpg",
     "title": "Câmera Sony Cyber-shot 12.1 MP",
     "description": "Câmera fotográfica com carregador e cartão de memória.",
@@ -984,7 +969,7 @@
     "city": "Belo Horizonte",
     "state": "MG",
     "credit": {
-      "author": "No machine-readable author provided. PJ assumed (based on copyright claims).",
+      "author": "PJ",
       "license": "CC BY-SA 3.0",
       "source": "https://commons.wikimedia.org/wiki/File:Headphones_1.jpg"
     }
@@ -1164,7 +1149,7 @@
     "city": "Salvador",
     "state": "BA",
     "credit": {
-      "author": "Kolforn (Kolforn) I'd appreciate if you could mail me (Kolforn@gmail.com) if you want to use this picture out of the Wikimedia project scope. This file is licensed under the Creative Commons Attributi",
+      "author": "Kolforn",
       "license": "CC BY-SA 4.0",
       "source": "https://commons.wikimedia.org/wiki/File:-2022-11-16_Pork_sausages,_Trimingham,_Norfolk.JPG"
     }
