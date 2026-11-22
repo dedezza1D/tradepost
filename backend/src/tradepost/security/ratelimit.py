@@ -39,15 +39,42 @@ _UPSERT = text(
 )
 
 
-async def hit(database: Database, key: str, *, limit: int, window_seconds: int) -> None:
-    """Count one request for ``key``; raise 429 once the window's limit is exceeded."""
+_COUNT = text(
+    "SELECT count FROM rate_limit_buckets WHERE key = :key AND window_start = :window_start"
+)
+
+
+def _window(window_seconds: int) -> tuple[int, int]:
+    """The current window's start and the seconds left until it ends."""
     now = int(time.time())
     window_start = now - now % window_seconds
+    return window_start, window_start + window_seconds - now
+
+
+async def record(database: Database, key: str, *, window_seconds: int) -> int:
+    """Count one event for ``key`` in the current window and return the window's total."""
+    window_start, _ = _window(window_seconds)
     async with database.sessionmaker() as db, db.begin():
         params = {"key": key[:200], "window_start": window_start}
-        count = (await db.execute(_UPSERT, params)).scalar_one()
+        return int((await db.execute(_UPSERT, params)).scalar_one())
+
+
+async def check(database: Database, key: str, *, limit: int, window_seconds: int) -> None:
+    """Raise 429 when ``key`` already reached ``limit`` in the current window, without
+    counting this call (for limits on outcomes, such as failed sign-ins)."""
+    window_start, retry_after = _window(window_seconds)
+    async with database.sessionmaker() as db:
+        params = {"key": key[:200], "window_start": window_start}
+        count = (await db.execute(_COUNT, params)).scalar_one_or_none() or 0
+    if count >= limit * get_settings().rate_limit_scale:
+        raise TooManyRequests(retry_after=retry_after)
+
+
+async def hit(database: Database, key: str, *, limit: int, window_seconds: int) -> None:
+    """Count one request for ``key``; raise 429 once the window's limit is exceeded."""
+    count = await record(database, key, window_seconds=window_seconds)
     if count > limit * get_settings().rate_limit_scale:
-        raise TooManyRequests(retry_after=window_start + window_seconds - now)
+        raise TooManyRequests(retry_after=_window(window_seconds)[1])
 
 
 def rate_limit(name: str, *, limit: int, window_seconds: int) -> Callable[..., Awaitable[None]]:

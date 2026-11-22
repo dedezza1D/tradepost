@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from tradepost.deps import DbSession
 from tradepost.errors import AppError, Conflict, Unauthorized
 from tradepost.geo.service import resolve_city
+from tradepost.identity.devices import issue_device_cookie, trusted_device
 from tradepost.identity.models import User
 from tradepost.identity.schemas import (
     ChangePasswordIn,
@@ -28,6 +29,9 @@ from tradepost.security import ratelimit
 from tradepost.security.passwords import hash_password, needs_rehash, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+LOGIN_FAILURES = 10
+LOGIN_FAILURE_WINDOW = 15 * 60
 
 
 def me_out(request: Request, user: User) -> MeOut:
@@ -60,6 +64,7 @@ async def register(body: RegisterIn, request: Request, response: Response, db: D
     except IntegrityError:
         raise Conflict("This email is already registered.", code="email_taken") from None
     await create_session(db, response, user, user_agent=request.headers.get("user-agent"))
+    issue_device_cookie(response, user.id)
     return me_out(request, user)
 
 
@@ -69,15 +74,28 @@ async def register(body: RegisterIn, request: Request, response: Response, db: D
 )
 async def login(body: LoginIn, request: Request, response: Response, db: DbSession) -> MeOut:
     email = body.email.lower()
-    # Per-account limit on top of the per-IP one: slows down guessing one victim's password
-    # from many addresses.
-    await ratelimit.hit(request.app.state.db, f"login:email:{email}", limit=10, window_seconds=900)
+    database = request.app.state.db
     user = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
+    # Failed sign-ins are limited per account (on top of the per-IP limit), which slows down
+    # guessing one password from many addresses. A browser that signed in to this account
+    # before is limited on its own failures instead, so failing on purpose from elsewhere
+    # cannot lock the owner out. The check comes before the password is verified: past the
+    # limit, an answer would tell right from wrong.
+    account_key = f"login:email:{email}"
+    device = trusted_device(request, user.id) if user is not None else None
+    limit_key = f"login:device:{device}" if device else account_key
+    await ratelimit.check(
+        database, limit_key, limit=LOGIN_FAILURES, window_seconds=LOGIN_FAILURE_WINDOW
+    )
     if not verify_password(user.password_hash if user else None, body.password) or user is None:
+        await ratelimit.record(database, account_key, window_seconds=LOGIN_FAILURE_WINDOW)
+        if device:
+            await ratelimit.record(database, limit_key, window_seconds=LOGIN_FAILURE_WINDOW)
         raise Unauthorized("Invalid email or password.", code="invalid_credentials")
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(body.password)
     await create_session(db, response, user, user_agent=request.headers.get("user-agent"))
+    issue_device_cookie(response, user.id)
     return me_out(request, user)
 
 
