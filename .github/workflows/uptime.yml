@@ -34,3 +34,14 @@ jobs:
           exit 1
       - name: Database answers
         run: curl --fail --silent --show-error --max-time 60 "$SITE/api/readyz"
+      - name: security.txt is served and not about to expire
+        run: |
+          body=$(curl --fail --silent --show-error --max-time 30 "$SITE/.well-known/security.txt")
+          echo "$body" | grep -q '^Contact: '
+          expires=$(echo "$body" | sed -n 's/^Expires: //p' | tr -d '\r')
+          left=$(( ($(date -d "$expires" +%s) - $(date +%s)) / 86400 ))
+          echo "security.txt expires in $left days"
+          if [ "$left" -lt 30 ]; then
+            echo "::error::security.txt expires in $left days; update Expires in frontend/public/.well-known/security.txt"
+            exit 1
+          fi
