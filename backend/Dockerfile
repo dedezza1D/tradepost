@@ -1,6 +1,7 @@
-# syntax=docker/dockerfile:1.7
-FROM python:3.13-slim AS build
-COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /bin/uv
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+# Images are pinned by digest (tags can be moved); Dependabot proposes the updates.
+FROM python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 AS build
+COPY --from=ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
 # Dependencies first: this layer is reused until the lock file changes.
@@ -9,7 +10,7 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 
-FROM python:3.13-slim
+FROM python:3.13-slim@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
 # Security updates for the base system; pip is not needed at runtime (the venv is complete) and
 # its vendored libraries only add attack surface.
 RUN apt-get update     && apt-get upgrade -y --no-install-recommends     && rm -rf /var/lib/apt/lists/*     && python -m pip uninstall -y pip     && useradd --create-home --uid 10001 app

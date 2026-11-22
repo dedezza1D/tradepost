@@ -20,7 +20,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: pgvector/pgvector:pg18
+        image: pgvector/pgvector:pg18@sha256:38681dc6eaf55308e2a4c6de392d131652dcfac70e1263e35cd9b5ea3fe39782
         env:
           POSTGRES_USER: tradepost
           POSTGRES_PASSWORD: tradepost
@@ -33,9 +33,10 @@ jobs:
       TP_DATABASE_URL: postgresql+asyncpg://tradepost:tradepost@localhost:5432/tradepost
       TP_TEST_DATABASE_URL: postgresql+asyncpg://tradepost:tradepost@localhost:5432/tradepost_test
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
+          version: "0.13.6"
           enable-cache: true
       - run: uv sync --locked
       - name: Lint
@@ -56,7 +57,7 @@ jobs:
       - name: Dependency audit
         run: |
           uv export --no-dev --no-hashes --frozen --no-emit-project > "$RUNNER_TEMP/requirements.txt"
-          uvx pip-audit --strict --progress-spinner off -r "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit@2.10.1 --strict --progress-spinner off -r "$RUNNER_TEMP/requirements.txt"
 
   frontend:
     runs-on: ubuntu-latest
@@ -64,8 +65,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -85,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: pgvector/pgvector:pg18
+        image: pgvector/pgvector:pg18@sha256:38681dc6eaf55308e2a4c6de392d131652dcfac70e1263e35cd9b5ea3fe39782
         env:
           POSTGRES_USER: tradepost
           POSTGRES_PASSWORD: tradepost
@@ -97,13 +98,14 @@ jobs:
     env:
       E2E_DATABASE_URL: postgresql+asyncpg://tradepost:tradepost@localhost:5432/tradepost_e2e
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
+          version: "0.13.6"
           enable-cache: true
       - run: uv sync --locked
         working-directory: backend
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -116,7 +118,7 @@ jobs:
         working-directory: frontend
       - name: Keep the report and traces of a failed run
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
           path: |
@@ -127,10 +129,10 @@ jobs:
   image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Build the API image
         run: docker build -t tradepost-api:ci backend
       - name: Scan the image for known vulnerabilities
         run: >
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1@sha256:ab70a02200597efa04748f210f793936eb647cbcdb0ea69cc30b226d6f5a22c7
           image --quiet --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 tradepost-api:ci
