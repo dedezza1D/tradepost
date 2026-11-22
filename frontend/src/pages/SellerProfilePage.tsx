@@ -140,7 +140,7 @@ export function SellerProfilePage() {
   const profile = useQuery({
     queryKey: ['profile', id],
     queryFn: () => api<Profile>(`/api/users/${id}`),
-    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
+    retry: (count, error) => !(error instanceof ApiError && (error.status === 404 || error.unavailable)) && count < 2,
   })
   const listings = useUserListings(id, profile.isSuccess && !profile.data.blocked)
 

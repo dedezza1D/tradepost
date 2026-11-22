@@ -89,10 +89,19 @@ def install_error_handlers(app: FastAPI) -> None:
         log.exception("unhandled_error", path=request.url.path)
         from tradepost.ops.metrics import record_error, route_of
 
+        request_id = structlog.contextvars.get_contextvars().get("request_id")
         await record_error(
             request.app.state.db,
             exc,
             f"{request.method} {route_of(request.url.path)}",
-            structlog.contextvars.get_contextvars().get("request_id"),
+            request_id,
         )
-        return JSONResponse(_body("internal_error", "Something went wrong."), status_code=500)
+        # The id is the only thing the client learns: it ties a report to the log entry. This
+        # response is built outside the middleware that normally adds the header.
+        extra = {"request_id": request_id} if request_id else {}
+        headers = {"X-Request-ID": request_id} if request_id else {}
+        return JSONResponse(
+            _body("internal_error", "Something went wrong.", **extra),
+            status_code=500,
+            headers=headers,
+        )

@@ -80,6 +80,10 @@ async def test_unhandled_errors_are_grouped(app: Any) -> None:
             assert response.status_code == 500
             assert response.json()["error"]["code"] == "internal_error"
             assert "boom" not in response.text
+            # The id that ties a report to the log entry, and nothing else about the failure.
+            request_id = response.json()["error"]["request_id"]
+            assert len(request_id) == 32
+            assert response.headers["x-request-id"] == request_id
     rows = await sql(app, "SELECT kind, route, count, message FROM error_events")
     assert rows == [("RuntimeError", "GET /api/test-broken", 2, "boom 42")]
     admin = await admin_client(app)
