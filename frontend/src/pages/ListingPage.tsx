@@ -270,7 +270,7 @@ export function ListingPage() {
   const listing = useQuery({
     queryKey: ['listing', id],
     queryFn: () => api<Listing>(`/api/listings/${id}`),
-    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
+    retry: (count, error) => !(error instanceof ApiError && (error.status === 404 || error.unavailable)) && count < 2,
   })
 
   if (listing.isPending) {

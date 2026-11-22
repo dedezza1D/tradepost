@@ -9,6 +9,12 @@ interface Env {
 
 const FILE = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jpg$/
 
+const unavailable = () =>
+  new Response('Temporarily unavailable', {
+    status: 503,
+    headers: { 'Retry-After': '30', 'Cache-Control': 'no-store' },
+  })
+
 export const onRequestGet: PagesFunction<Env> = async ({ params, env, request, waitUntil }) => {
   const match = FILE.exec(String(params.id))
   if (!match) return new Response('Not found', { status: 404 })
@@ -18,10 +24,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ params, env, request, w
   const cached = await cache.match(cacheKey)
   if (cached) return cached
 
-  const upstream = await fetch(new URL(`/api/listings/${match[1]}/og.jpg`, env.API_ORIGIN).toString(), {
-    headers: { 'X-Proxy-Secret': env.PROXY_SECRET },
-  })
-  if (!upstream.ok) return new Response('Not found', { status: 404 })
+  let upstream: Response
+  try {
+    upstream = await fetch(new URL(`/api/listings/${match[1]}/og.jpg`, env.API_ORIGIN).toString(), {
+      headers: { 'X-Proxy-Secret': env.PROXY_SECRET },
+    })
+  } catch {
+    return unavailable()
+  }
+  if (upstream.status === 404) return new Response('Not found', { status: 404 })
+  // Anything else that is not the image (API asleep or failing) must not read as "no such
+  // listing": crawlers would keep the missing preview.
+  if (!upstream.ok) return unavailable()
   const response = new Response(upstream.body, {
     headers: {
       'Content-Type': 'image/jpeg',

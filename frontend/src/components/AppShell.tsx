@@ -3,6 +3,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useMe } from '../api/auth'
 import { useCategories } from '../api/catalog'
+import { useApiWaiting } from '../api/status'
 import { useUnreadChats } from '../api/chat'
 import { useCart } from '../api/orders'
 import { LANGUAGES, currentLanguage } from '../i18n'
@@ -26,6 +27,17 @@ function HeaderSearch({ className }: { className: string }) {
       onChange={setQ}
       onSearch={(query) => navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/search')}
     />
+  )
+}
+
+/** Explains a long wait while requests are being sent again to an API that has not answered. */
+function ApiWaitingNotice() {
+  const { t } = useTranslation()
+  const waiting = useApiWaiting()
+  return (
+    <div role="status" aria-live="polite">
+      {waiting && <p className="bg-warning-soft px-4 py-1.5 text-center text-xs font-medium text-warning-fg">{t('errors.api_waiting')}</p>}
+    </div>
   )
 }
 
@@ -364,6 +376,7 @@ export function AppShell() {
           <LanguageSwitch />
         </div>
       </div>
+      <ApiWaitingNotice />
       <header className="band sticky top-0 z-20 shadow-[0_2px_12px_-4px_rgb(90_10_20/0.35)]">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex h-14 items-center gap-3 md:h-16 md:gap-6">

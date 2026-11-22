@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { ApiError } from './api/client'
 import { AppShell } from './components/AppShell'
 import { RequireAuth } from './components/RequireAuth'
 import { LoginPage, RegisterPage } from './pages/AuthPages'
@@ -11,7 +12,14 @@ import { SearchPage } from './pages/SearchPage'
 import { EmptyState, Spinner } from './ui/primitives'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 15_000 } },
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 15_000,
+      // An unavailable API is already waited for inside each request.
+      retry: (count, error) => !(error instanceof ApiError && error.unavailable) && count < 3,
+    },
+  },
 })
 
 function NotFound() {
