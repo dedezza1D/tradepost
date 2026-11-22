@@ -11,6 +11,7 @@ import { EmptyState, PageHeader } from '../ui/primitives'
 import { OrderItems, StatusBadge } from './OrdersPage'
 import { DisputeBadge } from './DisputePages'
 import { Coupons } from '../components/Coupons'
+import { SellerDashboard } from '../components/SellerDashboard'
 
 function Stat({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
@@ -131,6 +132,7 @@ export function SellerPage() {
         {orders.isSuccess && toShip.length === 0 && <EmptyState icon="truck" title={t('seller.nothingToShip')} />}
         {toShip.map((o) => <SellerOrder key={o.id} order={o} />)}
       </section>
+      <SellerDashboard />
       {history.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-semibold">{t('seller.history')}</h2>

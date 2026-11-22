@@ -32,6 +32,9 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 - **Moderation**: listings that may be prohibited (weapons, drugs, counterfeits, wild animals,
   documents, e-cigarettes) wait for an admin instead of going live; reports reach the admin
   with a suggested priority; scam patterns in chat get a warning. See [Moderation](#moderation).
+- **Seller dashboard**: views, saves, questions, chats, orders and sales per listing and per
+  day for 7, 30 or 90 days, conversion, median time to answer a chat and what coupons
+  brought in, with a CSV export. See [Seller dashboard](#seller-dashboard).
 - **Shipping**: a fixed price set by the seller, or calculated from distance and package weight
   (standard or express), quoted on the listing and at checkout.
 - **Cart and checkout**: items from several sellers in one payment; stock is reserved for 15
@@ -286,6 +289,23 @@ the model, which tends to call things low priority, so the queue is ordered by t
 the model adds what the content is and why. Full report:
 [`backend/eval/results/moderation.md`](backend/eval/results/moderation.md).
 
+## Seller dashboard
+
+The dashboard reads saves, questions, conversations and orders from their own tables, so its
+numbers cannot drift from what the seller sees in orders and chat; tests check them against
+those rows. Only views are new. A listing page opened by someone other than the seller or an
+admin counts once per visitor per day (the account, or a hash of address and browser for
+visitors who are not signed in; link previews and crawlers are left out). Views are counted in
+memory and a job adds them to `listing_daily_views`, one row per listing and day, like the
+request metrics: a page view never waits on a write. Days are Brasília days; 400 days are kept.
+
+Orders count when paid and stay counted after shipping and delivery; refunds are shown apart.
+Shop totals count each order once and use what the buyer paid for the items after coupons;
+the per-listing table counts an order in each listing it contains, at item prices. Response
+time is the median from a buyer's first message to the seller's first answer after it. The
+chart is a single series picked from the totals above it, grouped by week when a bar per day
+would be too thin to read, with a table view and keyboard reading of each bar.
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -347,6 +367,9 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
   approve and reject with the seller's notification, report triage ordering the admin queue,
   chat warnings added and cleared by the model, and nothing done without a model where the
   rules already ran.
+- **Seller dashboard**: a visitor counted once a day, the seller, admins and crawlers left
+  out, and every total matched against the saves, questions, conversations, orders and
+  coupons it comes from, per listing, per day and in the CSV export.
 - **Adapters**: webhook signatures with locally signed payloads (no network).
   `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix

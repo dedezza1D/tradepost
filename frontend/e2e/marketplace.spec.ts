@@ -134,6 +134,18 @@ test('a seller lists an item and a buyer buys, receives and reviews it', async (
 
   await seller.page.goto('/seller')
   await expect(seller.page.getByText('Entregue', { exact: true })).toBeVisible()
+
+  // Performance: the sale and the save, read from the orders and saves themselves.
+  const performance = seller.page.getByRole('region', { name: 'Desempenho' })
+  const tile = (name: string) => performance.getByRole('button', { name: new RegExp(`^${name}`) }).locator(':scope > span').nth(1)
+  await expect(tile('Pedidos')).toHaveText('1')
+  await expect(tile('Salvos')).toHaveText('1')
+  await expect(performance.getByRole('link', { name: title })).toBeVisible()
+  await performance.getByRole('button', { name: 'Ver como tabela' }).click()
+  await expect(performance.getByRole('columnheader', { name: 'Dia', exact: true })).toBeVisible()
+  const axe = await new AxeBuilder({ page: seller.page }).include('section[aria-labelledby="analytics-title"]')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([])
 })
 
 test('buyer and seller chat in real time and settle on an offer', async ({ browser }, info) => {

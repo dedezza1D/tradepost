@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.ai.client import AI
 from tradepost.ai.client import purge_cache as purge_ai_cache
+from tradepost.analytics import flush_views, purge_views
 from tradepost.catalog.semantic import embed_pending as embed_listings
 from tradepost.chat.service import expire_due as expire_offers
 from tradepost.config import Settings
@@ -71,6 +72,8 @@ TASKS: dict[str, Task] = {
     "embed_listings": lambda db, ctx: _embed_listings(db, ctx),
     "saved_search_alerts": lambda db, _: send_saved_search_alerts(db),
     "refresh_fx": lambda db, _: refresh_fx(db),
+    "flush_views": lambda db, _: flush_views(db),
+    "purge_views": lambda db, _: purge_views(db),
     "triage_reports": lambda db, ctx: triage_reports(db, ctx.ai),
     "screen_messages": lambda db, ctx: screen_messages(db, ctx.ai),
 }

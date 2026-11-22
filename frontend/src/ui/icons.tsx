@@ -39,6 +39,9 @@ const paths = {
   send: 'M4 12 20 4l-6 16-3-7-7-1Z',
   store: 'M4 9h16l-1-4H5L4 9Zm0 0v11h16V9M9 20v-6h6v6',
   sparkles: 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z',
+  chart: 'M4 20h16M7 16v-5M12 16V6M17 16v-8',
+  list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+  download: 'M12 4v11m0 0-4-4m4 4 4-4M5 19h14',
 } as const
 
 export type IconName = keyof typeof paths
