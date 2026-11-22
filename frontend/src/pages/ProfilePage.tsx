@@ -12,6 +12,7 @@ import { errorMessage } from '../lib/errors'
 import { useChangeLanguage } from '../lib/language'
 import { setThemeChoice, themeChoice, type ThemeChoice } from '../theme'
 import { Icon, type IconName } from '../ui/icons'
+import { NotificationSettings } from '../components/NotificationSettings'
 
 function Row({ to, icon, label }: { to: string; icon: IconName; label: string }) {
   return (
@@ -189,6 +190,8 @@ export function ProfilePage() {
             options={[{ value: 'system', label: t('profile.themeSystem') }, { value: 'light', label: t('profile.themeLight') }, { value: 'dark', label: t('profile.themeDark') }]} />
         </div>
       </section>
+
+      <NotificationSettings />
 
       <section className="card space-y-4 p-5">
         <h2 className="font-semibold">{t('profile.details')}</h2>

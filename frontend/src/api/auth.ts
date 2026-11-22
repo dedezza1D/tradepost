@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, api, json } from './client'
 import type { Me } from './types'
+import { disablePush } from './push'
 
 export function useMe() {
   return useQuery({
@@ -44,7 +45,11 @@ export function useRegister() {
 export function useLogout() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => api<void>('/api/auth/logout', { method: 'POST' }),
+    mutationFn: async () => {
+      // This browser stops receiving this account's notices before the session ends.
+      await disablePush().catch(() => undefined)
+      await api<void>('/api/auth/logout', { method: 'POST' })
+    },
     onSuccess: () => {
       qc.setQueryData(['me'], null)
       qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' })

@@ -26,7 +26,13 @@ KEEP_PER_USER = 200
 
 
 async def notify(db: AsyncSession, user_id: uuid.UUID, kind: str, payload: dict[str, Any]) -> None:
-    db.add(Notification(user_id=user_id, kind=kind, payload=payload))
+    from tradepost.notifications.delivery import queue
+
+    notification = Notification(user_id=user_id, kind=kind, payload=payload)
+    db.add(notification)
+    await db.flush()
+    # Push and e-mail, when the person wants them for this kind of notice (same transaction).
+    await queue(db, notification.id, user_id, kind)
     await db.execute(text("SELECT pg_notify(:ch, :uid)"), {"ch": CHANNEL, "uid": str(user_id)})
 
 

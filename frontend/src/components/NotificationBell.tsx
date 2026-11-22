@@ -9,6 +9,8 @@ import {
   useNotificationStream,
 } from '../api/notifications'
 import { notificationTarget } from '../api/notifications'
+import { useMe } from '../api/auth'
+import { refreshPush } from '../api/push'
 import { NotificationText } from './NotificationText'
 import { formatDateTime } from '../lib/format'
 import { Icon } from '../ui/icons'
@@ -20,6 +22,12 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
   useNotificationStream(true)
+  // Keep this device's push subscription tied to the current session (see refreshPush).
+  const { data: me } = useMe()
+  const meId = me?.id
+  useEffect(() => {
+    if (meId) void refreshPush(meId).catch(() => undefined)
+  }, [meId])
   const { data } = useQuery({ queryKey: NOTIFICATIONS_KEY, queryFn: fetchNotifications })
   const readAll = useMutation({
     mutationFn: markAllRead,

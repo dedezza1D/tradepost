@@ -77,6 +77,9 @@ a quiet period can take about a minute while the API wakes up. See [test payment
 - Phone-first layout with a bottom tab bar, light and dark themes, Portuguese and English
   (including notifications and errors), installable as an app (PWA).
 - **Live notifications** over server-sent events, with polling as a fallback.
+- **Notifications outside the app**: Web Push to the person's phones and computers and
+  e-mail for sales, payments, shipments and disputes, chosen per kind of notice. See
+  [Notifications outside the app](#notifications-outside-the-app).
 
 **Operations**
 
@@ -306,6 +309,38 @@ time is the median from a buyer's first message to the seller's first answer aft
 chart is a single series picked from the totals above it, grouped by week when a bar per day
 would be too thin to read, with a table view and keyboard reading of each bar.
 
+## Notifications outside the app
+
+Every notice is created in the transaction of the event that causes it. In that same
+transaction an outbox row is added for each channel the person wants for that kind of notice,
+so a push or an e-mail exists exactly when the sale, message or dispute committed. A job sends
+due rows every 30 seconds, retries failures with backoff (five attempts), and records why a row
+was skipped: no device, read in the app first, more than a day old, or the channel not set up.
+
+| Kind of notice | Push (default) | E-mail (default) |
+|---|---|---|
+| Messages and questions | on | none |
+| Offers | on | none |
+| Orders and disputes | on | on: sale, payment, shipment, refund and dispute decisions |
+| Searches and saved items | on | none |
+| Activity (followers, reviews, moderation) | off | none |
+
+**Web Push without a paid service.** The browser's push service (Google, Mozilla, Apple) only
+relays an encrypted message; the API encrypts it for the device (RFC 8291) and signs its
+request with a VAPID key (RFC 8292), built on `cryptography`. A test checks the encryption
+byte for byte against the RFC's example. Only a VAPID private key is configured; nothing is
+signed up for. Two rules keep it safe: the API posts only to the browsers' push services (an
+endpoint elsewhere would make it a proxy to any address), and a device receives only while the
+session that registered it is signed in, so a shared computer stops showing someone's notices
+when they sign out. Signing out also removes the browser's subscription, and another person
+signing in later does not inherit it. On iPhone and iPad, web push needs the site added to the
+home screen; the settings page says so.
+
+**E-mail through any SMTP service.** Messages are written on the server in the account's
+language, with the same sentences as the app, as plain text and HTML, and link to the order
+and to the notification settings. Without a service configured (`TP_EMAIL_PROVIDER=none`)
+nothing is sent; `log` writes them to the log for development.
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -370,6 +405,11 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
 - **Seller dashboard**: a visitor counted once a day, the seller, admins and crawlers left
   out, and every total matched against the saves, questions, conversations, orders and
   coupons it comes from, per listing, per day and in the CSV export.
+- **Notifications outside the app**: the RFC 8291 example, the VAPID token, texts in both
+  languages, and end to end with a stand-in push service that decrypts what it receives:
+  a chat message on the buyer's phone, sale e-mails in each side's language, preferences,
+  retries, devices the push service dropped, notices read in the app first, sign-out, and
+  endpoints outside the browsers' push services refused.
 - **Adapters**: webhook signatures with locally signed payloads (no network).
   `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix
@@ -440,6 +480,16 @@ npm install
 npm run dev                                       # http://localhost:5180
 ```
 
+To try push notifications locally, generate a VAPID key into `backend/.env` and run the
+production build (`npm run build && npx vite preview`), which installs the service worker;
+`TP_EMAIL_PROVIDER=log` writes e-mails to the API log:
+
+```bash
+cd backend
+echo "TP_VAPID_PRIVATE_KEY=$(uv run python -c 'from tradepost.notifications.webpush import generate_vapid_private_key as g; print(g())')" >> .env
+echo "TP_EMAIL_PROVIDER=log" >> .env
+```
+
 To try semantic search, install [Ollama](https://ollama.com), pull the model and start the API
 with it; `seed_catalog` loads the evaluation catalog, and the background job embeds it within a
 minute:
@@ -491,6 +541,7 @@ uv run python scripts/stripe_listen.py
 | Free-tier guard | `TP_MEDIA_QUOTA_BYTES`, `TP_MAX_PHOTOS_PER_USER` | uploads stop at 2 GB / 200 photos per account; photos cached at the edge |
 | Commerce settings | `TP_MAX_INSTALLMENTS`, `TP_PAYOUT_HOLD_HOURS` | defaults: 12 installments, payouts 168 hours after delivery |
 | AI | `TP_AI_PROVIDER` (`none`, `ollama`), `TP_AI_BASE_URL`, `TP_AI_CHAT_MODEL`, `TP_AI_EMBED_MODEL`, prices and `TP_AI_DAILY_BUDGET_USD` | `none` on the live demo |
+| Notifications | `TP_VAPID_PRIVATE_KEY`, `TP_VAPID_SUBJECT`; `TP_EMAIL_PROVIDER` (`none`, `log`, `smtp`), `TP_EMAIL_FROM`, `TP_SMTP_HOST`, `TP_SMTP_PORT`, `TP_SMTP_USERNAME`, `TP_SMTP_PASSWORD` | without a key or a service, that channel is simply not offered |
 | Uptime | `.github/workflows/uptime.yml` | every 6 hours; GitHub notifies the owner when it fails |
 
 ## Decisions and trade-offs
