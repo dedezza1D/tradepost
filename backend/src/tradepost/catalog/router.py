@@ -103,10 +103,23 @@ async def similar(
 
 @router.get("/listings/{listing_id}")
 async def get_listing(
-    listing_id: uuid.UUID, principal: OptionalPrincipal, db: DbSession, storage: StorageDep
+    listing_id: uuid.UUID,
+    request: Request,
+    principal: OptionalPrincipal,
+    db: DbSession,
+    storage: StorageDep,
 ) -> ListingOut:
+    from tradepost.analytics import views, visitor_key
+
     viewer = principal.user if principal else None
     listing = await service.get_visible_listing(db, listing_id, viewer)
+    # A view for the seller's dashboard: not the seller, not an admin, not a link-preview robot.
+    if listing.status == ListingStatus.ACTIVE and not (
+        viewer and (viewer.id == listing.seller_id or viewer.is_admin)
+    ):
+        key = visitor_key(request, viewer.id if viewer else None)
+        if key:
+            views.record(listing.id, key)
     return await service.listing_out(db, storage, listing, viewer.id if viewer else None)
 
 

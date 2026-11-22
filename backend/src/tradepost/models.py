@@ -1,6 +1,7 @@
 """Imports every model so ``Base.metadata`` is complete (Alembic and tests rely on it)."""
 
 from tradepost.ai.models import AICache, AICall
+from tradepost.analytics import ListingDailyViews
 from tradepost.catalog.models import Category, Listing, ListingPhoto, ListingVariant
 from tradepost.catalog.semantic import ListingEmbedding
 from tradepost.chat.models import Conversation, Message, Offer
@@ -50,6 +51,7 @@ __all__ = [
     "JobRun",
     "LedgerEntry",
     "Listing",
+    "ListingDailyViews",
     "ListingEmbedding",
     "ListingPhoto",
     "ListingVariant",

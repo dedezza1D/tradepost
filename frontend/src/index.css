@@ -31,6 +31,7 @@
   /* Chart marks: validated for chroma, lightness band and colorblind separation per theme. */
   --color-chart-ok: var(--tp-chart-ok);
   --color-chart-error: var(--tp-chart-error);
+  --color-chart-series: var(--tp-chart-series);
   --color-success: var(--tp-success);
   --color-success-soft: var(--tp-success-soft);
   --color-warning-soft: var(--tp-warning-soft);
@@ -66,6 +67,7 @@
   --tp-danger-soft: #fdecea;
   --tp-chart-ok: #0a9283;
   --tp-chart-error: #b42318;
+  --tp-chart-series: #b4540a;
   --tp-success: #127a3f;
   --tp-success-soft: #e5f5ea;
   --tp-warning-soft: #fdf3d7;
@@ -93,6 +95,7 @@
   --tp-danger-soft: #3b1b1b;
   --tp-chart-ok: #26a593;
   --tp-chart-error: #e55656;
+  --tp-chart-series: #d9761c;
   --tp-success: #4ade80;
   --tp-success-soft: #14301f;
   --tp-warning-soft: #3a2f12;
