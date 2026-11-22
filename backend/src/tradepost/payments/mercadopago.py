@@ -194,20 +194,24 @@ class MercadoPagoProvider:
         data_id = raw_id.lower()  # the signed manifest uses the lower-cased id
         if not data_id or query.get("type", "order") != "order":
             return None
+        # Unsigned notices are refused: anyone could otherwise fill the event inbox. Without a
+        # secret, payments are still confirmed by polling the API (reconciliation job).
+        if not self._webhook_secret:
+            raise InvalidWebhook("Webhook secret not configured.")
         request_id = headers.get("x-request-id", "")
         parts = dict(
             p.strip().split("=", 1) for p in headers.get("x-signature", "").split(",") if "=" in p
         )
         ts = parts.get("ts", "")
-        if self._webhook_secret:
-            manifest = f"id:{data_id};request-id:{request_id};ts:{ts};"
-            expected = hmac.new(
-                self._webhook_secret.encode(), manifest.encode(), hashlib.sha256
-            ).hexdigest()
-            if not hmac.compare_digest(expected, parts.get("v1", "")):
-                raise InvalidWebhook("Invalid Mercado Pago signature.")
-        # Without a secret (local development) the notice is still harmless: it only names an
-        # order, whose status is then read from the API with our own credentials.
+        manifest = f"id:{data_id};request-id:{request_id};ts:{ts};"
+        expected = hmac.new(
+            self._webhook_secret.encode(), manifest.encode(), hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(expected, parts.get("v1", "")):
+            raise InvalidWebhook("Invalid Mercado Pago signature.")
+        # No timestamp window: the request id is part of the signed manifest and is the event's
+        # unique key, so replaying a captured notice only yields a duplicate. A window could
+        # instead drop the provider's own retries, which are not documented to be re-signed.
         return WebhookNotice(
             event_id=request_id or f"{data_id}:{ts}",
             event_type=query.get("action") or "order",

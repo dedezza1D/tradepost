@@ -2,10 +2,13 @@
 
 import asyncio
 import json
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from sqlalchemy import text
 
 from tests.conftest import create_listing, make_client, register
@@ -216,6 +219,27 @@ async def test_webhooks_with_bad_signatures_are_rejected(app: Any) -> None:
             headers={"x-fake-signature": "forged"},
         )
     assert response.status_code == 400
+
+
+async def test_webhooks_are_rate_limited_per_ip(app: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Frozen clock for the limiter, so the requests cannot straddle two fixed windows.
+    from tradepost.security import ratelimit
+
+    frozen = float(int(time.time()) // 60 * 60)
+    monkeypatch.setattr(ratelimit, "time", SimpleNamespace(time=lambda: frozen))
+    async with make_client(app) as anon:
+        statuses = [
+            (
+                await anon.post(
+                    "/api/webhooks/fake",
+                    content=b'{"id": "x", "type": "t", "payment": "fake_1"}',
+                    headers={"x-fake-signature": "forged"},
+                )
+            ).status_code
+            for _ in range(121)
+        ]
+    assert set(statuses[:120]) == {400}
+    assert statuses[120] == 429
 
 
 async def test_a_card_declined_then_approved_pays_once(app: Any, seller: Any, buyer: Any) -> None:

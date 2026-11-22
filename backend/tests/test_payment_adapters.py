@@ -97,5 +97,13 @@ def test_mercadopago_signed_notification() -> None:
         mp(secret).verify_webhook(forged, {"data.id": order_id, "type": "order"}, b"{}")
 
 
+def test_mercadopago_refuses_notifications_without_a_secret() -> None:
+    headers = {"x-signature": f"ts=1700000000,v1={'0' * 64}", "x-request-id": "req-1"}
+    with pytest.raises(InvalidWebhook, match="not configured"):
+        mp(None).verify_webhook(headers, {"data.id": "ORD01ABC", "type": "order"}, b"{}")
+    with pytest.raises(InvalidWebhook, match="not configured"):
+        mp(None).verify_webhook({}, {"data.id": "ORD01ABC"}, b"{}")
+
+
 def test_mercadopago_ignores_other_topics() -> None:
     assert mp(None).verify_webhook({}, {"data.id": "1", "type": "payment"}, b"{}") is None
