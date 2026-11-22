@@ -8,6 +8,7 @@
  * When the hosting platform answers in place of the API (instance asleep, deploy in progress,
  * origin unreachable), the answer is replaced by a JSON error the app understands.
  */
+import { bodyTooLarge, tooLargeResponse } from '../../edge/limits'
 import { failureResponse, upstreamFailure } from '../../edge/upstream'
 
 interface Env {
@@ -28,6 +29,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   headers.set('X-Forwarded-Proto', 'https')
 
   const hasBody = !['GET', 'HEAD'].includes(request.method)
+  if (hasBody && bodyTooLarge(request.headers)) return tooLargeResponse()
   let response: Response
   try {
     response = await fetch(target.toString(), {

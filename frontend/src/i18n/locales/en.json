@@ -131,6 +131,7 @@
     "photo_limit_reached": "You reached your account's photo limit.",
     "storage_full": "Photo storage for this demo is full.",
     "invalid_image": "Invalid image. Use JPEG, PNG or WebP up to 5 MB.",
+    "payload_too_large": "The file or data sent is too large.",
     "out_of_stock": "One of the items is no longer available in that quantity.",
     "own_listing": "You cannot buy your own listing.",
     "checkout_closed": "This checkout is no longer open for payment.",
