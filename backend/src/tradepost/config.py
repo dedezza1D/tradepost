@@ -101,6 +101,9 @@ class Settings(BaseSettings):
     mercadopago_public_key: str | None = None
     mercadopago_webhook_secret: SecretStr | None = None
 
+    # New passwords are checked against the Pwned Passwords corpus (see password_policy.py).
+    breached_password_check: bool = True
+
     # Multiplies every rate limit. Only end-to-end tests raise it (many sign-ups from one IP).
     rate_limit_scale: float = Field(default=1.0, ge=1.0, le=1000.0)
 

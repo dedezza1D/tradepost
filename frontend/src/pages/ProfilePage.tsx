@@ -132,7 +132,7 @@ function PasswordForm() {
       </div>
       <div>
         <label className="label" htmlFor="new_password">{t('profile.newPassword')}</label>
-        <input id="new_password" type="password" autoComplete="new-password" minLength={10} maxLength={128} className="input" required value={next} onChange={(e) => setNext(e.target.value)} />
+        <input id="new_password" type="password" autoComplete="new-password" minLength={15} maxLength={128} className="input" required value={next} onChange={(e) => setNext(e.target.value)} />
         <p className="mt-1 text-xs text-muted">{t('auth.passwordHint')}</p>
       </div>
       {change.isError && <p role="alert" className="text-sm text-danger">{errorMessage(change.error, t)}</p>}

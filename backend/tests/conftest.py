@@ -46,6 +46,8 @@ def settings_env(database_url: str, tmp_path_factory: pytest.TempPathFactory) ->
         "TP_PAYMENT_PROVIDERS": '["fake"]',
         # Tests that need the dispute window set it themselves.
         "TP_PAYOUT_HOLD_HOURS": "0",
+        # No calls to the breach corpus; its tests use a mock transport.
+        "TP_BREACHED_PASSWORD_CHECK": "false",
     }
     previous = {k: os.environ.get(k) for k in env}
     os.environ.update(env)

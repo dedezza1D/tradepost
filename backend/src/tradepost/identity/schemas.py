@@ -4,13 +4,15 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
+from tradepost.security.password_policy import MAX_LENGTH, MIN_LENGTH
+
 BR_STATES = frozenset(
     "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split()
 )
 
 Locale = Literal["pt-BR", "en"]
 
-Password = Annotated[str, StringConstraints(min_length=10, max_length=128)]
+Password = Annotated[str, StringConstraints(min_length=MIN_LENGTH, max_length=MAX_LENGTH)]
 DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=60)]
 City = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80)]
 Bio = Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)]
