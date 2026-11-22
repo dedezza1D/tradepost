@@ -368,7 +368,11 @@ async def report(
 ) -> Report:
     if target_type == ReportTarget.LISTING:
         listing = await db.get(Listing, target_id)
-        if listing is None or listing.status in (ListingStatus.DRAFT, ListingStatus.REMOVED):
+        if listing is None or listing.status in (
+            ListingStatus.DRAFT,
+            ListingStatus.REMOVED,
+            ListingStatus.IN_REVIEW,
+        ):
             raise NotFound("Listing not found.")
         if listing.seller_id == user.id:
             raise AppError("You cannot report your own listing.", code="report_self")
@@ -403,13 +407,14 @@ async def report(
 
 
 async def open_reports(db: AsyncSession, limit: int = 100) -> list[tuple[Report, str, int]]:
-    """Open reports, oldest first, with a label for the target and how many people reported it."""
+    """Open reports, most urgent first (the triage job's suggestion, then age), with a label
+    for the target and how many people reported it."""
     reports = list(
         (
             await db.execute(
                 select(Report)
                 .where(Report.status == ReportStatus.OPEN)
-                .order_by(Report.created_at, Report.id)
+                .order_by(Report.triage_priority.asc().nulls_last(), Report.created_at, Report.id)
                 .limit(limit)
             )
         ).scalars()

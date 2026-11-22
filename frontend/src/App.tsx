@@ -106,6 +106,13 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: '/admin/review',
+        lazy: async () => {
+          const { AdminReviewPage } = await import('./pages/SocialPages')
+          return { element: auth(<AdminReviewPage />) }
+        },
+      },
+      {
         path: '/me/blocks',
         lazy: async () => {
           const { BlockedPage } = await import('./pages/SocialPages')

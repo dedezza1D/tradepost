@@ -78,7 +78,8 @@
       "dispute_cancelled": "O comprador encerrou a disputa de <b>{{title}}</b>.",
       "ops_alert": "Alerta de operação: {{alert}}.",
       "saved_search_one": "<b>{{count}}</b> anúncio novo para a sua busca <b>{{search}}</b>.",
-      "saved_search_other": "<b>{{count}}</b> anúncios novos para a sua busca <b>{{search}}</b>."
+      "saved_search_other": "<b>{{count}}</b> anúncios novos para a sua busca <b>{{search}}</b>.",
+      "listing_approved": "<b>{{title}}</b> foi aprovado e já está no ar."
     },
     "moreItems_one": " e mais {{count}} item",
     "moreItems_other": " e mais {{count}} itens",
@@ -283,7 +284,8 @@
       "active": "Ativo",
       "paused": "Pausado",
       "sold_out": "Esgotado",
-      "removed": "Removido"
+      "removed": "Removido",
+      "in_review": "Em análise"
     },
     "photos": "Fotos do anúncio",
     "openPhoto": "Ampliar foto {{n}} de {{total}}",
@@ -484,7 +486,8 @@
       "shouting_title": "O título está em letras maiúsculas. Em letras normais fica mais fácil de ler.",
       "short_description": "A descrição está curta. Conte o estado, o tamanho, o que acompanha e por que está vendendo.",
       "price_above_similar": "O preço está bem acima de anúncios parecidos (de {{low}} a {{high}})."
-    }
+    },
+    "inReview": "Este anúncio está em análise: nossas verificações indicam que ele pode violar as regras. Você recebe uma notificação quando ele for aprovado ou removido."
   },
   "cart": {
     "emptyTitle": "Seu carrinho está vazio",
@@ -735,7 +738,13 @@
     },
     "warning": {
       "contact": "Esta mensagem parece ter contato pessoal. Combine e pague pelo tradepost para ter proteção.",
-      "off_platform_payment": "Atenção: pagamento fora do tradepost (Pix direto, link, transferência) não tem proteção."
+      "off_platform_payment": "Atenção: pagamento fora do tradepost (Pix direto, link, transferência) não tem proteção.",
+      "fake_payment": "Cuidado: comprovante enviado no chat não é pagamento. Só envie depois que o pedido aparecer como pago.",
+      "advance_fee": "Cuidado: pedir sinal ou taxa antes da venda é um golpe comum.",
+      "phishing": "Cuidado: esta mensagem tem um link ou pedido que pode ser golpe. O tradepost nunca pede senhas ou códigos.",
+      "data_request": "Cuidado: nunca compartilhe senhas, códigos ou dados de cartão no chat.",
+      "impersonation": "Cuidado: o suporte do tradepost nunca fala com você pelo chat.",
+      "scam": "Cuidado: esta mensagem parece golpe. Mantenha o pagamento e o envio pelo tradepost."
     },
     "seen": "Visto",
     "viewProfile": "Ver perfil",
@@ -976,5 +985,31 @@
   "price": {
     "approx": "≈ {{amount}}",
     "approxDetail": "≈ {{amount}} a R$ {{rate}} por dólar (Banco Central, {{date}}). Cobrado em reais."
+  },
+  "review": {
+    "title": "Anúncios em análise",
+    "intro": "Retidos na publicação porque as verificações indicaram que podem ser proibidos. Aprovar publica o anúncio; rejeitar o remove. Quem vende é avisado nos dois casos.",
+    "empty": "Nenhum anúncio aguardando análise",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "priority": {
+      "1": "Urgente",
+      "2": "Revisar logo",
+      "3": "Baixa prioridade"
+    },
+    "categories": {
+      "weapons": "Armas",
+      "drugs": "Drogas ou remédios",
+      "counterfeit": "Falsificação",
+      "wildlife": "Animais silvestres",
+      "documents": "Documentos ou contas",
+      "tobacco": "Cigarro eletrônico",
+      "scam": "Golpe",
+      "prohibited": "Item proibido",
+      "offensive": "Ofensivo",
+      "spam": "Spam",
+      "misleading": "Enganoso",
+      "no_violation": "Sem violação"
+    }
   }
 }

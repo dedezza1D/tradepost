@@ -139,6 +139,8 @@ class Message(Base):
     offer_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))
     # Set when the text looks like contact details or payment outside the platform.
     warning: Mapped[str | None] = mapped_column(String(30))
+    # When a model last checked the message for scams (rules run as it is sent).
+    screened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

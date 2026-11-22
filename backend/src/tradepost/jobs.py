@@ -22,6 +22,7 @@ from tradepost.db import Database
 from tradepost.disputes import escalate_overdue as escalate_disputes
 from tradepost.fx import refresh as refresh_fx
 from tradepost.logs import get_logger
+from tradepost.moderation_queue import screen_messages, triage_reports
 from tradepost.notifications.service import prune as prune_notifications
 from tradepost.ops.metrics import flush as flush_metrics
 from tradepost.ops.metrics import purge as purge_metrics
@@ -70,6 +71,8 @@ TASKS: dict[str, Task] = {
     "embed_listings": lambda db, ctx: _embed_listings(db, ctx),
     "saved_search_alerts": lambda db, _: send_saved_search_alerts(db),
     "refresh_fx": lambda db, _: refresh_fx(db),
+    "triage_reports": lambda db, ctx: triage_reports(db, ctx.ai),
+    "screen_messages": lambda db, ctx: screen_messages(db, ctx.ai),
 }
 
 

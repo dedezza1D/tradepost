@@ -12,6 +12,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    SmallInteger,
     String,
     func,
     text,
@@ -141,3 +142,8 @@ class Report(Base):
     resolved_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL")
     )
+    # Suggested by the triage job for the admin queue (1 urgent, 2 soon, 3 low).
+    triage_category: Mapped[str | None] = mapped_column(String(20))
+    triage_priority: Mapped[int | None] = mapped_column(SmallInteger)
+    triage_reason: Mapped[str | None] = mapped_column(String(300))
+    triaged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

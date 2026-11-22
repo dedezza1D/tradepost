@@ -6,6 +6,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
+from tradepost.ai.client import AI
 from tradepost.catalog.models import (
     Category,
     Listing,
@@ -167,7 +168,9 @@ def _sync_stock_status(listing: Listing) -> None:
         listing.status = ListingStatus.ACTIVE
 
 
-async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate) -> Listing:
+async def update_listing(
+    db: AsyncSession, listing: Listing, body: ListingUpdate, ai: AI | None = None
+) -> Listing:
     if body.version != listing.version:
         raise Conflict(
             "The listing changed since you loaded it. Reload and try again.",
@@ -194,6 +197,9 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
             setattr(listing, field, value)
     _sync_stock_status(listing)
     _check_package(listing)
+    # A published listing whose text changed is checked again, as at publishing.
+    if listing.status in PUBLIC_STATUSES and ({"title", "description"} & changes.keys()):
+        await _screen(db, ai, listing)
     try:
         await db.flush()
     except StaleDataError:
@@ -211,14 +217,31 @@ async def update_listing(db: AsyncSession, listing: Listing, body: ListingUpdate
     return listing
 
 
-async def publish_listing(db: AsyncSession, listing: Listing) -> Listing:
+async def _screen(db: AsyncSession, ai: AI | None, listing: Listing) -> bool:
+    """Hold the listing for review when the checks say it may be prohibited."""
+    from tradepost.moderation import classify_listing, needs_review
+
+    verdict = await classify_listing(db, ai, listing.title, listing.description)
+    if not needs_review(verdict):
+        listing.review_category = listing.review_reason = None
+        return False
+    listing.status = ListingStatus.IN_REVIEW
+    listing.review_category = verdict.category
+    listing.review_reason = verdict.reason or None
+    return True
+
+
+async def publish_listing(db: AsyncSession, listing: Listing, ai: AI | None = None) -> Listing:
     if not listing.photos:
         raise AppError("Add at least one photo before publishing.", code="photo_required")
     if listing.stock == 0:
         raise AppError("Set the stock before publishing.", code="stock_required")
-    listing.status = ListingStatus.ACTIVE
-    if listing.published_at is None:
-        listing.published_at = datetime.now(UTC)
+    if listing.status == ListingStatus.IN_REVIEW:
+        raise AppError("This listing is waiting for review.", code="in_review")
+    if not await _screen(db, ai, listing):
+        listing.status = ListingStatus.ACTIVE
+        if listing.published_at is None:
+            listing.published_at = datetime.now(UTC)
     await db.flush()
     return listing
 

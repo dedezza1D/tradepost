@@ -31,6 +31,8 @@ class ListingStatus(enum.StrEnum):
     PAUSED = "paused"
     SOLD_OUT = "sold_out"
     REMOVED = "removed"
+    # Held back at publishing: the checks found it may be prohibited; an admin decides.
+    IN_REVIEW = "in_review"
 
 
 class ShippingMode(enum.StrEnum):
@@ -111,6 +113,9 @@ class Listing(TimestampMixin, Base):
     )
     # Optimistic locking: an edit must name the version it was based on.
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Why the listing is in review (category from the moderation checks, and their reason).
+    review_category: Mapped[str | None] = mapped_column(String(20))
+    review_reason: Mapped[str | None] = mapped_column(String(300))
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

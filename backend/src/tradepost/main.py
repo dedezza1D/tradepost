@@ -30,6 +30,7 @@ from tradepost.middleware import (
     ProxyGuardMiddleware,
     RequestContextMiddleware,
 )
+from tradepost.moderation_queue import router as moderation_router
 from tradepost.notifications.router import router as notifications_router
 from tradepost.notifications.service import Broker, asyncpg_dsn
 from tradepost.ops.router import router as ops_router
@@ -100,6 +101,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(saved_searches_router)
     app.include_router(assistant_router)
     app.include_router(fx_router)
+    app.include_router(moderation_router)
 
     @app.get("/healthz", tags=["ops"])
     async def healthz() -> dict[str, str]:

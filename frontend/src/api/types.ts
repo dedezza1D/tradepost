@@ -1,4 +1,4 @@
-export type ListingStatus = 'draft' | 'active' | 'paused' | 'sold_out' | 'removed'
+export type ListingStatus = 'draft' | 'active' | 'paused' | 'sold_out' | 'removed' | 'in_review'
 export type Condition = 'new' | 'used'
 export type SortOrder = 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'nearest'
 
@@ -179,6 +179,10 @@ export interface AdminReport {
   created_at: string
   target_label: string
   reports_on_target: number
+  // Suggested by the triage job: 1 urgent, 2 soon, 3 low.
+  triage_category: string | null
+  triage_priority: number | null
+  triage_reason: string | null
 }
 
 export type OfferStatus = 'pending' | 'accepted' | 'declined' | 'countered' | 'cancelled' | 'expired'

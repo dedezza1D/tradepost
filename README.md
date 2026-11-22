@@ -29,6 +29,9 @@ a quiet period can take about a minute while the API wakes up. See [test payment
   listings (dark photo, vague title, price far above similar items); with a vision model, a
   draft of title, description, category and condition from the photos. See
   [Listing assistant](#listing-assistant).
+- **Moderation**: listings that may be prohibited (weapons, drugs, counterfeits, wild animals,
+  documents, e-cigarettes) wait for an admin instead of going live; reports reach the admin
+  with a suggested priority; scam patterns in chat get a warning. See [Moderation](#moderation).
 - **Shipping**: a fixed price set by the seller, or calculated from distance and package weight
   (standard or express), quoted on the listing and at checkout.
 - **Cart and checkout**: items from several sellers in one payment; stock is reserved for 15
@@ -254,6 +257,35 @@ its median within the expected range for 90% of the drafts. A draft takes about 
 tokens in, mostly the image, 85 out). Full report:
 [`backend/eval/results/assistant.md`](backend/eval/results/assistant.md).
 
+## Moderation
+
+Every check has two layers: rules (word lists and patterns) that always run, including on the
+live demo, and a model that reads the text in context when one is available. Nothing is
+punished automatically: a risky listing waits for an admin, a suspicious message gets a warning
+next to it, and a report gets a suggested priority and reason; people decide.
+
+`backend/eval/moderation_dataset.py` is a hand-labelled set written before the checks: 82
+listings (42 prohibited; 39 hard cases such as a Nerf gun, a glue gun, a painting reproduction,
+or "pist0la" and "erva" in disguise), 50 chat messages (25 scams; honest questions about paying
+by Pix through the site among the hard cases) and 30 reports. With Qwen2.5-VL 7B:
+
+| Check | Decision | Precision | Recall |
+|---|---|---:|---:|
+| Listings | Rules | 100% | 88% |
+| Listings | Model, medium or high risk | 100% | 50% |
+| Listings | **Rules or model** (in use) | **100%** | **98%** |
+| Chat | Rules (payment outside the site) | 77% | 40% |
+| Chat | **Model** (in use with a model) | **100%** | **84%** |
+
+The model names the right category for almost every prohibited listing but often calls the
+risk low, so alone it misses half; flagging any category it names would hold 19 innocent
+look-alikes. Combined with the rules, it catches what the words miss without false alarms.
+In chat the model wins outright, and it also clears the rules' warning from honest messages
+about Pix. For reports, the rules' priority ranks 85% of the urgent ones first against 31% for
+the model, which tends to call things low priority, so the queue is ordered by the rules and
+the model adds what the content is and why. Full report:
+[`backend/eval/results/moderation.md`](backend/eval/results/moderation.md).
+
 ## Security
 
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
@@ -286,7 +318,7 @@ tokens in, mostly the image, 85 out). Full report:
 
 ```bash
 cd backend
-uv run pytest            # 153 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
+uv run pytest            # 161 tests on a real PostgreSQL (Testcontainers), migrated by Alembic
 uv run ruff check . && uv run mypy
 uv run python scripts/sandbox_check.py   # adapters against the Stripe and Mercado Pago sandboxes
 ```
@@ -311,6 +343,10 @@ uv run python scripts/sandbox_check.py   # adapters against the Stripe and Merca
 - **Listing assistant**: drafts from photos (photos shrunk before the model, at most three,
   unsupported claims removed, not-a-product answers refused, a looping answer retried), price
   ranges that ignore outliers and fall back to the category, and every tip.
+- **Moderation**: rules against look-alikes, listings held at publishing and after an edit,
+  approve and reject with the seller's notification, report triage ordering the admin queue,
+  chat warnings added and cleared by the model, and nothing done without a model where the
+  rules already ran.
 - **Adapters**: webhook signatures with locally signed payloads (no network).
   `sandbox_check.py` runs the real adapters against the sandboxes. It found two bugs the mocks
   could not: Stripe rejects `transfer_group` on transfers tied to a charge, and a Mercado Pago Pix

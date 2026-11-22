@@ -447,13 +447,15 @@ function NewListing() {
         body.append('file', photo.file)
         await api<Photo>(`/api/listings/${created.id}/photos`, { method: 'POST', body })
       }
+      let held = false
       if (publish) {
         setProgress(t('sell.progress.publishing'))
-        await api<Listing>(`/api/listings/${created.id}/publish`, { method: 'POST' })
+        const published = await api<Listing>(`/api/listings/${created.id}/publish`, { method: 'POST' })
+        held = published.status === 'in_review'
       }
       void qc.invalidateQueries({ queryKey: ['my-listings'] })
       void qc.invalidateQueries({ queryKey: ['listings'] })
-      navigate(publish ? `/listings/${created.id}` : `/sell/${created.id}`, { replace: true })
+      navigate(publish && !held ? `/listings/${created.id}` : `/sell/${created.id}`, { replace: true })
     } catch (err) {
       setProgress(null)
       setError(errorMessage(err, t))
@@ -662,7 +664,12 @@ function EditListing({ id }: { id: string }) {
 
       <section className="card space-y-3 p-5">
         <h2 className="font-semibold">{t('sell.visibility')}</h2>
-        {l.status !== 'active' && l.status !== 'sold_out' ? (
+        {l.status === 'in_review' ? (
+          <p role="status" className="flex items-start gap-2 rounded-xl bg-warning-soft p-3 text-sm text-warning-fg">
+            <Icon name="shield" size={18} className="mt-0.5 shrink-0" />
+            {t('sell.inReview')}
+          </p>
+        ) : l.status !== 'active' && l.status !== 'sold_out' ? (
           <button className="btn-primary w-full" disabled={action.isPending} onClick={() => action.mutate('publish')}>{t('sell.publish')}</button>
         ) : (
           <button className="btn-secondary w-full" disabled={action.isPending} onClick={() => action.mutate('pause')}>{t('sell.pause')}</button>

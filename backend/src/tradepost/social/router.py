@@ -109,6 +109,9 @@ class ReportOut(BaseModel):
 class AdminReportOut(ReportOut):
     target_label: str
     reports_on_target: int
+    triage_category: str | None
+    triage_priority: int | None
+    triage_reason: str | None
 
 
 class ResolveIn(BaseModel):
@@ -309,6 +312,9 @@ async def admin_reports(admin: AdminUser, db: DbSession) -> list[AdminReportOut]
     return [
         AdminReportOut(
             **ReportOut.model_validate(entry, from_attributes=True).model_dump(),
+            triage_category=entry.triage_category,
+            triage_priority=entry.triage_priority,
+            triage_reason=entry.triage_reason,
             target_label=label,
             reports_on_target=count,
         )

@@ -171,6 +171,7 @@ export function ProfilePage() {
         <Row to="/cart" icon="cart" label={t('nav.cart')} />
         <Row to="/me/blocks" icon="ban" label={t('social.blockedTitle')} />
         {me.is_admin && <Row to="/admin/reports" icon="shield" label={t('social.moderation.title')} />}
+        {me.is_admin && <Row to="/admin/review" icon="flag" label={t('review.title')} />}
         {me.is_admin && <Row to="/admin/disputes" icon="info" label={t('disputes.adminTitle')} />}
         {me.is_admin && <Row to="/admin/ops" icon="trending" label={t('ops.title')} />}
       </ul>

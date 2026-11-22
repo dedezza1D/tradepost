@@ -145,21 +145,26 @@ async def create_listing(
 async def update_listing(
     listing_id: uuid.UUID,
     body: ListingUpdate,
+    request: Request,
     user: CurrentUser,
     db: DbSession,
     storage: StorageDep,
 ) -> ListingOut:
     listing = await service.get_owned_listing(db, listing_id, user)
-    listing = await service.update_listing(db, listing, body)
+    listing = await service.update_listing(db, listing, body, request.app.state.ai)
     return await service.listing_out(db, storage, listing)
 
 
 @router.post("/listings/{listing_id}/publish")
 async def publish_listing(
-    listing_id: uuid.UUID, user: CurrentUser, db: DbSession, storage: StorageDep
+    listing_id: uuid.UUID,
+    request: Request,
+    user: CurrentUser,
+    db: DbSession,
+    storage: StorageDep,
 ) -> ListingOut:
     listing = await service.get_owned_listing(db, listing_id, user)
-    listing = await service.publish_listing(db, listing)
+    listing = await service.publish_listing(db, listing, request.app.state.ai)
     return await service.listing_out(db, storage, listing)
 
 

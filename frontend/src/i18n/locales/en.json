@@ -78,7 +78,8 @@
       "dispute_cancelled": "The buyer closed the dispute about <b>{{title}}</b>.",
       "ops_alert": "Operations alert: {{alert}}.",
       "saved_search_one": "<b>{{count}}</b> new listing for your search <b>{{search}}</b>.",
-      "saved_search_other": "<b>{{count}}</b> new listings for your search <b>{{search}}</b>."
+      "saved_search_other": "<b>{{count}}</b> new listings for your search <b>{{search}}</b>.",
+      "listing_approved": "<b>{{title}}</b> was approved and is now live."
     },
     "moreItems_one": " and {{count}} more item",
     "moreItems_other": " and {{count}} more items",
@@ -283,7 +284,8 @@
       "active": "Active",
       "paused": "Paused",
       "sold_out": "Sold out",
-      "removed": "Removed"
+      "removed": "Removed",
+      "in_review": "In review"
     },
     "photos": "Listing photos",
     "openPhoto": "Enlarge photo {{n}} of {{total}}",
@@ -484,7 +486,8 @@
       "shouting_title": "The title is in capital letters. Normal case is easier to read.",
       "short_description": "The description is short. Add condition, size, what comes with it and why you are selling.",
       "price_above_similar": "The price is well above similar listings ({{low}} to {{high}})."
-    }
+    },
+    "inReview": "This listing is waiting for review: our checks found it may break the rules. You get a notification when it is approved or removed."
   },
   "cart": {
     "emptyTitle": "Your cart is empty",
@@ -735,7 +738,13 @@
     },
     "warning": {
       "contact": "This message seems to share contact details. Keep the deal on tradepost to stay protected.",
-      "off_platform_payment": "Careful: paying outside tradepost (direct Pix, links, transfers) is not protected."
+      "off_platform_payment": "Careful: paying outside tradepost (direct Pix, links, transfers) is not protected.",
+      "fake_payment": "Careful: a payment proof sent in the chat is not a payment. Only ship after the order shows as paid.",
+      "advance_fee": "Careful: asking for a deposit or a fee before the sale is a common scam.",
+      "phishing": "Careful: this message has a link or request that may be a scam. tradepost never asks for passwords or codes.",
+      "data_request": "Careful: never share passwords, codes or card details in the chat.",
+      "impersonation": "Careful: tradepost support never contacts you through the chat.",
+      "scam": "Careful: this message looks like a scam. Keep payment and shipping on tradepost."
     },
     "seen": "Seen",
     "viewProfile": "View profile",
@@ -976,5 +985,31 @@
   "price": {
     "approx": "≈ {{amount}}",
     "approxDetail": "≈ {{amount}} at R$ {{rate}} per dollar (Banco Central, {{date}}). Charged in reais."
+  },
+  "review": {
+    "title": "Listings in review",
+    "intro": "Held at publishing because the checks found they may be prohibited. Approving publishes the listing; rejecting removes it. The seller is told either way.",
+    "empty": "No listings waiting for review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "priority": {
+      "1": "Urgent",
+      "2": "Review soon",
+      "3": "Low priority"
+    },
+    "categories": {
+      "weapons": "Weapons",
+      "drugs": "Drugs or medicines",
+      "counterfeit": "Counterfeit",
+      "wildlife": "Wild animals",
+      "documents": "Documents or accounts",
+      "tobacco": "E-cigarettes",
+      "scam": "Scam",
+      "prohibited": "Prohibited item",
+      "offensive": "Offensive",
+      "spam": "Spam",
+      "misleading": "Misleading",
+      "no_violation": "No violation"
+    }
   }
 }

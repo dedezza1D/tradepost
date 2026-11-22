@@ -34,6 +34,7 @@ const KNOWN = new Set([
   'offer_declined',
   'offer_expired',
   'saved_search',
+  'listing_approved',
 ])
 export function NotificationText({ n }: { n: Notification }) {
   const { t } = useTranslation()

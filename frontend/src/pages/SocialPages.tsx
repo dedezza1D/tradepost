@@ -153,6 +153,11 @@ export function AdminReportsPage() {
         {reports.data?.map((r) => (
           <li key={r.id} className="card space-y-3 p-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
+              {r.triage_priority && (
+                <Badge tone={r.triage_priority === 1 ? 'danger' : r.triage_priority === 2 ? 'warning' : 'neutral'}>
+                  {t(`review.priority.${r.triage_priority}`)}
+                </Badge>
+              )}
               <Badge tone="danger">{t(`social.report.reasons.${r.reason}`)}</Badge>
               <Badge>{t(`social.moderation.target.${r.target_type}`)}</Badge>
               {r.reports_on_target > 1 && <Badge tone="warning">{t('social.moderation.count', { count: r.reports_on_target })}</Badge>}
@@ -162,12 +167,81 @@ export function AdminReportsPage() {
               {r.target_label}<Icon name="chevronRight" size={16} />
             </Link>
             {r.details && <p className="rounded-xl bg-surface-2 p-3">{r.details}</p>}
+            {r.triage_reason && (
+              <p className="flex items-start gap-2 text-xs text-muted">
+                <Icon name="sparkles" size={14} className="mt-0.5 shrink-0 text-primary" />
+                <span>
+                  <strong className="font-semibold text-fg">{t(`review.categories.${r.triage_category}`, { defaultValue: r.triage_category ?? '' })}</strong>
+                  {' · '}{r.triage_reason}
+                </span>
+              </p>
+            )}
             <div className="flex gap-2">
               <button className="btn-secondary flex-1" disabled={resolve.isPending} onClick={() => resolve.mutate({ id: r.id, outcome: 'dismissed' })}>
                 {t('social.moderation.dismiss')}
               </button>
               <button className="btn-danger flex-1" disabled={resolve.isPending} onClick={() => resolve.mutate({ id: r.id, outcome: 'actioned' })}>
                 {r.target_type === 'listing' ? t('social.moderation.remove') : t('social.moderation.actioned')}
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+interface ReviewItem {
+  id: string
+  title: string
+  description: string
+  category_slug: string
+  price_cents: number
+  review_category: string | null
+  review_reason: string | null
+  updated_at: string
+}
+
+/** Listings held at publishing because the checks found they may be prohibited. */
+export function AdminReviewPage() {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const queue = useQuery({ queryKey: ['admin-review'], queryFn: () => api<ReviewItem[]>('/api/admin/review/listings') })
+  const decide = useMutation({
+    mutationFn: ({ id, decision }: { id: string; decision: 'approve' | 'reject' }) =>
+      api<{ status: string }>(`/api/admin/review/listings/${id}`, { method: 'POST', body: json({ decision }) }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['admin-review'] }),
+  })
+  return (
+    <div className="mx-auto max-w-2xl">
+      <PageHeader title={t('review.title')} back="/me" />
+      <p className="mb-4 text-sm text-muted">{t('review.intro')}</p>
+      {queue.isPending && <div className="flex justify-center py-10 text-primary"><Spinner /></div>}
+      {queue.isError && <ErrorState message={errorMessage(queue.error, t)} onRetry={() => void queue.refetch()} />}
+      {queue.isSuccess && queue.data.length === 0 && <EmptyState icon="shield" title={t('review.empty')} />}
+      <ul className="space-y-3">
+        {queue.data?.map((item) => (
+          <li key={item.id} className="card space-y-3 p-4 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              {item.review_category && <Badge tone="danger">{t(`review.categories.${item.review_category}`, { defaultValue: item.review_category })}</Badge>}
+              <span className="ml-auto text-xs text-muted">{formatDateTime(item.updated_at)}</span>
+            </div>
+            <Link to={`/listings/${item.id}`} className="flex items-center gap-1 font-semibold text-primary hover:underline">
+              {item.title}<Icon name="chevronRight" size={16} />
+            </Link>
+            <p className="line-clamp-3 rounded-xl bg-surface-2 p-3">{item.description}</p>
+            {item.review_reason && (
+              <p className="flex items-start gap-2 text-xs text-muted">
+                <Icon name="sparkles" size={14} className="mt-0.5 shrink-0 text-primary" />
+                {item.review_reason}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button className="btn-secondary flex-1" disabled={decide.isPending} onClick={() => decide.mutate({ id: item.id, decision: 'approve' })}>
+                {t('review.approve')}
+              </button>
+              <button className="btn-danger flex-1" disabled={decide.isPending} onClick={() => decide.mutate({ id: item.id, decision: 'reject' })}>
+                {t('review.reject')}
               </button>
             </div>
           </li>

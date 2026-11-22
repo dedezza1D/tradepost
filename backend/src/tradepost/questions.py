@@ -87,7 +87,11 @@ def _public_text(text: str) -> None:
 
 async def _listing(db: AsyncSession, listing_id: uuid.UUID) -> Listing:
     listing = await db.get(Listing, listing_id)
-    if listing is None or listing.status in (ListingStatus.DRAFT, ListingStatus.REMOVED):
+    if listing is None or listing.status in (
+        ListingStatus.DRAFT,
+        ListingStatus.REMOVED,
+        ListingStatus.IN_REVIEW,
+    ):
         raise NotFound("Listing not found.")
     return listing
 
