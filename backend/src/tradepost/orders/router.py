@@ -594,7 +594,12 @@ async def connect_payout_account(
 # --- webhooks ------------------------------------------------------------------------------
 
 
-@router.post("/webhooks/{provider}", include_in_schema=False)
+@router.post(
+    "/webhooks/{provider}",
+    include_in_schema=False,
+    # Generous: providers send bursts and retry a 429, so a limit only stops floods.
+    dependencies=[Depends(rate_limit("webhook", limit=120, window_seconds=60))],
+)
 async def webhook(
     provider: str, request: Request, db: DbSession, payments: Payments
 ) -> dict[str, str]:
