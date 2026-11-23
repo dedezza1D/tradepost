@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ApiError } from './api/client'
 import { AppShell } from './components/AppShell'
 import { RequireAuth } from './components/RequireAuth'
-import { LoginPage, RegisterPage } from './pages/AuthPages'
+import { ForgotPasswordPage, LoginPage, RegisterPage, ResetPasswordPage } from './pages/AuthPages'
 import { HomePage } from './pages/HomePage'
 import { ListingPage } from './pages/ListingPage'
 import { SearchPage } from './pages/SearchPage'
@@ -53,6 +53,8 @@ const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/ReputationHelpPage')).ReputationHelpPage }),
       },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
       {
         path: '/users/:id',
         lazy: async () => ({ Component: (await import('./pages/SellerProfilePage')).SellerProfilePage }),

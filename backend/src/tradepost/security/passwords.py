@@ -22,3 +22,8 @@ def verify_password(password_hash: str | None, password: str) -> bool:
 
 def needs_rehash(password_hash: str) -> bool:
     return _hasher.check_needs_rehash(password_hash)
+
+
+def has_usable_password(password_hash: str) -> bool:
+    """False for accounts that cannot sign in with a password (seeded with a non-hash)."""
+    return password_hash.startswith("$argon2")

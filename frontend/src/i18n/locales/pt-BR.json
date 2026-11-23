@@ -227,7 +227,9 @@
     "forbidden": "Você não tem permissão para isso.",
     "ai_unavailable": "O assistente de IA não está disponível agora.",
     "saved_search_limit": "Você pode salvar até 20 buscas. Remova uma para salvar outra.",
-    "not_a_product": "As fotos não parecem mostrar um item à venda. Tente uma foto só do item."
+    "not_a_product": "As fotos não parecem mostrar um item à venda. Tente uma foto só do item.",
+    "reset_link_invalid": "Este link expirou, foi substituído por um mais novo ou já foi usado. Peça outro.",
+    "email_unavailable": "O envio de e-mails não está disponível agora, então não dá para redefinir a senha."
   },
   "home": {
     "categories": "Categorias",
@@ -462,7 +464,24 @@
     "signingIn": "Entrando…",
     "creating": "Criando conta…",
     "newHere": "Novo por aqui?",
-    "haveAccount": "Já tem conta?"
+    "haveAccount": "Já tem conta?",
+    "forgotPassword": "Esqueci minha senha",
+    "forgotTitle": "Redefinir a senha",
+    "forgotSubtitle": "Informe o e-mail da conta e enviaremos um link para você criar uma senha nova.",
+    "sendLink": "Enviar link",
+    "sending": "Enviando…",
+    "linkSentTitle": "Confira seu e-mail",
+    "linkSent": "Se houver uma conta com {{email}}, enviamos para esse endereço um link para criar uma senha nova. Ele vale por 30 minutos e funciona uma única vez.",
+    "linkSentHelp": "Não chegou em alguns minutos? Confira a caixa de spam ou peça outro link.",
+    "askAgain": "Pedir outro link",
+    "backToSignIn": "Voltar para entrar",
+    "resetTitle": "Crie uma senha nova",
+    "resetSubtitle": "Ao salvar, todas as sessões da conta são encerradas e você entra de novo com a senha nova.",
+    "newPassword": "Nova senha",
+    "savePassword": "Salvar senha nova",
+    "saving": "Salvando…",
+    "resetLinkMissing": "Este link está incompleto. Abra de novo o link do e-mail ou peça outro.",
+    "passwordResetDone": "Senha redefinida. Entre com a senha nova."
   },
   "profile": {
     "myListings": "Meus anúncios",

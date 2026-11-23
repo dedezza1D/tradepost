@@ -10,7 +10,7 @@ from tradepost.db import Base
 from tradepost.disputes import Dispute, DisputeMessage
 from tradepost.fx import FxRate
 from tradepost.geo.models import Municipality
-from tradepost.identity.models import Session, User
+from tradepost.identity.models import PasswordResetToken, Session, User
 from tradepost.notifications.delivery import (
     NotificationDelivery,
     NotificationPreference,
@@ -69,6 +69,7 @@ __all__ = [
     "Order",
     "OrderEvent",
     "OrderItem",
+    "PasswordResetToken",
     "PaymentAttempt",
     "PaymentEvent",
     "PushSubscriptionRow",

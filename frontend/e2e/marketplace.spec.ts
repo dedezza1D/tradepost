@@ -330,7 +330,7 @@ test('notification preferences are kept per kind of notice', async ({ browser },
   await register(user.page, 'Prefs E2E', user.email, 'Recife', /Create your account/)
   await user.page.goto('/me#notifications')
   const section = user.page.getByRole('region', { name: 'Notifications outside the app' })
-  // The test server has no VAPID key and no e-mail service: choices are still saved.
+  // The test server has no VAPID key (its e-mails go to the log): choices are still saved.
   await expect(section.getByText('Push notifications are not set up on this server.')).toBeVisible()
   await expect(section.getByRole('checkbox', { name: 'E-mail for Orders and disputes' })).toBeChecked()
   const offers = section.getByRole('checkbox', { name: 'Push for Offers' })
@@ -344,8 +344,34 @@ test('notification preferences are kept per kind of notice', async ({ browser },
   expect(axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([])
 })
 
+test('a forgotten password is asked for by e-mail without revealing accounts', async ({ browser }, info) => {
+  const user = await newUser(browser, 'pt-BR', info.project.name)
+  const { page } = user
+  await page.goto('/login')
+  await page.locator('#email').fill(user.email)
+  await page.getByRole('link', { name: 'Esqueci minha senha' }).click()
+  await expect(page.getByRole('heading', { name: 'Redefinir a senha' })).toBeVisible()
+  // The address typed on the sign-in page comes along. Nobody has it: the answer is the same.
+  await expect(page.locator('#email')).toHaveValue(user.email)
+  await page.getByRole('button', { name: 'Enviar link' }).click()
+  await expect(page.getByRole('heading', { name: 'Confira seu e-mail' })).toBeVisible()
+  await expect(page.getByRole('main').getByRole('status')).toContainText(`Se houver uma conta com ${user.email}`)
+
+  // A link that is unknown, used or expired leads back to asking for a new one.
+  await page.goto(`/reset-password#token=${'x'.repeat(43)}`)
+  await expect(page.getByRole('heading', { name: 'Crie uma senha nova' })).toBeVisible()
+  await page.locator('#new_password').fill('uma senha nova e bem comprida')
+  await page.getByRole('button', { name: 'Salvar senha nova' }).click()
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Este link expirou')
+  await page.getByRole('link', { name: 'Pedir outro link' }).click()
+  await expect(page).toHaveURL('/forgot-password')
+
+  await page.goto('/reset-password')
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('Este link está incompleto')
+})
+
 test('main pages have no serious accessibility violations', async ({ page }) => {
-  for (const path of ['/', '/search', '/login', '/register']) {
+  for (const path of ['/', '/search', '/login', '/register', '/forgot-password', '/reset-password#token=e2e-token-that-is-long-enough']) {
     await page.goto(path)
     await page.waitForLoadState('networkidle')
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()

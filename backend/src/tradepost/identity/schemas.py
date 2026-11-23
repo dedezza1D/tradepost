@@ -48,6 +48,15 @@ class ChangePasswordIn(BaseModel):
     new_password: Password
 
 
+class PasswordResetRequestIn(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetIn(BaseModel):
+    token: str = Field(min_length=20, max_length=100)
+    new_password: Password
+
+
 class ProfileUpdateIn(BaseModel):
     display_name: DisplayName | None = None
     # An empty string clears the bio.
