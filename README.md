@@ -10,7 +10,7 @@ Payments run in **test mode only** (provider sandboxes): no real money moves, an
 live credentials.
 
 **Live demo: https://tradepost-2ay.pages.dev** — runs on free tiers, so the first request after
-a quiet period can take about a minute while the API wakes up. See [test payments](#test-payments).
+a quiet period can take a few minutes while the API wakes up. See [test payments](#test-payments).
 
 [![CI](https://github.com/dedezza1D/tradepost/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dedezza1D/tradepost/actions/workflows/ci.yml)
 
@@ -549,7 +549,8 @@ uv run python scripts/stripe_listen.py
 | Commerce settings | `TP_MAX_INSTALLMENTS`, `TP_PAYOUT_HOLD_HOURS` | defaults: 12 installments, payouts 168 hours after delivery |
 | AI | `TP_AI_PROVIDER` (`none`, `ollama`), `TP_AI_BASE_URL`, `TP_AI_CHAT_MODEL`, `TP_AI_EMBED_MODEL`, prices and `TP_AI_DAILY_BUDGET_USD` | `none` on the live demo |
 | Notifications | `TP_VAPID_PRIVATE_KEY`, `TP_VAPID_SUBJECT`; `TP_EMAIL_PROVIDER` (`none`, `log`, `smtp`), `TP_EMAIL_FROM`, `TP_SMTP_HOST`, `TP_SMTP_PORT`, `TP_SMTP_USERNAME`, `TP_SMTP_PASSWORD` | without a key or a service, that channel is simply not offered |
-| Uptime | `.github/workflows/uptime.yml` | every 6 hours; GitHub notifies the owner when it fails |
+| Keep-warm | Cloudflare Worker (`frontend/workers/keep-warm/`), deployed on its own | cron every 5 minutes on the API's `/healthz`; secret: `API_ORIGIN`; no public URL |
+| Uptime | `.github/workflows/uptime.yml` | every 6 hours; wakes the API at its origin (repository secret `API_ORIGIN`), then checks it through the proxy; GitHub notifies the owner when it fails |
 
 ## Decisions and trade-offs
 
@@ -617,7 +618,11 @@ uv run python scripts/stripe_listen.py
 
 ### Free-tier limits
 
-- The API sleeps after 15 minutes without traffic; the first request then takes about a minute.
+- The API sleeps after 15 minutes without traffic. Waking it through the proxy takes minutes,
+  and may not happen at all: the platform's edge challenges most proxied requests to a sleeping
+  instance, and the spin-up itself takes one to two minutes once a request gets through. A
+  scheduled Worker calls the health check every 5 minutes so the instance does not go to sleep;
+  one instance awake all month fits the free plan's monthly hours.
   Webhooks are retried by the providers and missed ones are caught by reconciliation; chat and
   notifications reach the app once it is awake.
 - Neon's free plan has 1 GB of storage and scales to zero; R2 has 10 GB.
