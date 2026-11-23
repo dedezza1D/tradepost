@@ -1,8 +1,14 @@
 name: Uptime
 
 # Checks the live demo a few times a day. A failed run is the alert: GitHub notifies the
-# repository owner, so no monitoring account is needed. The API sleeps on the free tier, so
-# the first call is given time to wake it up.
+# repository owner, so no monitoring account is needed.
+#
+# The API sleeps on the free tier when the keep-warm Worker is not running. Requests through the
+# proxy cannot wake it: while the instance is asleep, the platform's edge challenges requests
+# from the proxy, and those that reach the router do not start the spin-up. A direct request to
+# the origin's health check (the one route served without the proxy secret) does: the first one
+# may be challenged, a later one is held for about a minute while the instance starts. So the
+# check wakes the API at its origin first, then checks it through the proxy.
 on:
   schedule:
     - cron: "17 */6 * * *"
@@ -14,24 +20,65 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       SITE: https://tradepost-2ay.pages.dev
+      # Same value as the Pages proxy's API_ORIGIN, kept as a repository secret.
+      API_ORIGIN: ${{ secrets.API_ORIGIN }}
+      WAKE_DEADLINE_SECONDS: 300
+      PROXY_DEADLINE_SECONDS: 120
     steps:
       - name: Web app is served
         run: |
           curl --fail --silent --show-error --max-time 30 "$SITE/" | grep -q '<div id="root">'
-      - name: API answers through the proxy (waking it if asleep)
+      - name: API wakes up at its origin
         run: |
-          for attempt in 1 2 3 4 5 6; do
-            if curl --fail --silent --max-time 90 "$SITE/api/categories" | grep -q '"slug"'; then
-              echo "API up on attempt $attempt"
+          if [ -z "$API_ORIGIN" ]; then
+            echo "::warning::API_ORIGIN secret not set; a sleeping API cannot be woken from here"
+            exit 0
+          fi
+          start=$(date +%s)
+          attempt=0
+          while :; do
+            attempt=$((attempt + 1))
+            status=$(curl --silent --max-time 120 --dump-header headers.txt --output body.txt \
+              --write-out '%{http_code}' "${API_ORIGIN%/}/healthz" || true)
+            elapsed=$(( $(date +%s) - start ))
+            if [ "$status" = "200" ] && grep -q '"ok"' body.txt; then
+              echo "API awake on attempt $attempt after ${elapsed}s"
               exit 0
             fi
-            sleep 20
+            # x-render-routing: the router answered for a sleeping instance; cf-mitigated: the
+            # platform's edge challenged the request before the router.
+            platform=$(grep -i -E '^(x-render-routing|cf-mitigated):' headers.txt 2>/dev/null | tr -d '\r' | tr '\n' ' ' || true)
+            echo "attempt $attempt after ${elapsed}s: HTTP $status ${platform}"
+            if [ "$elapsed" -ge "$WAKE_DEADLINE_SECONDS" ]; then
+              echo "::error::API did not wake at its origin within ${WAKE_DEADLINE_SECONDS}s (last: HTTP $status ${platform})"
+              exit 1
+            fi
+            sleep 15
           done
-          echo "::error::API did not answer through the proxy"
-          exit 1
+      - name: API answers through the proxy
+        run: |
+          start=$(date +%s)
+          attempt=0
+          while :; do
+            attempt=$((attempt + 1))
+            status=$(curl --silent --max-time 60 --output body.json --write-out '%{http_code}' "$SITE/api/categories" || true)
+            elapsed=$(( $(date +%s) - start ))
+            if [ "$status" = "200" ] && grep -q '"slug"' body.json; then
+              echo "API up through the proxy on attempt $attempt after ${elapsed}s"
+              exit 0
+            fi
+            # The proxy's error code tells a sleeping instance apart from a broken one.
+            code=$(grep -o '"code":"[a-z_]*"' body.json 2>/dev/null | head -n 1 || true)
+            echo "attempt $attempt after ${elapsed}s: HTTP $status ${code}"
+            if [ "$elapsed" -ge "$PROXY_DEADLINE_SECONDS" ]; then
+              echo "::error::API did not answer through the proxy within ${PROXY_DEADLINE_SECONDS}s (last: HTTP $status ${code})"
+              exit 1
+            fi
+            sleep 15
+          done
       - name: Database answers
         run: curl --fail --silent --show-error --max-time 60 "$SITE/api/readyz"
       - name: security.txt is served and not about to expire
