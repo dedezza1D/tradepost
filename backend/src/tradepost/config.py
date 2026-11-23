@@ -37,7 +37,13 @@ class Settings(BaseSettings):
     public_origin: str = "http://localhost:5180"
     # Cookies are Secure everywhere except plain-HTTP local development.
     cookie_secure: bool = False
+    # Session lifetimes (ASVS 7.1.1 asks for them to be documented). A session ends at the
+    # absolute limit, or earlier when unused for the idle limit. Administrators, who decide
+    # refunds and disputes, get the NIST SP 800-63B AAL2 timeouts.
     session_ttl_hours: int = 24 * 14
+    session_idle_hours: int = 24 * 7
+    admin_session_ttl_hours: int = 12
+    admin_session_idle_minutes: int = 60
 
     # In production every request reaches the API through the web app's proxy, which adds this
     # header. Requests that bypass the proxy are rejected, so client-IP headers can be trusted.
