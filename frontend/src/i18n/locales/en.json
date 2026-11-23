@@ -227,7 +227,9 @@
     "forbidden": "You don't have permission to do this.",
     "ai_unavailable": "The AI assistant is not available right now.",
     "saved_search_limit": "You can save up to 20 searches. Remove one to save another.",
-    "not_a_product": "The photos don't seem to show an item for sale. Try a photo of the item on its own."
+    "not_a_product": "The photos don't seem to show an item for sale. Try a photo of the item on its own.",
+    "reset_link_invalid": "This link has expired, was replaced by a newer one or was already used. Ask for another one.",
+    "email_unavailable": "Email is not available right now, so the password cannot be reset."
   },
   "home": {
     "categories": "Categories",
@@ -462,7 +464,24 @@
     "signingIn": "Signing in…",
     "creating": "Creating account…",
     "newHere": "New here?",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "forgotPassword": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your account's email and we will send you a link to choose a new password.",
+    "sendLink": "Send link",
+    "sending": "Sending…",
+    "linkSentTitle": "Check your email",
+    "linkSent": "If there is an account with {{email}}, we sent that address a link to choose a new password. It works for 30 minutes and only once.",
+    "linkSentHelp": "Nothing after a few minutes? Check your spam folder or ask for another link.",
+    "askAgain": "Ask for another link",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Saving signs the account out everywhere; then you sign in with the new password.",
+    "newPassword": "New password",
+    "savePassword": "Save new password",
+    "saving": "Saving…",
+    "resetLinkMissing": "This link is incomplete. Open the link in the email again or ask for another one.",
+    "passwordResetDone": "Password reset. Sign in with your new password."
   },
   "profile": {
     "myListings": "My listings",

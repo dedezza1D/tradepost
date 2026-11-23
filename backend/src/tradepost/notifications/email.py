@@ -1,4 +1,4 @@
-"""Transactional e-mail: a sale, a payment, a shipment, a dispute.
+"""Transactional e-mail: a sale, a payment, a shipment, a dispute, the safety of the account.
 
 Any SMTP service works (most have a free tier); nothing here is tied to one provider. Without
 one configured (``TP_EMAIL_PROVIDER=none``) e-mails are not sent, and ``log`` writes them to
@@ -32,24 +32,36 @@ _BUTTON = (
     "font-weight:bold;padding:12px 20px;border-radius:999px"
 )
 _FOOT = "padding:0 24px 24px;font-size:12px;line-height:1.5;color:#6b554d"
+_NOTE = "margin:20px 0 0;font-size:14px;line-height:1.5;color:#6b554d"
 _TABLE = 'role="presentation" width="100%" cellpadding="0" cellspacing="0"'
-HTML = "\n".join(
-    [
-        "<!doctype html>",
-        f'<html lang="{{lang}}"><body style="{_PAGE}">',
-        f'<table {_TABLE}><tr><td align="center" style="padding:24px 12px">',
-        f'<table {_TABLE} style="{_CARD}">',
-        f'<tr><td style="{_BAND}">tradepost</td></tr>',
-        '<tr><td style="padding:24px">',
-        '<p style="margin:0 0 12px">{greeting}</p>',
-        '<p style="margin:0 0 20px;font-size:17px;line-height:1.45">{line}</p>',
-        f'<a href="{{link}}" style="{_BUTTON}">{{open}}</a>',
-        "</td></tr>",
-        f'<tr><td style="{_FOOT}">',
-        '{why}<br><a href="{preferences_link}" style="color:#6b554d">{preferences}</a>',
-        "</td></tr></table></td></tr></table></body></html>",
-    ]
+
+
+def _layout(*, footer: str, after_button: tuple[str, ...] = ()) -> str:
+    """The e-mail page, as a ``str.format`` template."""
+    return "\n".join(
+        [
+            "<!doctype html>",
+            f'<html lang="{{lang}}"><body style="{_PAGE}">',
+            f'<table {_TABLE}><tr><td align="center" style="padding:24px 12px">',
+            f'<table {_TABLE} style="{_CARD}">',
+            f'<tr><td style="{_BAND}">tradepost</td></tr>',
+            '<tr><td style="padding:24px">',
+            '<p style="margin:0 0 12px">{greeting}</p>',
+            '<p style="margin:0 0 20px;font-size:17px;line-height:1.45">{line}</p>',
+            f'<a href="{{link}}" style="{_BUTTON}">{{open}}</a>',
+            *after_button,
+            "</td></tr>",
+            f'<tr><td style="{_FOOT}">',
+            footer,
+            "</td></tr></table></td></tr></table></body></html>",
+        ]
+    )
+
+
+HTML = _layout(
+    footer='{why}<br><a href="{preferences_link}" style="color:#6b554d">{preferences}</a>'
 )
+ACCOUNT_HTML = _layout(footer="{why}", after_button=(f'<p style="{_NOTE}">{{note}}</p>',))
 
 
 @dataclass(frozen=True)
@@ -92,6 +104,36 @@ def compose(
         preferences=e(words["preferences"]),
     )
     return Email(to=to, subject=subject, text=text, html=body)
+
+
+def compose_account(
+    *,
+    to: str,
+    name: str,
+    kind: str,
+    link: str,
+    locale: str | None,
+    values: dict[str, object] | None = None,
+) -> Email:
+    """An account e-mail (``kind`` is ``reset`` or ``changed``): one sentence, a button to
+    ``link`` (an absolute URL) and a note on what to do if it was not the reader."""
+    lang = texts.language(locale)
+    words = texts.ACCOUNT_EMAIL[lang]
+    greeting = texts.EMAIL[lang]["greeting"].format(name=name)
+    line = words[f"{kind}_line"].format(**(values or {}))
+    button, note, why = words[f"{kind}_open"], words[f"{kind}_note"], words["why"]
+    text = f"{greeting}\n\n{line}\n\n{button}: {link}\n\n{note}\n\n--\n{why}\n"
+    e = html.escape
+    body = ACCOUNT_HTML.format(
+        lang=lang,
+        greeting=e(greeting),
+        line=e(line),
+        link=e(link),
+        open=e(button),
+        note=e(note),
+        why=e(why),
+    )
+    return Email(to=to, subject=words[f"{kind}_subject"], text=text, html=body)
 
 
 class EmailFailed(Exception):

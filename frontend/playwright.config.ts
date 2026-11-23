@@ -38,6 +38,8 @@ export default defineConfig({
         TP_RATE_LIMIT_SCALE: '100',
         TP_LOG_JSON: 'false',
         TP_BREACHED_PASSWORD_CHECK: 'false',
+        // E-mails (order notices, password reset links) are written to the log, never sent.
+        TP_EMAIL_PROVIDER: 'log',
       },
     },
     {

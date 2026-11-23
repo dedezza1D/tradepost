@@ -190,6 +190,59 @@ EMAIL: dict[str, dict[str, str]] = {
     },
 }
 
+# Account e-mails (password reset, password changed). They are about the account's safety, so
+# they are always sent and carry no link to the notification preferences.
+ACCOUNT_EMAIL: dict[str, dict[str, str]] = {
+    "pt-BR": {
+        "why": (
+            "Você recebe este e-mail porque ele trata da segurança da sua conta no tradepost, "
+            "um marketplace de demonstração em que os pagamentos rodam em modo de teste."
+        ),
+        "reset_subject": "Redefina sua senha do tradepost",
+        "reset_line": (
+            "Recebemos um pedido para redefinir a senha da sua conta. O link abaixo vale por "
+            "{minutes} minutos e pode ser usado uma única vez."
+        ),
+        "reset_open": "Definir nova senha",
+        "reset_note": "Se não foi você que pediu, ignore este e-mail: sua senha continua a mesma.",
+        "changed_subject": "A senha da sua conta foi alterada",
+        "changed_line": (
+            "A senha da sua conta no tradepost acabou de ser alterada, e as sessões abertas em "
+            "outros aparelhos foram encerradas."
+        ),
+        "changed_open": "Redefinir a senha",
+        "changed_note": (
+            "Se foi você, não precisa fazer nada. Se não foi, redefina a senha agora pelo botão "
+            "acima."
+        ),
+    },
+    "en": {
+        "why": (
+            "You get this e-mail because it is about the safety of your tradepost account, a "
+            "demo marketplace where payments run in test mode."
+        ),
+        "reset_subject": "Reset your tradepost password",
+        "reset_line": (
+            "We received a request to reset your account's password. The link below works for "
+            "{minutes} minutes and only once."
+        ),
+        "reset_open": "Choose a new password",
+        "reset_note": (
+            "If you did not ask for this, ignore this e-mail: your password stays the same."
+        ),
+        "changed_subject": "Your account's password was changed",
+        "changed_line": (
+            "The password of your tradepost account was just changed, and the sessions open on "
+            "other devices were signed out."
+        ),
+        "changed_open": "Reset the password",
+        "changed_note": (
+            "If it was you, there is nothing to do. If it was not, reset the password now with "
+            "the button above."
+        ),
+    },
+}
+
 TEST_PUSH = {
     "pt-BR": "Os avisos estão funcionando neste aparelho.",
     "en": "Notifications are working on this device.",

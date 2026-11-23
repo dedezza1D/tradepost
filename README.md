@@ -346,15 +346,22 @@ nothing is sent; `log` writes them to the log for development.
 - **Sessions**: random token in an `HttpOnly; Secure; SameSite=Lax` cookie, only its SHA-256
   stored; revocable instantly. Passwords hashed with Argon2id (OWASP parameters); unknown emails
   still run a hash so timing does not reveal accounts.
+- **Password reset**: the request answers the same for every address, and the lookup and the
+  e-mail happen after the response, so neither the answer nor its timing reveals accounts. The
+  link carries a 256-bit token in the URL fragment (never sent to a server), stored only as its
+  SHA-256; it works once, for 30 minutes, and a newer link or a password change voids it. The
+  new password follows the sign-up rules; every session is signed out and the owner is told by
+  e-mail. Demonstration accounts and accounts without a usable password get no link.
 - **CSRF**: token bound to the session, sent in a header on unsafe requests, plus an `Origin`
   check.
 - **One origin, closed API**: the browser only talks to the Pages domain; a Pages Function
   proxies `/api` and adds a shared secret. The API rejects requests without it, so it cannot be
   called around the proxy and the client-IP header it receives is trustworthy.
 - **Rate limits** in PostgreSQL (atomic upsert per key and window, own transaction): sign-up,
-  login per IP *and* per account, checkout, uploads, search, messages, offers, follows, saves,
-  questions, reports. `429` with `Retry-After`. Per-account ceilings (follows, saves, blocks,
-  coupons, photos) keep one account from filling the free database.
+  login per IP *and* per account, password reset per IP *and* per address, checkout, uploads,
+  search, messages, offers, follows, saves, questions, reports. `429` with `Retry-After`.
+  Per-account ceilings (follows, saves, blocks, coupons, photos) keep one account from filling
+  the free database.
 - **Authorization per resource**: sellers only see their orders and drafts; only the two people
   in a conversation or dispute can read it; another user's listing, order, checkout or
   conversation answers `404`. Tests cover these paths.

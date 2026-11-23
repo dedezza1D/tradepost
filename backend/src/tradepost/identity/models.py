@@ -68,3 +68,21 @@ class Session(TimestampMixin, Base):
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(String(300))
+
+
+class PasswordResetToken(Base):
+    """A password reset link. The link carries a random token; only its SHA-256 is stored.
+    The row is deleted when the link is used, when a newer one is asked for and when the
+    password changes; expired rows are purged by a job."""
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    token_hash: Mapped[bytes] = mapped_column(LargeBinary(32), unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

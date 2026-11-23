@@ -56,3 +56,24 @@ export function useLogout() {
     },
   })
 }
+
+/** Asks for a reset link. The answer is the same whether or not the address has an account. */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (body: { email: string }) =>
+      api<void>('/api/auth/password-reset', { method: 'POST', body: json(body) }),
+  })
+}
+
+/** Sets a new password with the link's token. Every session ends, so the person signs in again. */
+export function useResetPassword() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { token: string; new_password: string }) =>
+      api<void>('/api/auth/password-reset/confirm', { method: 'POST', body: json(body) }),
+    onSuccess: () => {
+      qc.setQueryData(['me'], null)
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
+    },
+  })
+}
