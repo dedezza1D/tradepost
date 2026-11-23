@@ -229,7 +229,13 @@
     "saved_search_limit": "Você pode salvar até 20 buscas. Remova uma para salvar outra.",
     "not_a_product": "As fotos não parecem mostrar um item à venda. Tente uma foto só do item.",
     "reset_link_invalid": "Este link expirou, foi substituído por um mais novo ou já foi usado. Peça outro.",
-    "email_unavailable": "O envio de e-mails não está disponível agora, então não dá para redefinir a senha."
+    "email_unavailable": "O envio de e-mails não está disponível agora, então não dá para redefinir a senha.",
+    "invalid_code": "O código não é válido. Confira o aplicativo e tente de novo.",
+    "mfa_required": "A administração exige verificação em duas etapas. Ative no seu perfil e entre de novo.",
+    "mfa_session_expired": "O login demorou demais. Recomece com a sua senha.",
+    "mfa_already_enabled": "A verificação em duas etapas já está ativada.",
+    "mfa_setup_missing": "Comece a ativação de novo.",
+    "mfa_not_enabled": "A verificação em duas etapas está desativada."
   },
   "home": {
     "categories": "Categorias",
@@ -1125,5 +1131,39 @@
       "misleading": "Enganoso",
       "no_violation": "Sem violação"
     }
+  },
+  "mfa": {
+    "title": "Verificação em duas etapas",
+    "off": "Desativada. Ative para pedir um código de um aplicativo autenticador depois da senha.",
+    "on_one": "Ativada. Resta {{count}} código de recuperação.",
+    "on_other": "Ativada. Restam {{count}} códigos de recuperação.",
+    "turnOn": "Ativar",
+    "turnOff": "Desativar",
+    "intro": "Você vai precisar de um aplicativo autenticador no celular (por exemplo Google Authenticator, Microsoft Authenticator ou 1Password). Confirme sua senha para começar.",
+    "password": "Sua senha",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "scanHelp": "Escaneie este código com o aplicativo autenticador e digite o código de seis dígitos que ele mostrar.",
+    "qrAlt": "QR code para adicionar o tradepost a um aplicativo autenticador",
+    "manualKey": "Não consegue escanear? Digite esta chave",
+    "code": "Código de seis dígitos",
+    "confirm": "Ativar",
+    "recoveryTitle": "Códigos de recuperação",
+    "recoveryHelp": "Cada código permite entrar uma vez se você perder o celular. Guarde-os em lugar seguro: eles não serão mostrados de novo.",
+    "copy": "Copiar códigos",
+    "copied": "Copiados",
+    "done": "Já guardei",
+    "newCodes": "Novos códigos de recuperação",
+    "newCodesHelp": "Os códigos novos substituem os atuais, que deixam de funcionar.",
+    "disableHelp": "Confirme sua senha e um código do aplicativo (ou um código de recuperação).",
+    "useRecovery": "Usar um código de recuperação",
+    "useApp": "Usar o aplicativo autenticador",
+    "recoveryCode": "Código de recuperação",
+    "signInTitle": "Verificação em duas etapas",
+    "signInSubtitle": "Digite o código de seis dígitos do seu aplicativo autenticador.",
+    "signInRecovery": "Digite um dos seus códigos de recuperação. Cada um funciona uma vez.",
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "startOver": "Recomeçar"
   }
 }

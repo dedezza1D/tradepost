@@ -92,3 +92,41 @@ class PublicUserOut(BaseModel):
     city: str | None
     state: str | None
     created_at: datetime
+
+
+class MfaChallengeOut(BaseModel):
+    """The password was right; the account's second factor is asked for next."""
+
+    mfa_required: Literal[True] = True
+
+
+class SecondFactorIn(BaseModel):
+    code: str | None = Field(default=None, max_length=12)
+    recovery_code: str | None = Field(default=None, max_length=24)
+
+
+class PasswordConfirmIn(BaseModel):
+    password: str = Field(max_length=128)
+
+
+class MfaCodeIn(BaseModel):
+    code: str = Field(max_length=12)
+
+
+class MfaDisableIn(SecondFactorIn):
+    password: str = Field(max_length=128)
+
+
+class MfaStatusOut(BaseModel):
+    enabled: bool
+    recovery_codes_left: int
+
+
+class MfaSetupOut(BaseModel):
+    secret: str
+    otpauth_uri: str
+    qr_code: str
+
+
+class RecoveryCodesOut(BaseModel):
+    recovery_codes: list[str]

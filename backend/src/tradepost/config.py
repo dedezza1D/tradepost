@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # In production every request reaches the API through the web app's proxy, which adds this
     # header. Requests that bypass the proxy are rejected, so client-IP headers can be trusted.
     proxy_secret: SecretStr | None = None
+    # Encrypts the authenticator secrets (TOTP) at rest: 32 random bytes, URL-safe base64.
+    # Required in production; elsewhere a fixed development key is used.
+    mfa_key: SecretStr | None = None
     client_ip_header: str | None = None
 
     storage_backend: Literal["local", "s3"] = "local"
@@ -143,6 +146,7 @@ class Settings(BaseSettings):
                 name
                 for name, ok in (
                     ("TP_PROXY_SECRET", self.proxy_secret is not None),
+                    ("TP_MFA_KEY", self.mfa_key is not None),
                     ("TP_COOKIE_SECURE=true", self.cookie_secure),
                     ("TP_PUBLIC_ORIGIN (https)", self.public_origin.startswith("https://")),
                     ("TP_STORAGE_BACKEND=s3", self.storage_backend == "s3"),

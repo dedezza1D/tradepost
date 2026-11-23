@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
@@ -7,24 +8,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepost.config import get_settings
 from tradepost.deps import DbSession
-from tradepost.errors import Conflict, Unauthorized
+from tradepost.errors import AppError, Conflict, Unauthorized
 from tradepost.geo.service import resolve_city
-from tradepost.identity import password_reset
+from tradepost.identity import mfa, password_reset
 from tradepost.identity.devices import issue_device_cookie, trusted_device
 from tradepost.identity.models import User
 from tradepost.identity.schemas import (
     ChangePasswordIn,
     LoginIn,
     MeOut,
+    MfaChallengeOut,
     PasswordResetIn,
     PasswordResetRequestIn,
     ProfileUpdateIn,
     RegisterIn,
+    SecondFactorIn,
 )
 from tradepost.identity.sessions import (
+    AUTH_MFA,
+    AUTH_PENDING,
     CurrentPrincipal,
     CurrentUser,
     OptionalPrincipal,
+    PendingPrincipal,
     clear_cookies,
     create_session,
     revoke_all_sessions,
@@ -85,7 +91,9 @@ async def register(body: RegisterIn, request: Request, response: Response, db: D
     "/login",
     dependencies=[Depends(ratelimit.rate_limit("login", limit=20, window_seconds=60))],
 )
-async def login(body: LoginIn, request: Request, response: Response, db: DbSession) -> MeOut:
+async def login(
+    body: LoginIn, request: Request, response: Response, db: DbSession
+) -> MeOut | MfaChallengeOut:
     email = body.email.lower()
     database = request.app.state.db
     user = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()
@@ -107,9 +115,52 @@ async def login(body: LoginIn, request: Request, response: Response, db: DbSessi
         raise Unauthorized("Invalid email or password.", code="invalid_credentials")
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(body.password)
+    if await mfa.confirmed_factor(db, user.id) is not None:
+        # The password alone is not a sign-in here: a short pending session waits for the code.
+        agent = request.headers.get("user-agent")
+        await create_session(db, response, user, user_agent=agent, auth_level=AUTH_PENDING)
+        return MfaChallengeOut()
     await create_session(db, response, user, user_agent=request.headers.get("user-agent"))
     issue_device_cookie(response, user.id)
     return me_out(request, user)
+
+
+@router.post(
+    "/login/mfa",
+    dependencies=[Depends(ratelimit.rate_limit("login_mfa", limit=20, window_seconds=60))],
+)
+async def login_second_factor(
+    body: SecondFactorIn,
+    request: Request,
+    response: Response,
+    db: DbSession,
+    pending: PendingPrincipal,
+) -> MeOut:
+    user = pending.user
+    await check_second_factor(request, db, user.id, body)
+    # A new session (new token) for the higher level; the pending one ends.
+    await revoke_session(db, pending.session.id)
+    await create_session(
+        db, response, user, user_agent=request.headers.get("user-agent"), auth_level=AUTH_MFA
+    )
+    issue_device_cookie(response, user.id)
+    return me_out(request, user)
+
+
+async def check_second_factor(
+    request: Request, db: AsyncSession, user_id: uuid.UUID, body: SecondFactorIn
+) -> None:
+    """Accept a code from the authenticator or a recovery code, with failures limited per
+    account like passwords (checked before verifying, so past the limit nothing is revealed)."""
+    database = request.app.state.db
+    key = f"mfa:user:{user_id}"
+    await ratelimit.check(database, key, limit=LOGIN_FAILURES, window_seconds=LOGIN_FAILURE_WINDOW)
+    factor = await mfa.confirmed_factor(db, user_id, lock=True)
+    if factor is None or not await mfa.verify_second_factor(
+        db, factor, code=body.code, recovery_code=body.recovery_code
+    ):
+        await ratelimit.record(database, key, window_seconds=LOGIN_FAILURE_WINDOW)
+        raise AppError("The code is not valid.", code="invalid_code")
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

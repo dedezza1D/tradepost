@@ -29,6 +29,9 @@ services:
       # Shared with the Cloudflare Pages proxy (PROXY_SECRET there); same value on both sides.
       - key: TP_PROXY_SECRET
         sync: false
+      # 32 random bytes, URL-safe base64; encrypts the authenticator (TOTP) secrets.
+      - key: TP_MFA_KEY
+        sync: false
       - key: TP_PUBLIC_ORIGIN
         sync: false
       - key: TP_DATABASE_URL

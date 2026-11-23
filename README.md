@@ -352,6 +352,12 @@ nothing is sent; `log` writes them to the log for development.
   SHA-256; it works once, for 30 minutes, and a newer link or a password change voids it. The
   new password follows the sign-up rules; every session is signed out and the owner is told by
   e-mail. Demonstration accounts and accounts without a usable password get no link.
+- **Two-step verification**: optional for every account, required for administration. An
+  authenticator app (TOTP, RFC 6238) whose secret is stored encrypted (AES-GCM, `TP_MFA_KEY`);
+  a code is accepted once, for its 30-second step or the previous one. Ten single-use recovery
+  codes, stored as SHA-256. After the password, a five-minute pending session waits for the code
+  and is not a sign-in; a correct code starts a new session. Wrong codes are limited per account
+  like passwords. Turning it on or off asks for the password again and signs out other devices.
 - **CSRF**: token bound to the session, sent in a header on unsafe requests, plus an `Origin`
   check.
 - **One origin, closed API**: the browser only talks to the Pages domain; a Pages Function
@@ -542,7 +548,7 @@ uv run python scripts/stripe_listen.py
 |---|---|---|
 | Web app + Functions | Cloudflare Pages (`frontend/`, `wrangler.toml`) | env: `API_ORIGIN`, `PROXY_SECRET`; R2 binding `MEDIA` |
 | Photos and avatars | Cloudflare R2 bucket `tradepost-media` | API writes through the S3 API, Pages reads through the binding |
-| API | Render web service (`render.yaml`) | Docker; migrations run at start-up; health check `/healthz` |
+| API | Render web service (`render.yaml`) | Docker; migrations run at start-up; health check `/healthz`; `TP_MFA_KEY` (32 random bytes, URL-safe base64) is required |
 | Database | Neon | the non-pooled connection string; `sslmode` is adapted for asyncpg |
 | Webhooks | `https://<pages-domain>/api/webhooks/stripe` (and `/mercadopago`) | through the proxy, bytes unchanged |
 | Free-tier guard | `TP_MEDIA_QUOTA_BYTES`, `TP_MAX_PHOTOS_PER_USER` | uploads stop at 2 GB / 200 photos per account; photos cached at the edge |

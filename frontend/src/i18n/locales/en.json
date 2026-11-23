@@ -229,7 +229,13 @@
     "saved_search_limit": "You can save up to 20 searches. Remove one to save another.",
     "not_a_product": "The photos don't seem to show an item for sale. Try a photo of the item on its own.",
     "reset_link_invalid": "This link has expired, was replaced by a newer one or was already used. Ask for another one.",
-    "email_unavailable": "Email is not available right now, so the password cannot be reset."
+    "email_unavailable": "Email is not available right now, so the password cannot be reset.",
+    "invalid_code": "The code is not valid. Check the app and try again.",
+    "mfa_required": "Administration needs two-step verification. Turn it on in your profile, then sign in again.",
+    "mfa_session_expired": "The sign-in took too long. Start over with your password.",
+    "mfa_already_enabled": "Two-step verification is already on.",
+    "mfa_setup_missing": "Start the setup again.",
+    "mfa_not_enabled": "Two-step verification is off."
   },
   "home": {
     "categories": "Categories",
@@ -1125,5 +1131,39 @@
       "misleading": "Misleading",
       "no_violation": "No violation"
     }
+  },
+  "mfa": {
+    "title": "Two-step verification",
+    "off": "Off. Turn it on to ask for a code from an authenticator app after your password.",
+    "on_one": "On. {{count}} recovery code left.",
+    "on_other": "On. {{count}} recovery codes left.",
+    "turnOn": "Turn on",
+    "turnOff": "Turn off",
+    "intro": "You will need an authenticator app on your phone (for example Google Authenticator, Microsoft Authenticator or 1Password). Confirm your password to start.",
+    "password": "Your password",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "scanHelp": "Scan this code with your authenticator app, then type the six-digit code it shows.",
+    "qrAlt": "QR code to add tradepost to an authenticator app",
+    "manualKey": "Can't scan? Type this key",
+    "code": "Six-digit code",
+    "confirm": "Turn on",
+    "recoveryTitle": "Recovery codes",
+    "recoveryHelp": "Each code signs you in once if you lose your phone. Keep them somewhere safe: they will not be shown again.",
+    "copy": "Copy codes",
+    "copied": "Copied",
+    "done": "I saved them",
+    "newCodes": "New recovery codes",
+    "newCodesHelp": "New codes replace the current ones, which stop working.",
+    "disableHelp": "Confirm your password and a code from the app (or a recovery code).",
+    "useRecovery": "Use a recovery code",
+    "useApp": "Use the authenticator app",
+    "recoveryCode": "Recovery code",
+    "signInTitle": "Two-step verification",
+    "signInSubtitle": "Type the six-digit code from your authenticator app.",
+    "signInRecovery": "Type one of your recovery codes. Each works once.",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "startOver": "Start over"
   }
 }

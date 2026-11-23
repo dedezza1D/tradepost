@@ -19,6 +19,8 @@ async def admin_client(app: Any) -> Any:
     client = await signed_in_client(app, "admin")
     me = (await client.get("/api/auth/me")).json()
     await sql(app, "UPDATE users SET is_admin = true WHERE id = :id", id=uuid.UUID(me["id"]))
+    # Administration needs a session signed in with the second factor (auth level 2).
+    await sql(app, "UPDATE sessions SET auth_level = 2 WHERE user_id = :id", id=uuid.UUID(me["id"]))
     return client
 
 

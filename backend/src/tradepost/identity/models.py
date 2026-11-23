@@ -2,12 +2,14 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
     Index,
     Integer,
     LargeBinary,
+    SmallInteger,
     String,
     Text,
     func,
@@ -68,6 +70,11 @@ class Session(TimestampMixin, Base):
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(String(300))
+    # 0: password verified, second factor still owed; 1: password; 2: password and second
+    # factor (see identity/sessions.py).
+    auth_level: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=1, server_default="1"
+    )
 
 
 class PasswordResetToken(Base):
@@ -86,3 +93,32 @@ class PasswordResetToken(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class TotpFactor(TimestampMixin, Base):
+    """An authenticator app (TOTP) registered for an account. The shared secret is stored
+    encrypted (identity/mfa.py); the factor counts only once confirmed with a valid code."""
+
+    __tablename__ = "totp_factors"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    secret_encrypted: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The time step of the last accepted code: a code is never accepted twice.
+    last_used_step: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+
+
+class RecoveryCode(Base):
+    """A single-use recovery code for an account with a second factor. Only its SHA-256 is
+    stored (the codes are random, so a fast hash is enough)."""
+
+    __tablename__ = "recovery_codes"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    code_hash: Mapped[bytes] = mapped_column(LargeBinary(32), unique=True, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

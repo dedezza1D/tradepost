@@ -10,7 +10,13 @@ from tradepost.db import Base
 from tradepost.disputes import Dispute, DisputeMessage
 from tradepost.fx import FxRate
 from tradepost.geo.models import Municipality
-from tradepost.identity.models import PasswordResetToken, Session, User
+from tradepost.identity.models import (
+    PasswordResetToken,
+    RecoveryCode,
+    Session,
+    TotpFactor,
+    User,
+)
 from tradepost.notifications.delivery import (
     NotificationDelivery,
     NotificationPreference,
@@ -75,6 +81,7 @@ __all__ = [
     "PushSubscriptionRow",
     "Question",
     "RateLimitBucket",
+    "RecoveryCode",
     "Report",
     "RequestStat",
     "Review",
@@ -83,5 +90,6 @@ __all__ = [
     "SellerAccount",
     "Session",
     "StockReservation",
+    "TotpFactor",
     "User",
 ]

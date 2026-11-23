@@ -23,6 +23,14 @@ CSRF_COOKIE = "tp_csrf"
 HOST_PREFIX = "__Host-"
 CSRF_HEADER = "X-CSRF-Token"
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+# How a session was authenticated. A pending session proved the password and still owes the
+# second factor: it is not a sign-in (no route accepts it except the one that takes the code)
+# and lasts a few minutes.
+AUTH_PENDING = 0
+AUTH_PASSWORD = 1
+AUTH_MFA = 2
+PENDING_TTL = timedelta(minutes=5)
 _TOUCH_INTERVAL = timedelta(minutes=5)
 
 
@@ -53,20 +61,27 @@ class Principal:
 
 
 async def create_session(
-    db: AsyncSession, response: Response, user: User, *, user_agent: str | None
+    db: AsyncSession,
+    response: Response,
+    user: User,
+    *,
+    user_agent: str | None,
+    auth_level: int = AUTH_PASSWORD,
 ) -> Session:
     settings = get_settings()
+    lifetime = PENDING_TTL if auth_level == AUTH_PENDING else session_limits(settings, user)[0]
     token = secrets.token_urlsafe(32)
     session = Session(
         user_id=user.id,
         token_hash=_hash_token(token),
         csrf_token=secrets.token_urlsafe(32),
-        expires_at=datetime.now(UTC) + session_limits(settings, user)[0],
+        expires_at=datetime.now(UTC) + lifetime,
         user_agent=(user_agent or "")[:300] or None,
+        auth_level=auth_level,
     )
     db.add(session)
     await db.flush()
-    max_age = int(session_limits(settings, user)[0].total_seconds())
+    max_age = int(lifetime.total_seconds())
     _set_cookies(response, settings, token, session.csrf_token, max_age=max_age)
     return session
 
@@ -137,7 +152,10 @@ async def purge_sessions(db: AsyncSession, *, retention: timedelta = SESSION_RET
     return int(result.rowcount or 0)  # type: ignore[attr-defined]
 
 
-async def load_principal(request: Request, db: AsyncSession) -> Principal | None:
+async def load_principal(
+    request: Request, db: AsyncSession, *, pending: bool = False
+) -> Principal | None:
+    """The signed-in account, or with ``pending`` the session still owing a second factor."""
     settings = get_settings()
     # The bare name is still read over HTTPS for sessions issued before the prefix; that
     # fallback can go once those have reached session_ttl_hours.
@@ -153,12 +171,15 @@ async def load_principal(request: Request, db: AsyncSession) -> Principal | None
                 Session.token_hash == _hash_token(token),
                 Session.revoked_at.is_(None),
                 Session.expires_at > now,
+                Session.auth_level == AUTH_PENDING if pending else Session.auth_level > 0,
             )
         )
     ).one_or_none()
     if row is None:
         return None
     session, user = row
+    if pending:
+        return Principal(user=user, session=session)
     # The lifetimes follow the account's current role, so a session that outlived them (left
     # unused, or opened before the account became an administrator) ends here.
     absolute, idle = session_limits(settings, user)
@@ -196,13 +217,28 @@ async def require_user(principal: Annotated[Principal, Depends(require_principal
     return principal.user
 
 
-async def require_admin(user: Annotated[User, Depends(require_user)]) -> User:
-    if not user.is_admin:
+async def require_admin(principal: Annotated[Principal, Depends(require_principal)]) -> User:
+    if not principal.user.is_admin:
         raise Forbidden("Administrators only.")
-    return user
+    # Administrators decide refunds and disputes: their sessions need the second factor.
+    if principal.session.auth_level < AUTH_MFA:
+        raise Forbidden(
+            "Administration needs a sign-in with two-step verification.", code="mfa_required"
+        )
+    return principal.user
+
+
+async def require_pending(request: Request, db: DbSession) -> Principal:
+    """The session waiting for its second factor."""
+    principal = await load_principal(request, db, pending=True)
+    if principal is None:
+        raise Unauthorized("Sign in again to continue.", code="mfa_session_expired")
+    _check_csrf(request, principal.session)
+    return principal
 
 
 CurrentPrincipal = Annotated[Principal, Depends(require_principal)]
 CurrentUser = Annotated[User, Depends(require_user)]
 OptionalPrincipal = Annotated[Principal | None, Depends(optional_principal)]
 AdminUser = Annotated[User, Depends(require_admin)]
+PendingPrincipal = Annotated[Principal, Depends(require_pending)]
