@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck:functions": "tsc -p functions",
+    "typecheck:workers": "tsc -p workers",
     "check:i18n": "node scripts/check-i18n.mjs",
     "test:edge": "node --test \"edge/*.test.ts\"",
     "e2e": "playwright test"

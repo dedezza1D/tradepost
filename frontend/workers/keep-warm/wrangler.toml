@@ -1,0 +1,17 @@
+# Scheduled Worker that keeps the API's free instance from going to sleep (edge/keep-warm.ts).
+# Deployed on its own, separately from the Pages project, from frontend/:
+#   npx wrangler secret put API_ORIGIN -c workers/keep-warm/wrangler.toml   (once)
+#   npx wrangler deploy -c workers/keep-warm/wrangler.toml
+name = "tradepost-keep-warm"
+main = "index.ts"
+compatibility_date = "2026-11-01"
+# No public URL: the Worker only runs on its schedule.
+workers_dev = false
+
+[triggers]
+# The instance sleeps after 15 minutes without traffic; every 5 minutes leaves room for a
+# skipped or failed run.
+crons = ["*/5 * * * *"]
+
+[observability]
+enabled = true
