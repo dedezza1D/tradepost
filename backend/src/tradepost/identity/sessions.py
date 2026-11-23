@@ -17,9 +17,29 @@ from tradepost.identity.models import Session, User
 
 SESSION_COOKIE = "tp_session"
 CSRF_COOKIE = "tp_csrf"
+# Over HTTPS the cookies carry the __Host- prefix: the browser then only accepts them when set
+# Secure, for Path=/ and without Domain, so no other host or path can plant or shadow them.
+# Plain-HTTP development cannot use the prefix and keeps the bare names.
+HOST_PREFIX = "__Host-"
 CSRF_HEADER = "X-CSRF-Token"
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _TOUCH_INTERVAL = timedelta(minutes=5)
+
+
+def cookie_names(settings: Settings) -> tuple[str, str]:
+    """The session and CSRF cookie names in use."""
+    prefix = HOST_PREFIX if settings.cookie_secure else ""
+    return prefix + SESSION_COOKIE, prefix + CSRF_COOKIE
+
+
+def session_limits(settings: Settings, user: User) -> tuple[timedelta, timedelta]:
+    """Absolute and idle lifetimes of a session for this user."""
+    if user.is_admin:
+        return (
+            timedelta(hours=settings.admin_session_ttl_hours),
+            timedelta(minutes=settings.admin_session_idle_minutes),
+        )
+    return timedelta(hours=settings.session_ttl_hours), timedelta(hours=settings.session_idle_hours)
 
 
 def _hash_token(token: str) -> bytes:
@@ -41,19 +61,26 @@ async def create_session(
         user_id=user.id,
         token_hash=_hash_token(token),
         csrf_token=secrets.token_urlsafe(32),
-        expires_at=datetime.now(UTC) + timedelta(hours=settings.session_ttl_hours),
+        expires_at=datetime.now(UTC) + session_limits(settings, user)[0],
         user_agent=(user_agent or "")[:300] or None,
     )
     db.add(session)
     await db.flush()
-    _set_cookies(response, settings, token, session.csrf_token)
+    max_age = int(session_limits(settings, user)[0].total_seconds())
+    _set_cookies(response, settings, token, session.csrf_token, max_age=max_age)
     return session
 
 
-def _set_cookies(response: Response, settings: Settings, token: str, csrf: str) -> None:
-    max_age = settings.session_ttl_hours * 3600
+def _set_cookies(
+    response: Response, settings: Settings, token: str, csrf: str, *, max_age: int
+) -> None:
+    session_name, csrf_name = cookie_names(settings)
+    if settings.cookie_secure:
+        # Cookies issued before the prefix was adopted: replaced by the prefixed ones.
+        response.delete_cookie(SESSION_COOKIE, path="/", secure=True, httponly=True)
+        response.delete_cookie(CSRF_COOKIE, path="/", secure=True)
     response.set_cookie(
-        SESSION_COOKIE,
+        session_name,
         token,
         max_age=max_age,
         httponly=True,
@@ -63,7 +90,7 @@ def _set_cookies(response: Response, settings: Settings, token: str, csrf: str) 
     )
     # Readable by the web app, which echoes it in the CSRF header on unsafe requests.
     response.set_cookie(
-        CSRF_COOKIE,
+        csrf_name,
         csrf,
         max_age=max_age,
         httponly=False,
@@ -74,8 +101,10 @@ def _set_cookies(response: Response, settings: Settings, token: str, csrf: str) 
 
 
 def clear_cookies(response: Response) -> None:
-    response.delete_cookie(SESSION_COOKIE, path="/")
-    response.delete_cookie(CSRF_COOKIE, path="/")
+    for name in (SESSION_COOKIE, CSRF_COOKIE):
+        response.delete_cookie(name, path="/")
+        # Deleting a __Host- cookie is itself a Set-Cookie, which must be Secure to be accepted.
+        response.delete_cookie(HOST_PREFIX + name, path="/", secure=True)
 
 
 async def revoke_session(db: AsyncSession, session_id: uuid.UUID) -> None:
@@ -109,7 +138,10 @@ async def purge_sessions(db: AsyncSession, *, retention: timedelta = SESSION_RET
 
 
 async def load_principal(request: Request, db: AsyncSession) -> Principal | None:
-    token = request.cookies.get(SESSION_COOKIE)
+    settings = get_settings()
+    # The bare name is still read over HTTPS for sessions issued before the prefix; that
+    # fallback can go once those have reached session_ttl_hours.
+    token = request.cookies.get(cookie_names(settings)[0]) or request.cookies.get(SESSION_COOKIE)
     if not token or len(token) > 100:
         return None
     now = datetime.now(UTC)
@@ -127,6 +159,11 @@ async def load_principal(request: Request, db: AsyncSession) -> Principal | None
     if row is None:
         return None
     session, user = row
+    # The lifetimes follow the account's current role, so a session that outlived them (left
+    # unused, or opened before the account became an administrator) ends here.
+    absolute, idle = session_limits(settings, user)
+    if now - session.last_seen_at > idle or now - session.created_at > absolute:
+        return None
     if now - session.last_seen_at > _TOUCH_INTERVAL:
         session.last_seen_at = now
     return Principal(user=user, session=session)

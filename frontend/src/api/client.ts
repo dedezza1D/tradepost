@@ -101,7 +101,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers.set('Content-Type', 'application/json')
   }
   if (!SAFE_METHODS.has(method)) {
-    const csrf = readCookie('tp_csrf')
+    // Prefixed over HTTPS; the bare name in plain-HTTP development and on older sessions.
+    const csrf = readCookie('__Host-tp_csrf') ?? readCookie('tp_csrf')
     if (csrf) headers.set('X-CSRF-Token', csrf)
   }
   const request: RequestInit = { ...init, method, headers, credentials: 'same-origin' }
