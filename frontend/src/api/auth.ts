@@ -18,12 +18,21 @@ export function useMe() {
   })
 }
 
+/** The answer to the password step: the account, or a request for the second factor. */
+export type LoginResult = Me | { mfa_required: true }
+
+export function needsSecondFactor(result: LoginResult): result is { mfa_required: true } {
+  return 'mfa_required' in result
+}
+
 export function useLogin() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: { email: string; password: string }) =>
-      api<Me>('/api/auth/login', { method: 'POST', body: json(body) }),
-    onSuccess: (me) => qc.setQueryData(['me'], me),
+      api<LoginResult>('/api/auth/login', { method: 'POST', body: json(body) }),
+    onSuccess: (result) => {
+      if (!needsSecondFactor(result)) qc.setQueryData(['me'], result)
+    },
   })
 }
 

@@ -13,6 +13,7 @@ import { useChangeLanguage } from '../lib/language'
 import { setThemeChoice, themeChoice, type ThemeChoice } from '../theme'
 import { Icon, type IconName } from '../ui/icons'
 import { NotificationSettings } from '../components/NotificationSettings'
+import { TwoFactorSettings } from '../components/TwoFactorSettings'
 
 function Row({ to, icon, label }: { to: string; icon: IconName; label: string }) {
   return (
@@ -202,6 +203,8 @@ export function ProfilePage() {
         <h2 className="font-semibold">{t('profile.security')}</h2>
         <PasswordForm />
       </section>
+
+      <TwoFactorSettings />
 
       <button className="btn-danger w-full" onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/') })}>
         <Icon name="logout" size={18} />

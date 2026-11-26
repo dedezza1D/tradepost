@@ -1,7 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useLogin, useRegister, useRequestPasswordReset, useResetPassword } from '../api/auth'
+import { needsSecondFactor, useLogin, useRegister, useRequestPasswordReset, useResetPassword } from '../api/auth'
+import { useLoginSecondFactor } from '../api/mfa'
 import { ApiError } from '../api/client'
 import { CityPicker, type City } from '../components/CityPicker'
 import { currentLanguage } from '../i18n'
@@ -36,10 +37,29 @@ export function LoginPage() {
   const passwordReset = (location.state as { passwordReset?: boolean } | null)?.passwordReset === true
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [secondStep, setSecondStep] = useState(false)
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    login.mutate({ email, password }, { onSuccess: () => navigate(returnTo, { replace: true }) })
+    login.mutate({ email, password }, {
+      onSuccess: (result) => {
+        if (needsSecondFactor(result)) {
+          setPassword('')
+          setSecondStep(true)
+        } else {
+          navigate(returnTo, { replace: true })
+        }
+      },
+    })
+  }
+
+  if (secondStep) {
+    return (
+      <SecondFactorStep
+        onDone={() => navigate(returnTo, { replace: true })}
+        onRestart={() => { login.reset(); setSecondStep(false) }}
+      />
+    )
   }
 
   return (
@@ -64,6 +84,52 @@ export function LoginPage() {
         {login.error && <p role="alert" className="text-sm text-danger">{errorMessage(login.error, t)}</p>}
         <button className="btn-primary w-full" disabled={login.isPending}>
           {login.isPending ? t('auth.signingIn') : t('nav.signIn')}
+        </button>
+      </form>
+    </AuthCard>
+  )
+}
+
+function SecondFactorStep({ onDone, onRestart }: { onDone: () => void; onRestart: () => void }) {
+  const { t } = useTranslation()
+  const verify = useLoginSecondFactor()
+  const [useRecovery, setUseRecovery] = useState(false)
+  const [value, setValue] = useState('')
+  const expired = verify.error instanceof ApiError && verify.error.code === 'mfa_session_expired'
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    verify.mutate(useRecovery ? { recovery_code: value } : { code: value }, { onSuccess: onDone })
+  }
+
+  return (
+    <AuthCard
+      title={t('mfa.signInTitle')}
+      subtitle={useRecovery ? t('mfa.signInRecovery') : t('mfa.signInSubtitle')}
+      footer={<button type="button" className="font-semibold text-primary hover:underline" onClick={onRestart}>{t('mfa.startOver')}</button>}
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div>
+          <label className="label" htmlFor="second-factor">{useRecovery ? t('mfa.recoveryCode') : t('mfa.code')}</label>
+          {useRecovery ? (
+            <input id="second-factor" autoComplete="off" autoCapitalize="none" spellCheck={false} required maxLength={24}
+              className="input font-mono" value={value} onChange={(e) => setValue(e.target.value)} />
+          ) : (
+            <input id="second-factor" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]*" required maxLength={7}
+              className="input font-mono tracking-widest" value={value} onChange={(e) => setValue(e.target.value)} />
+          )}
+        </div>
+        {verify.error && <p role="alert" className="text-sm text-danger">{errorMessage(verify.error, t)}</p>}
+        {expired ? (
+          <button type="button" className="btn-primary w-full" onClick={onRestart}>{t('mfa.startOver')}</button>
+        ) : (
+          <button className="btn-primary w-full" disabled={verify.isPending}>
+            {verify.isPending ? t('mfa.verifying') : t('mfa.verify')}
+          </button>
+        )}
+        <button type="button" className="w-full text-sm font-semibold text-primary hover:underline"
+          onClick={() => { setUseRecovery(!useRecovery); setValue(''); verify.reset() }}>
+          {useRecovery ? t('mfa.useApp') : t('mfa.useRecovery')}
         </button>
       </form>
     </AuthCard>

@@ -16,6 +16,7 @@ def production_settings() -> Settings:
     return Settings(  # type: ignore[call-arg]
         env="production",
         proxy_secret="s",
+        mfa_key="A" * 43 + "=",
         cookie_secure=True,
         public_origin="https://shop.example",
         storage_backend="s3",
@@ -25,6 +26,8 @@ def production_settings() -> Settings:
 
 def test_production_refuses_unsafe_settings() -> None:
     with pytest.raises(ValidationError, match="TP_PROXY_SECRET"):
+        Settings(env="production", _env_file=None)  # type: ignore[call-arg]
+    with pytest.raises(ValidationError, match="TP_MFA_KEY"):
         Settings(env="production", _env_file=None)  # type: ignore[call-arg]
     assert production_settings().env == "production"
 

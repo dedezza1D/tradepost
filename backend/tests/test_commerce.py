@@ -250,6 +250,10 @@ async def test_the_platform_decides_after_the_seller_rejects(
         assert (await admin.get("/api/admin/disputes")).status_code == 403
         admin_id = (await admin.get("/api/auth/me")).json()["id"]
         await sql(app, "UPDATE users SET is_admin = true WHERE id = :id", id=uuid.UUID(admin_id))
+        # Administration needs a session signed in with the second factor (auth level 2).
+        await sql(
+            app, "UPDATE sessions SET auth_level = 2 WHERE user_id = :id", id=uuid.UUID(admin_id)
+        )
         queue = (await admin.get("/api/admin/disputes")).json()
         assert [d["id"] for d in queue] == [dispute["id"]]
         decided = await admin.post(

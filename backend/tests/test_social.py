@@ -35,6 +35,10 @@ async def make_admin(app: Any, client: Any) -> None:
     user_id = (await me(client))["id"]
     async with app.state.db.sessionmaker() as db, db.begin():
         await db.execute(text("UPDATE users SET is_admin = true WHERE id = :id"), {"id": user_id})
+        # Administration needs a session signed in with the second factor (auth level 2).
+        await db.execute(
+            text("UPDATE sessions SET auth_level = 2 WHERE user_id = :id"), {"id": user_id}
+        )
 
 
 # --- follows ---------------------------------------------------------------------------------

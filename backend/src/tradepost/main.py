@@ -23,6 +23,7 @@ from tradepost.disputes import router as disputes_router
 from tradepost.errors import install_error_handlers
 from tradepost.fx import router as fx_router
 from tradepost.geo.router import router as geo_router
+from tradepost.identity.mfa_router import router as mfa_router
 from tradepost.identity.router import router as identity_router
 from tradepost.logs import configure_logging
 from tradepost.media.storage import build_storage
@@ -113,6 +114,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware)
 
     app.include_router(identity_router)
+    app.include_router(mfa_router)
     app.include_router(catalog_router)
     app.include_router(orders_router)
     app.include_router(reviews_router)
